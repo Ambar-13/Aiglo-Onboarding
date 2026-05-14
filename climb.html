@@ -811,14 +811,15 @@ function difficultyAt(m) {
 }
 
 // 0–100 m: 3.3 (tutorial). Drops by 0.07 every 100 m past that, floored
-// at 3.0. The 3.0 floor combined with the reachable-rescue check in
-// placeRow guarantees ≥ 3 viable upward moves from every row.
+// at 2.5. The ≥3-reachable rescue in placeRow still kicks in when the
+// scatter misses, so the guaranteed "3 viable moves" invariant holds
+// even though base density dips below 3.
 //   0–100   → 3.3
-//   400+    → 3.0 (floor reached ~400 m)
+//   1100+   → 2.5 (floor reached ~1140 m)
 function densityAt(m) {
   if (m < 100) return 3.3;
   const band = Math.floor(m / 100);  // 1, 2, 3, ...
-  return Math.max(3.0, 3.3 - 0.07 * band);
+  return Math.max(2.5, 3.3 - 0.07 * band);
 }
 
 // Lay one row of rocks at world-y `y`.
