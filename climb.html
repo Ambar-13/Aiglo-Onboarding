@@ -881,11 +881,13 @@ function spawnAhead() {
 }
 
 // Where the climber sits in the viewport, from the TOP of the screen.
-// Portrait: ~55% (lots of sky above, modest ground below).
-// Landscape / laptop: ~72% (vertical real estate is precious — push the
-// climber down so most of the screen shows upcoming rocks, not dirt).
+// We aim for the GROUND LINE to land 100 px above the viewport bottom so
+// the dirt strip ends exactly at the bottom edge (no empty wall below it).
+// FOOT_Y_OFFSET = 50 sits between body center and feet, so body.y screen
+// position = H - 150. share = 1 - 150/H.
+// Clamped to [0.55, 0.85] so very small / very tall viewports stay sane.
 function climberScreenShare() {
-  return (W / H) > 1.2 ? 0.72 : 0.55;
+  return Math.max(0.55, Math.min(0.85, 1 - 150 / H));
 }
 
 function reset() {
@@ -1651,7 +1653,7 @@ function drawBaseCamp() {
   // Ground strip (light lilac "alpine soil"). Kept as a SHORT band — the
   // dirt is just a base anchor for grass / bushes, not the dominant element
   // of the screen. Below the band we let the cream wall continue.
-  const GROUND_BAND = 70;
+  const GROUND_BAND = 100;
   const groundH = Math.min(GROUND_BAND, Math.max(0, H - groundSy));
   ctx.fillStyle = '#b8a0e8';
   ctx.fillRect(0, groundSy, W, groundH);
