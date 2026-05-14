@@ -799,6 +799,10 @@ cvs.addEventListener('pointerleave', endPointer);
 // current tangential velocity). Called whenever a grip is acquired or
 // released so the active-swing force starts from a settled state instead
 // of yanking the body toward an arbitrary phase.
+// Also kills the body's RADIAL velocity at grab time — otherwise the
+// rope constraint snaps body position inward each frame while velocity
+// keeps pulling it outward via gravity, producing a visible up-down
+// bounce (especially on lunge-grabs onto a rock lower than the last one).
 function syncSwingPhase() {
   const oneHand = (!!hands.L.gripped) !== (!!hands.R.gripped);
   if (!oneHand) return;
@@ -810,18 +814,44 @@ function syncSwingPhase() {
   const SA_hi = isR ?  SA_OTHER :  SA_FREE;
   const SA_mid = (SA_lo + SA_hi) / 2;
   const SA_amp = (SA_hi - SA_lo) / 2;
-  const dx = body.x - grip.x, dy = body.y - grip.y;
-  const d = Math.hypot(dx, dy) || 1;
+
+  // Snap body to be at most ARM from the new grip and kill radial velocity.
+  let dx = body.x - grip.x, dy = body.y - grip.y;
+  let d = Math.hypot(dx, dy) || 1;
+  if (d > ARM) {
+    const k = ARM / d;
+    body.x = grip.x + dx * k;
+    body.y = grip.y + dy * k;
+    dx = body.x - grip.x; dy = body.y - grip.y;
+    d = Math.hypot(dx, dy) || 1;
+  }
+  const radX = dx / d, radY = dy / d;
+  const tangX = dy / d, tangY = -dx / d;
+  const vx = body.x - body.px, vy = body.y - body.py;
+  const radV  = vx * radX + vy * radY;
+  const tangV = vx * tangX + vy * tangY;
+  // Kill radial component: rebuild prev from tangential velocity alone.
+  body.px = body.x - tangX * tangV;
+  body.py = body.y - tangY * tangV;
+
   const curSA = Math.atan2(dx, dy);
   // sin(swingPhase) should produce (curSA - SA_mid) / SA_amp
   const normalized = Math.max(-1, Math.min(1, (curSA - SA_mid) / SA_amp));
   let newPhase = Math.asin(normalized);  // in [-π/2, π/2]
   // Choose the half-cycle whose cos sign matches body's current angular
-  // direction (so the target moves the SAME direction the body is moving).
-  const vx = body.x - body.px, vy = body.y - body.py;
-  const tangX = dy / d, tangY = -dx / d;
-  const tangVel = vx * tangX + vy * tangY;
-  if (tangVel < 0) newPhase = Math.PI - newPhase;
+  // direction. If the body has essentially no tangential motion (e.g.
+  // pure radial lunge-grab), default to the free-side half-cycle so the
+  // wave sweeps toward the free hand instead of biasing arbitrarily.
+  const TANG_DEADZONE = 8; // px/frame, ≈ light tap of motion
+  let cosShouldBeNegative;
+  if (Math.abs(tangV) < TANG_DEADZONE) {
+    // Free side: L gripped → free=right=+SA → target should increase (cos>0)
+    //            R gripped → free=left=-SA  → target should decrease (cos<0)
+    cosShouldBeNegative = isR;
+  } else {
+    cosShouldBeNegative = tangV < 0;
+  }
+  if (cosShouldBeNegative) newPhase = Math.PI - newPhase;
   swingPhase = newPhase;
 }
 
