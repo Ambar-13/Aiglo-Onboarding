@@ -1274,7 +1274,12 @@ function tryGrab(side) {
   // to catch rocks it passes near, not slip past them.
   const otherHand = hands[side === 'L' ? 'R' : 'L'];
   const isReaching = h.pressed && !!otherHand.gripped;
-  const HAND_MARGIN = isReaching ? 14 : 4;
+  // Freefall = both hands ungripped but pressing. The body moves so fast
+  // the hand can't catch up to a rock in time, so we widen the grab
+  // margin substantially — the player's intent (pressing the button) is
+  // clear, give them the catch.
+  const inFreefall = h.pressed && !hands.L.gripped && !hands.R.gripped;
+  const HAND_MARGIN = isReaching ? 14 : inFreefall ? 24 : 4;
   let best = null, bestD = Infinity;
   for (const r of rocks) {
     if (r.crumbled) continue;
@@ -1550,8 +1555,13 @@ function update(dt) {
         tx = body.x + sxOff;
         ty = body.y - 32;
       }
-      h.x += (tx - h.x) * Math.min(1, dt * 18);
-      h.y += (ty - h.y) * Math.min(1, dt * 18);
+      // Snap the hand toward the target faster during freefall: body is
+      // moving ~25 px/frame, the default lerp (~0.3/frame) can't keep up
+      // and the hand drags behind, missing rocks.
+      const inFreefall = h.pressed && !hands.L.gripped && !hands.R.gripped;
+      const lerpRate = inFreefall ? 40 : 18;
+      h.x += (tx - h.x) * Math.min(1, dt * lerpRate);
+      h.y += (ty - h.y) * Math.min(1, dt * lerpRate);
     }
   }
 
