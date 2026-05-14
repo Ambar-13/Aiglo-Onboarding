@@ -734,6 +734,14 @@ function spawnAhead() {
   rocks = rocks.filter(r => r.y < camY + H + 250 || r.y > -160);
 }
 
+// Where the climber sits in the viewport, from the TOP of the screen.
+// Portrait: ~55% (lots of sky above, modest ground below).
+// Landscape / laptop: ~72% (vertical real estate is precious — push the
+// climber down so most of the screen shows upcoming rocks, not dirt).
+function climberScreenShare() {
+  return (W / H) > 1.2 ? 0.72 : 0.55;
+}
+
 function reset() {
   seed = (Date.now() & 0x7fffffff) || 1;
   // Body starts STANDING on the ground at base camp — feet on the floor,
@@ -749,7 +757,11 @@ function reset() {
   highestY = 0;
   meters = 0;
   camX = 0;
-  camY = -H * 0.45 + body.y;
+  // Place the climber lower in the viewport so the area ABOVE him (where
+  // he'll climb) takes the majority of the screen. In wide-aspect (laptop /
+  // landscape phone) we shove him even lower since vertical space is tight
+  // and we want to see as many upcoming rocks as possible.
+  camY = -H * climberScreenShare() + body.y;
   lastReleaseAt = { L: -9999, R: -9999 };
   lastPressAt   = { L: -9999, R: -9999 };
   lastGripChangeAt = -9999;
@@ -1319,7 +1331,8 @@ function update(dt) {
   if (body.y < highestY) highestY = body.y;
   const STAND_Y = GROUND_Y - FOOT_Y_OFFSET;  // body.y when standing on ground
   meters = Math.max(0, Math.floor((STAND_Y - highestY) / META_SCALE));
-  const targetCamY = Math.min(highestY - H * 0.5, body.y - H * 0.5);
+  const yShare = climberScreenShare();
+  const targetCamY = Math.min(highestY - H * yShare, body.y - H * yShare);
   if (camY > targetCamY) camY += (targetCamY - camY) * 0.08;
   // Track X smoothly so the climber can drift but stays in frame
   camX += (body.x - camX) * Math.min(1, dt * 3);
