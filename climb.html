@@ -624,13 +624,19 @@ const SHOULDER_LY = -12;
 const DAMP = 0.997;       // slight decay so swings settle to a clean max angle instead of running forever
 const META_SCALE = 12;
 const SWING_KICK = 640;   // px/s impulse when releasing one hand while the other is gripped
-const LAUNCH_KICK = 650;  // px/s impulse for the single-hand "fly toward free hand" release
+const LAUNCH_KICK = 500;  // px/s base impulse for single-hand "fly toward free hand" release
+// Near-vertical launches lose most of their speed immediately to gravity (with
+// g=1500 a 500 px/s straight-up kick peaks at only ~83 px = 7 m). Multiply the
+// kick by (1 + LAUNCH_VERTICAL_BOOST · upwardness) so a fully-vertical launch
+// gets ~1.8× the base, peaking at ~270 px ≈ 22 m — comparable to how far a
+// horizontal launch carries before the next grab.
+const LAUNCH_VERTICAL_BOOST = 0.8;
 const TAP_BOOST  = 320;   // extra impulse when releasing very quickly (tap, not hold)
 const PUMP_KICK  = 340;   // px/s tangential pump when pressing the free side mid-swing
 const PUMP_STAM_COST = 4; // stamina cost per pump
 const JUMP_BOOST = 240;   // upward boost when releasing last grip with upward momentum
 const DOUBLE_WIN = 150;   // ms window: both-hands release counts as a jump
-const DOUBLE_JUMP_V = 680; // velocity for double-release jump (a touch higher than the swing kick)
+const DOUBLE_JUMP_V = 850; // velocity for double-release vertical jump — needs enough kick to clear several rows against gravity
 
 // Stamina
 const STAM_MAX = 100;
@@ -1122,7 +1128,13 @@ function release(side) {
         const fx = freeHand.x - body.x;
         const fy = freeHand.y - body.y;
         const fd = Math.hypot(fx, fy) || 1;
-        applyImpulse(fx / fd * LAUNCH_KICK, fy / fd * LAUNCH_KICK);
+        // Boost the kick magnitude when the launch direction is mostly UP
+        // (y-down coords: fy < 0 means free hand is above body). Without this,
+        // gravity ate so much of a vertical launch that "almost-vertical" felt
+        // weak compared to sideways launches at the same speed.
+        const upwardness = Math.max(0, -fy / fd);
+        const mag = LAUNCH_KICK * (1 + LAUNCH_VERTICAL_BOOST * upwardness);
+        applyImpulse(fx / fd * mag, fy / fd * mag);
       }
     }
 
