@@ -698,22 +698,59 @@ function makeRock(x, y, R, type) {
 // just above the ground so the climber begins standing, then grips up.
 const GROUND_Y = 0;
 
+// Lay one row of rocks at world-y `y`. Rocks span the full viewport width
+// but in a NON-UNIFORM pattern: most rows cluster around 1–2 centers
+// (leaving voids on the rest of the row), and a minority are evenly
+// scattered. Cluster gaps force the climber to commit to a direction
+// instead of grazing through a uniform field of holds.
+function placeRow(y) {
+  const fullHalf = W * 0.48;
+  // Density scales with viewport width so a wide laptop screen feels
+  // populated while a narrow phone stays uncluttered. Average ~1 rock
+  // per 130 px of width, with row-to-row variance.
+  const baseCount = Math.max(3, Math.round(W / 130));
+  const count = rint(Math.max(2, baseCount - 2), baseCount + 2);
+  const mode = srand();
+  if (mode < 0.25) {
+    // Scattered: rocks anywhere across the wall, no shared center.
+    for (let i = 0; i < count; i++) {
+      const x = rnd(-fullHalf, fullHalf);
+      rocks.push(makeRock(x, y + rnd(-15, 15)));
+    }
+  } else if (mode < 0.75) {
+    // One cluster: a clump on one side, a void on the other.
+    const center = rnd(-fullHalf * 0.7, fullHalf * 0.7);
+    const spread = rnd(60, 140);
+    for (let i = 0; i < count; i++) {
+      let x = center + rnd(-spread, spread);
+      x = Math.max(-fullHalf, Math.min(fullHalf, x));
+      rocks.push(makeRock(x, y + rnd(-15, 15)));
+    }
+  } else {
+    // Two clusters: holds on both edges, a gap in the middle the climber
+    // has to swing across.
+    const c1 = rnd(-fullHalf, -fullHalf * 0.3);
+    const c2 = rnd(fullHalf * 0.3, fullHalf);
+    for (let i = 0; i < count; i++) {
+      const c = (srand() < 0.5) ? c1 : c2;
+      let x = c + rnd(-60, 60);
+      x = Math.max(-fullHalf, Math.min(fullHalf, x));
+      rocks.push(makeRock(x, y + rnd(-15, 15)));
+    }
+  }
+}
+
 function spawnInitial() {
   rocks = [];
   // Two starter holds positioned within easy reach of the climber while
-  // he's standing on the ground (body.y = -44, ARM = 110). Pressing L or R
-  // when under one of these grabs it and starts the climb.
+  // he's standing on the ground. Pressing L or R when under one of these
+  // grabs it and starts the climb.
   rocks.push(makeRock(-36, -100, 18, 'solid'));
   rocks.push(makeRock(36,  -100, 18, 'solid'));
   let y = -160;
-  while (y > -2200) {
-    // Dense scatter — reference wall is packed with tiny holds
-    const count = rint(5, 9);
-    for (let i = 0; i < count; i++) {
-      const x = rnd(-W * 0.46, W * 0.46);
-      rocks.push(makeRock(x, y + rnd(-18, 18)));
-    }
-    y -= rnd(34, 56);
+  while (y > -2400) {
+    placeRow(y);
+    y -= rnd(38, 58);
   }
 }
 
@@ -721,14 +758,10 @@ function spawnAhead() {
   let topY = 0;
   for (const r of rocks) if (!r.crumbled && r.y < topY) topY = r.y;
   const need = camY - H * 0.5;
-  let y = topY - rnd(34, 56);
+  let y = topY - rnd(38, 58);
   while (y > need) {
-    const count = rint(5, 9);
-    for (let i = 0; i < count; i++) {
-      const x = rnd(-W * 0.46, W * 0.46);
-      rocks.push(makeRock(x, y + rnd(-18, 18)));
-    }
-    y -= rnd(34, 56);
+    placeRow(y);
+    y -= rnd(38, 58);
   }
   // Cull anything way off screen below (but keep ground-level rocks)
   rocks = rocks.filter(r => r.y < camY + H + 250 || r.y > -160);
