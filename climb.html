@@ -1422,6 +1422,17 @@ function update(dt) {
     if (body.py > body.y) body.py = body.y;
   }
 
+  // ---- World side walls — clamp the climber to the playable column.
+  // halfX is the same boundary the rocks are placed inside, so the body
+  // can never travel past the edge of the wall (no off-screen drifting
+  // even on a hard jump). Lateral velocity is killed at the wall so the
+  // body doesn't keep "pushing" against it.
+  {
+    const halfX = W * 0.46;
+    if (body.x >  halfX) { body.x =  halfX; body.px = body.x; }
+    if (body.x < -halfX) { body.x = -halfX; body.px = body.x; }
+  }
+
   // ---- Walking on the floor: while alive AND grounded, L/R press moves
   // the climber horizontally instead of doing anything climby. (The same
   // press also keeps trying to grab a rock — so when the player is under
