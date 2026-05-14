@@ -624,7 +624,7 @@ const SHOULDER_LY = -12;
 const DAMP = 0.997;       // slight decay so swings settle to a clean max angle instead of running forever
 const META_SCALE = 12;
 const SWING_KICK = 640;   // px/s impulse when releasing one hand while the other is gripped
-const LAUNCH_KICK = 1000; // px/s impulse for the single-hand "fly toward free hand" release
+const LAUNCH_KICK = 600;  // px/s impulse for the single-hand "fly toward free hand" release
 const TAP_BOOST  = 320;   // extra impulse when releasing very quickly (tap, not hold)
 const PUMP_KICK  = 340;   // px/s tangential pump when pressing the free side mid-swing
 const PUMP_STAM_COST = 4; // stamina cost per pump
@@ -716,10 +716,10 @@ const GROUND_Y = 0;
 //   - 0–100 intro / 100–500 learning / 500–2 k challenging / 2 k–6 k very hard /
 //     6 k+ varied infinite with "rest zones" every 2.5 km.
 
-const SPINE_STEP_MAX   = 55;   // Pythagoras-validated; see math above
-const DECOY_MIN_DIST   = 50;   // Bridson r ≈ 0.6·ARM
-const SPINE_BRANCH_PROB = 0.20;
-const ROCK_PER_PX      = 1 / 70;
+const SPINE_STEP_MAX   = 55;    // Pythagoras-validated; see math above
+const DECOY_MIN_DIST   = 70;    // Bridson r ≈ 0.82·ARM — clear breathing room
+const SPINE_BRANCH_PROB = 0.18;
+const ROCK_PER_PX      = 1 / 110; // sparser wall, more readable holds
 
 // Loose-rock probability as a function of altitude (m). Starts at 800 m
 // (first taste), ramps to 0.55 by 50 km.
