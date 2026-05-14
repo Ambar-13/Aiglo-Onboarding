@@ -1837,6 +1837,29 @@ function drawClimber() {
     const W_EL = 3;      // tiny APEX where both bones meet at the elbow
     const W_WR = 15;     // forearm at the wrist (wide — blends into the fist)
 
+    // Outfit-driven arm colors. Long-sleeved outfits (lab coat / suit /
+    // hoodie / sweater / chef coat / spacesuit) cover the bicep and forearm
+    // with the shirt material; short-sleeved outfits (flannel, hi-vis vest)
+    // leave the bicep + forearm bare skin.
+    const _o = currentOutfit;
+    const _longSleeve = _o.shirtStyle === 'labcoat' || _o.shirtStyle === 'suit'
+                     || _o.shirtStyle === 'hoodie'  || _o.shirtStyle === 'sweater'
+                     || _o.shirtStyle === 'chef'    || _o.shirtStyle === 'spacesuit';
+    const _sleeveColor   = _o.shirt;
+    const _sleeveDark    = _o.shirtDark;
+    const _bicepColor    = _longSleeve ? _o.shirt     : '#c89868';
+    const _bicepDark     = _longSleeve ? _o.shirtDark : '#7a4a26';
+    const _bicepHi       = _longSleeve ? null         : '#e4b888'; // null = skip highlight
+    const _elbowFill     = _longSleeve ? _o.shirt     : '#a07444';
+    const _elbowStroke   = _longSleeve ? _o.shirtDark : '#7a4a26';
+    // Shoulder cap matches the sleeve (deltoid bulge of the shirt)
+    const _shoulderFill  = _o.shirt;
+    const _shoulderDark  = _o.shirtDark;
+    // Highlight tone: a slightly lighter version of the shirt for shoulder rim
+    // (just use the existing climber-style accent unless it'd clash badly)
+    const _shoulderHi    = _o.shirtStyle === 'flannel' ? '#c84a30' :
+                           _longSleeve ? _o.shirtDark : '#c84a30';
+
     // Upper arm direction
     const u1dx = elX - shSx, u1dy = elY - shSy;
     const u1Len = Math.max(1, Math.hypot(u1dx, u1dy));
@@ -1848,68 +1871,73 @@ function drawClimber() {
     const u2x = u2dx / u2Len, u2y = u2dy / u2Len;
     const p2x = -u2y, p2y = u2x;
 
-    // Sleeve ends 35% down the upper arm (rolled-up red flannel)
+    // Sleeve ends 35% down the upper arm (rolled-up sleeve for short-sleeve
+    // outfits; for long-sleeve the rolled-cuff dark band still draws as a
+    // subtle seam between deltoid and bicep).
     const sleeveT = 0.35;
     const slX = shSx + u1dx * sleeveT;
     const slY = shSy + u1dy * sleeveT;
 
-    // --- UPPER ARM trapezoid #1: red flannel sleeve (shoulder → sleeve-end) ---
+    // --- UPPER ARM trapezoid #1: shirt-color sleeve (shoulder → sleeve-end) ---
     drawTrap(shSx, shSy, slX, slY, p1x, p1y, W_SH, W_SLEEVE,
-             '#a8321c', '#5a1c0c', 1.2);
-    // Rolled-cuff dark band at the sleeve end (a thin trapezoid that wraps the bottom of the sleeve)
+             _sleeveColor, _sleeveDark, 1.2);
+    // Rolled-cuff dark band at the sleeve end
     drawTrap(slX - u1x * 1.8, slY - u1y * 1.8, slX, slY, p1x, p1y, W_SLEEVE + 0.6, W_SLEEVE + 0.6,
-             '#5a1808', '#3a0c04', 1.0);
+             _sleeveDark, _sleeveDark, 1.0);
 
-    // --- UPPER ARM trapezoid #2: bare bicep (sleeve-end → elbow) ---
+    // --- UPPER ARM trapezoid #2: bicep (bare skin for short-sleeve, shirt color for long-sleeve) ---
     drawTrap(slX, slY, elX, elY, p1x, p1y, W_SLEEVE - 0.5, W_EL,
-             '#c89868', '#7a4a26', 1.2);
-    // Bicep muscle highlight — a slim brighter strip along the top edge
-    drawTrap(
-      slX - p1x * outSign * (W_SLEEVE - 0.5) / 2 * 0.75,
-      slY - p1y * outSign * (W_SLEEVE - 0.5) / 2 * 0.75,
-      elX - p1x * outSign * W_EL / 2 * 0.7,
-      elY - p1y * outSign * W_EL / 2 * 0.7,
-      p1x, p1y,
-      2.6, 2.0,
-      '#e4b888', null, 0
-    );
+             _bicepColor, _bicepDark, 1.2);
+    // Bicep muscle highlight (only for bare-skin / short-sleeve)
+    if (_bicepHi) {
+      drawTrap(
+        slX - p1x * outSign * (W_SLEEVE - 0.5) / 2 * 0.75,
+        slY - p1y * outSign * (W_SLEEVE - 0.5) / 2 * 0.75,
+        elX - p1x * outSign * W_EL / 2 * 0.7,
+        elY - p1y * outSign * W_EL / 2 * 0.7,
+        p1x, p1y,
+        2.6, 2.0,
+        _bicepHi, null, 0
+      );
+    }
 
     // --- ELBOW JOINT — small flat disc covering the meeting point of the
-    // two triangle apexes. Sized just slightly larger than W_EL so it hides
-    // the seam without ballooning the hinge.
-    ctx.fillStyle = '#a07444';
+    // two triangle apexes. Matches the bicep color (skin or shirt).
+    ctx.fillStyle = _elbowFill;
     ctx.beginPath();
     ctx.arc(elX, elY, W_EL / 2 + 1.6, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = '#7a4a26';
+    ctx.strokeStyle = _elbowStroke;
     ctx.lineWidth = 1.0;
     ctx.stroke();
 
-    // --- FOREARM trapezoid (elbow → wrist) — flares at the elbow, tapers to the wrist ---
+    // --- FOREARM trapezoid (elbow → wrist) ---
     drawTrap(elX, elY, wx, wy, p2x, p2y, W_EL - 0.5, W_WR,
-             '#c89868', '#7a4a26', 1.2);
-    // Forearm muscle highlight (top edge strip)
-    drawTrap(
-      elX - p2x * outSign * (W_EL - 0.5) / 2 * 0.75,
-      elY - p2y * outSign * (W_EL - 0.5) / 2 * 0.75,
-      wx  - p2x * outSign * W_WR / 2 * 0.7,
-      wy  - p2y * outSign * W_WR / 2 * 0.7,
-      p2x, p2y,
-      2.2, 1.6,
-      '#e4b888', null, 0
-    );
+             _bicepColor, _bicepDark, 1.2);
+    // Forearm muscle highlight (only for bare-skin / short-sleeve)
+    if (_bicepHi) {
+      drawTrap(
+        elX - p2x * outSign * (W_EL - 0.5) / 2 * 0.75,
+        elY - p2y * outSign * (W_EL - 0.5) / 2 * 0.75,
+        wx  - p2x * outSign * W_WR / 2 * 0.7,
+        wy  - p2y * outSign * W_WR / 2 * 0.7,
+        p2x, p2y,
+        2.2, 1.6,
+        _bicepHi, null, 0
+      );
+    }
 
     // --- SHOULDER CAP — drawn LAST so it overlays the upper-arm seam to torso ---
     const shAng = Math.atan2(u1dy, u1dx);
     ctx.save();
     ctx.translate(shSx, shSy);
     ctx.rotate(shAng);
-    ctx.fillStyle = '#a8321c';
+    ctx.fillStyle = _shoulderFill;
     ctx.beginPath();
     ctx.ellipse(0, 0, 8, 7, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = '#5a1c0c'; ctx.lineWidth = 1.2; ctx.stroke();
-    ctx.fillStyle = '#c84a30';
+    ctx.strokeStyle = _shoulderDark; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.fillStyle = _shoulderHi;
     ctx.beginPath();
     ctx.ellipse(-2, -3.2 * outSign, 4, 1.8, 0, 0, Math.PI * 2);
     ctx.fill();
