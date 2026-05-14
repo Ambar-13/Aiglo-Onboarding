@@ -722,26 +722,22 @@ const GROUND_Y = 0;
 //   - 0–100 intro / 100–500 learning / 500–2 k challenging / 2 k–6 k very hard /
 //     6 k+ varied infinite with "rest zones" every 2.5 km.
 
-const SPINE_STEP_MAX    = 55;    // Pythagoras-validated; see math above
-// IMPORTANT: decoy min-distance is now > ARM=85 on purpose. With the old
-// value of 70, every decoy was reachable from its neighbours, so the whole
-// wall was a connected graph and the player could climb from anywhere.
-// With min-distance 95, decoys in a single row are NOT reachable from each
-// other (95 > ARM), so the ONLY reliable upward path is the spine.
-const DECOY_MIN_DIST    = 95;
-const DECOY_TIGHT_DIST  = 55;    // high-altitude ambiguity band: just past ARM
-const DECOY_CAMO_BAND   = [55, 85]; // camouflage near-spine band — at the EDGE of reach
-const SPINE_BRANCH_PROB = 0.12;
-const ROCK_PER_PX       = 1 / 145; // genuinely sparse, fewer ambient decoys
-const ROW_STRETCH_MAX   = 64;    // max row spacing that still leaves √(55²+64²)≈84 < 85
-const ROW_STRETCH_MIN   = 28;    // tight "chimney" rows — overshoot risk
-// Fake-spine state — dead-end spurs branching off the real path. They look
-// reachable for 2-5 rows then terminate (no rock above), forcing the climber
-// to read the wall properly rather than chasing the first connected chain.
-let fakeSpines = [];             // [{ x, rowsLeft }]
-// Multi-row forced-loose CHAIN countdown. When > 0, the next row's spine is
-// also forced-loose so the player has to hand-over-hand through 2-3
-// crumbling holds in sequence.
+// === World-gen constants ============================================
+// No explicit "spine" is tracked anymore. Rocks are random-scattered each
+// row; we only PROMOTE a row to connectivity if its random scatter
+// happens to leave no rock within ARM of any previous-row rock — then
+// one fallback anchor rock is placed near a previous-row rock. That way
+// the path is emergent, mostly natural, occasionally rescued.
+const ROCK_MIN_DIST   = 75;       // base Bridson rejection radius
+const ARM_REACH       = 85;       // hard physics reach (same as ARM)
+const ROW_STRETCH_MAX = 64;       // max vertical row gap — √(55²+64²)≈84
+const ROW_STRETCH_MIN = 28;       // tight rows — overshoot risk
+
+// Previous row's rock x-positions, used for the rescue-anchor check.
+let prevRowRocks = [];
+// Dead-end spurs (look like a continuation for a few rows then end).
+let fakeSpurs = [];               // [{ x, rowsLeft }]
+// Forced-loose chain countdown (when > 0, the next row's rocks are loose).
 let forcedLooseChainLeft = 0;
 
 // Loose-rock probability as a function of altitude (m). Starts at 800 m
@@ -784,209 +780,160 @@ function fakeSpawnProbAt(m) {
   return 0.12;
 }
 
-// Camouflage-cluster probability: fraction of decoys placed CLOSE to the spine
-// (40-70 px band) so the spine doesn't visually stand out as the only locally-
-// reachable chain. Counter to early instinct — making decoys cluster NEAR the
-// path is what hides the path.
-function camoFractionAt(m) {
-  if (m <  1500) return 0.00;
-  if (m <  3000) return 0.15;
-  if (m <  5000) return 0.30;
-  if (m < 10000) return 0.45;
-  if (m < 20000) return 0.55;
-  return 0.60;
-}
-
-// Difficulty config for the row at altitude m.
-//   spineStep        – max horizontal wander per row (capped at SPINE_STEP_MAX)
-//   countMult        – multiplier on the base rock count
-//   looseProb        – probability the spine rock is loose
-//   allLoose         – this row's spine + branch are guaranteed loose
-//   chainLen         – if allLoose, how many consecutive rows are loose
-//   decoyNearSpine   – fraction of decoys placed in the AMBIGUITY band
-//                      (within DECOY_TIGHT_DIST of any rock, no breathing room)
+// Difficulty config for the row at altitude m. SPARSE by default:
+// rocksPerRow targets 1.5–2.2 holds at portrait width.
+//   rocksPerRow   – target rocks per row (at reference W=400)
+//   looseProb     – probability each rock is loose
+//   allLoose      – every rock this row is loose (forced commit)
+//   chainLen      – if allLoose, how many rows are loose
+//   fakeSuppress  – disable fake-spur seeding in this row (rest zones, chains)
 function difficultyAt(m) {
-  // 1) Forced-loose check fires first. Returns a chainLen so subsequent rows
-  //    inherit the forced state.
+  // 1) Forced-loose row — fires first, owns the row.
   const fli = forcedLoosePeriod(m);
   if (fli > 0 && (m % fli) < 22) {
-    return { spineStep: 55, countMult: 1.0, allLoose: true, chainLen: chainLengthAt(m) };
+    return { rocksPerRow: 1.5, allLoose: true, chainLen: chainLengthAt(m), fakeSuppress: true };
   }
-  // 2) Rest zones above 5 km — 200 m breather at the start of every 2.5 km
-  //    macro cycle. Fake-spines are suppressed here too (so recovery feels
-  //    like recovery, not "yet another decision").
+  // 2) Rest zones from 5 km — 200 m breather every 2.5 km macro cycle.
   if (m >= 5000 && (m % 2500) < 200) {
-    return { spineStep: 35, countMult: 0.7, looseProb: looseProbAt(m) * 0.25, fakeSuppress: true };
+    return { rocksPerRow: 1.5, looseProb: looseProbAt(m) * 0.25, fakeSuppress: true };
   }
-  // 3) Base bands — tutorial → learning → loose intro → ambiguity ramp.
-  if (m <   100) return { spineStep: 25, countMult: 0.6, looseProb: 0 };
-  if (m <   300) return { spineStep: 30, countMult: 0.7, looseProb: 0 };
-  if (m <   800) return { spineStep: 40, countMult: 0.8, looseProb: 0 };
-  if (m <  1500) return { spineStep: 45, countMult: 0.9, looseProb: looseProbAt(m), decoyNearSpine: 0.10 };
-  if (m <  3000) return { spineStep: 50, countMult: 1.0, looseProb: looseProbAt(m), decoyNearSpine: 0.20 };
-  if (m <  5000) return { spineStep: 55, countMult: 1.0, looseProb: looseProbAt(m), decoyNearSpine: 0.30 };
-  if (m < 10000) return { spineStep: 55, countMult: 1.05, looseProb: looseProbAt(m), decoyNearSpine: 0.45 };
-  if (m < 15000) return { spineStep: 55, countMult: 1.10, looseProb: looseProbAt(m), decoyNearSpine: 0.55 };
-  if (m < 20000) return { spineStep: 55, countMult: 1.10, looseProb: looseProbAt(m), decoyNearSpine: 0.65 };
-  if (m < 25000) return { spineStep: 55, countMult: 1.15, looseProb: looseProbAt(m), decoyNearSpine: 0.75 };
-  // 4) 25 km+ plateau — variety carries the engagement, not more difficulty.
-  return { spineStep: 55, countMult: 1.15, looseProb: looseProbAt(m), decoyNearSpine: 0.75 };
+  // 3) Main band table — climbs from 1.6 → 2.2 rocks/row as the player
+  //    progresses. Loose-rock probability and fake-spur density carry the
+  //    actual difficulty increase, not raw rock count.
+  if (m <  1000) return { rocksPerRow: 1.6, looseProb: 0 };
+  if (m <  2000) return { rocksPerRow: 1.8, looseProb: looseProbAt(m) };
+  if (m <  3000) return { rocksPerRow: 1.9, looseProb: looseProbAt(m) };
+  if (m <  5000) return { rocksPerRow: 2.0, looseProb: looseProbAt(m) };
+  if (m <  8000) return { rocksPerRow: 2.0, looseProb: looseProbAt(m) };
+  if (m < 12000) return { rocksPerRow: 2.1, looseProb: looseProbAt(m) };
+  if (m < 18000) return { rocksPerRow: 2.0, looseProb: looseProbAt(m) };
+  if (m < 25000) return { rocksPerRow: 2.2, looseProb: looseProbAt(m) };
+  return { rocksPerRow: 2.0, looseProb: looseProbAt(m) };
 }
 
-// State: x of the most recent spine rock. Random-walks each row so the path
-// wanders organically across the wall instead of running up the centre line.
-let spineX = 0;
-
-// Lay one row of rocks at world-y `y`. Pipeline:
-//   1) CHAIN continuation — inherit forced-loose state from prior row
-//   2) SPINE wander — Lévy-style: mostly small steps, occasional near-max
-//   3) SPINE rock — guaranteed reachable from previous spine
-//   4) CHAIN start — if cfg.chainLen > 1, queue subsequent rows
-//   5) PARALLEL branch — optional sibling rock
-//   6) FAKE SPINES — advance/retire active spurs, maybe seed a new one
-//   7) CAMOUFLAGE decoys — placed INSIDE the spine's personal space (40–70 px)
-//      so the spine doesn't stand out as the only reachable rock
-//   8) SCATTER decoys — Bridson rejection across the full wall
+// Lay one row of rocks at world-y `y`.
+//
+// No tracked spine; the path is emergent. We:
+//   1. Continue any active forced-loose chain (one or more loose rows queued)
+//   2. Place rocks by Bridson scatter at min-distance 75 (just under ARM=85
+//      so adjacent rocks CAN occasionally chain, but mostly don't)
+//   3. If the row has zero rocks reachable from prev row's rocks, force a
+//      rescue anchor near a prev-row rock so the wall stays solvable
+//   4. Advance + maybe seed FAKE SPURS — small dead-end branches that
+//      continue 2–5 rows then terminate (no rock above)
+//   5. Mark loose rocks (probabilistic, or forced for chain rows)
 function placeRow(y) {
   const m = Math.max(0, Math.floor((-y) / META_SCALE));
   const cfg = difficultyAt(m);
   const halfX = W * 0.46;
 
-  // 1) Chain continuation overrides cfg.allLoose if we're already mid-chain.
+  // 1) Forced-loose chain continuation.
   let isForcedLoose = !!cfg.allLoose;
   if (forcedLooseChainLeft > 0) {
     isForcedLoose = true;
     forcedLooseChainLeft--;
   }
 
-  // 2) Spine wander — Lévy-ish (mostly small, occasional max-stretch).
-  // Plain rnd(-S, S) was visually a smooth thread the eye easily traced.
-  const baseStep = cfg.spineStep;
-  let step;
-  if (srand() < 0.18) {
-    // BIG jump: pushes toward ARM-reach limit in one direction.
-    const lo = baseStep * 0.7;
-    step = (srand() < 0.5 ? -1 : 1) * rnd(lo, SPINE_STEP_MAX);
-  } else {
-    // TIGHT wiggle: ±0.4·baseStep
-    step = rnd(-baseStep * 0.4, baseStep * 0.4);
+  // 2) Random scatter via Bridson rejection.
+  const widthScale = Math.max(1, Math.sqrt(W / 400));
+  const target = Math.max(1, Math.round((cfg.rocksPerRow || 1.8) * widthScale));
+  const placedX = [];
+  for (let tries = 0; tries < target * 8 && placedX.length < target; tries++) {
+    const x = rnd(-halfX, halfX);
+    let ok = true;
+    for (const p of placedX) {
+      if (Math.abs(x - p) < ROCK_MIN_DIST) { ok = false; break; }
+    }
+    if (ok) placedX.push(x);
   }
-  spineX = Math.max(-halfX, Math.min(halfX, spineX + step));
 
-  // 3) Spine rock.
-  const looseSpine = isForcedLoose || srand() < (cfg.looseProb || 0);
-  const sx = Math.max(-halfX, Math.min(halfX, spineX + rnd(-3, 3)));
-  rocks.push(makeRock(sx, y + rnd(-5, 5), undefined, looseSpine ? 'loose' : 'solid'));
-  const placed = [sx];
+  // 3) Connectivity rescue. If no placed rock is within ARM of a prev-row
+  // rock, force-place one near a random prev-row anchor. This is the ONLY
+  // place world-gen guarantees connectivity — and only when the natural
+  // scatter happens to fail.
+  if (prevRowRocks.length > 0) {
+    // Use the typical row spacing (~50 px) for the diagonal reach budget.
+    const dyTypical = 50;
+    const maxReachDx = Math.sqrt(Math.max(1, ARM_REACH * ARM_REACH - dyTypical * dyTypical));
+    let connected = false;
+    for (const px of placedX) {
+      for (const ppx of prevRowRocks) {
+        if (Math.abs(px - ppx) <= maxReachDx) { connected = true; break; }
+      }
+      if (connected) break;
+    }
+    if (!connected) {
+      const anchor = prevRowRocks[Math.floor(srand() * prevRowRocks.length)];
+      const dx = (srand() - 0.5) * 2 * maxReachDx * 0.75;
+      const x = Math.max(-halfX, Math.min(halfX, anchor + dx));
+      // Try to keep min-distance from other rocks in this row, but accept
+      // the rescue even if it has to sit a little close.
+      placedX.push(x);
+    }
+  } else if (placedX.length === 0) {
+    placedX.push(0);
+  }
 
-  // 4) Chain start. We're row 1 of a new chain; queue (chainLen − 1) more.
+  // 4) Fake spurs — advance active ones, retire those whose time is up,
+  // and seed a new one with probability fakeSpawnProbAt(m). A retired
+  // spur leaves an "orphan" rock above with nothing reachable from it.
+  for (let i = fakeSpurs.length - 1; i >= 0; i--) {
+    const fs = fakeSpurs[i];
+    fs.rowsLeft--;
+    if (fs.rowsLeft < 0) {
+      // Spur ends this row — no rock placed. Player who climbed this
+      // branch hits a dead end and must retreat.
+      fakeSpurs.splice(i, 1);
+      continue;
+    }
+    fs.x = Math.max(-halfX, Math.min(halfX, fs.x + rnd(-30, 30)));
+    placedX.push(fs.x);
+  }
+  if (!isForcedLoose && !cfg.fakeSuppress &&
+      fakeSpurs.length < 2 && srand() < fakeSpawnProbAt(m)) {
+    // Seed a new spur. Place it near a recently-placed rock so it looks
+    // like a legitimate fork off the natural path.
+    const anchor = placedX.length ? placedX[Math.floor(srand() * placedX.length)] : 0;
+    const dir = srand() < 0.5 ? -1 : 1;
+    const x = Math.max(-halfX, Math.min(halfX, anchor + dir * rnd(40, 60)));
+    fakeSpurs.push({ x, rowsLeft: rint(2, 5) });
+    placedX.push(x);
+  }
+
+  // 5) Emit rocks with loose markers as appropriate.
+  for (const x of placedX) {
+    const isLoose = isForcedLoose || srand() < (cfg.looseProb || 0);
+    rocks.push(makeRock(x, y + rnd(-5, 5), undefined, isLoose ? 'loose' : 'solid'));
+  }
+
+  // 6) Queue chain follow-up rows if this row started a chain.
   if (cfg.allLoose && cfg.chainLen && cfg.chainLen > 1 && forcedLooseChainLeft === 0) {
     forcedLooseChainLeft = cfg.chainLen - 1;
   }
 
-  // 5) Optional parallel branch. Skipped on forced-loose rows so the climber
-  // has to commit to the loose rock instead of side-stepping it.
-  if (!isForcedLoose && srand() < SPINE_BRANCH_PROB) {
-    const offset = (srand() < 0.5 ? -1 : 1) * rnd(35, 55);
-    const bx = Math.max(-halfX, Math.min(halfX, sx + offset));
-    rocks.push(makeRock(bx, y + rnd(-5, 5)));
-    placed.push(bx);
-  }
-
-  // 6) Fake spines — advance active spurs, retire expired ones, then
-  // possibly seed a new spur off the real spine.
-  for (let i = fakeSpines.length - 1; i >= 0; i--) {
-    const fs = fakeSpines[i];
-    fs.rowsLeft--;
-    if (fs.rowsLeft < 0) {
-      // Spur terminates this row — place no rock. The previous spur rock
-      // now has nothing above; player who committed must retreat to the
-      // real spine.
-      fakeSpines.splice(i, 1);
-      continue;
-    }
-    // Drift the spur AWAY from the real spine so the two paths diverge.
-    const awayDir = fs.x > spineX ? 1 : -1;
-    fs.x = Math.max(-halfX, Math.min(halfX,
-      fs.x + awayDir * rnd(8, 28) + rnd(-12, 12)));
-    rocks.push(makeRock(fs.x, y + rnd(-5, 5), undefined, 'solid'));
-    placed.push(fs.x);
-  }
-  if (!isForcedLoose && !cfg.fakeSuppress &&
-      fakeSpines.length < 2 && srand() < fakeSpawnProbAt(m)) {
-    // New spur, placed within reach of THIS row's spine so the player sees
-    // a legitimate fork. Lives 2–5 rows then ends.
-    const dir = srand() < 0.5 ? -1 : 1;
-    const startX = Math.max(-halfX, Math.min(halfX, spineX + dir * rnd(40, 55)));
-    fakeSpines.push({ x: startX, rowsLeft: rint(2, 5) });
-    rocks.push(makeRock(startX, y + rnd(-5, 5), undefined, 'solid'));
-    placed.push(startX);
-  }
-
-  // 7+8) Decoys split into CAMOUFLAGE + SCATTER.
-  const target = Math.max(3, Math.round(halfX * 2 * ROCK_PER_PX * cfg.countMult));
-  const totalDecoys = Math.max(0, target - placed.length);
-  const camoCount = Math.round(totalDecoys * camoFractionAt(m));
-  const scatterCount = totalDecoys - camoCount;
-  const nearProb = cfg.decoyNearSpine || 0;
-
-  // 7) CAMOUFLAGE — placed adjacent to the spine (40–70 px band). Breaks the
-  // Gestalt "the spine is the only locally-isolated reachable rock" cue.
-  for (let i = 0; i < camoCount; i++) {
-    const dir = srand() < 0.5 ? -1 : 1;
-    const offset = dir * rnd(DECOY_CAMO_BAND[0], DECOY_CAMO_BAND[1]);
-    let x = Math.max(-halfX, Math.min(halfX, sx + offset));
-    let tooClose = false;
-    for (const p of placed) {
-      if (Math.abs(x - p) < 28) { tooClose = true; break; }
-    }
-    if (tooClose) continue;
-    const looseDecoy = !isForcedLoose && srand() < (cfg.looseProb || 0) * 0.4;
-    rocks.push(makeRock(x, y + rnd(-5, 5), undefined, looseDecoy ? 'loose' : 'solid'));
-    placed.push(x);
-  }
-
-  // 8) SCATTER — Bridson rejection across full width. blue-noise voids.
-  for (let i = 0; i < scatterCount; i++) {
-    const tight = srand() < nearProb;
-    const minDist = tight ? DECOY_TIGHT_DIST : DECOY_MIN_DIST;
-    let x = 0, tries = 0, ok = false;
-    while (tries++ < 10 && !ok) {
-      x = rnd(-halfX, halfX);
-      ok = true;
-      for (const p of placed) {
-        if (Math.abs(x - p) < minDist) { ok = false; break; }
-      }
-    }
-    if (ok) {
-      const looseDecoy = !isForcedLoose && srand() < (cfg.looseProb || 0) * 0.4;
-      rocks.push(makeRock(x, y + rnd(-5, 5), undefined, looseDecoy ? 'loose' : 'solid'));
-      placed.push(x);
-    }
-  }
+  prevRowRocks = placedX;
 }
 
-// Vertical row spacing. Mostly comfortable, with occasional STRETCH rows
-// (60–64 px ≈ max reach against ARM=85) and TIGHT rows (28–36 px) past
-// the tutorial. Stretch tests the player's leap; tight tests overshoot
-// control. Both force them to re-read the rhythm.
+// Vertical row spacing. Mostly comfortable; occasional STRETCH rows (60–64
+// px ≈ max reach against ARM=85) and TIGHT rows (28–36 px) past the tutorial.
 function nextRowStep(m) {
-  if (m < 600) return rnd(40, 55);
+  if (m < 600) return rnd(42, 55);
   const r = srand();
-  const stretchProb = m < 1000 ? 0.06 : m < 5000 ? 0.10 : 0.13;
+  const stretchProb = m < 1000 ? 0.05 : m < 5000 ? 0.08 : 0.11;
   if (r < stretchProb) return rnd(58, ROW_STRETCH_MAX);
-  const tightProb = m < 3000 ? 0 : m < 8000 ? 0.07 : 0.10;
+  const tightProb = m < 3000 ? 0 : m < 8000 ? 0.06 : 0.09;
   if (r < stretchProb + tightProb) return rnd(ROW_STRETCH_MIN, 36);
-  return rnd(40, 55);
+  return rnd(42, 55);
 }
 
 function spawnInitial() {
   rocks = [];
   rocks.push(makeRock(-36, -100, 18, 'solid'));
   rocks.push(makeRock(36,  -100, 18, 'solid'));
-  // Reset world-gen state for a fresh run.
-  spineX = 0;
-  fakeSpines = [];
+  // Reset world-gen state for a fresh run. Seed prevRowRocks with the two
+  // starter holds so the first scattered row is checked against them.
+  prevRowRocks = [-36, 36];
+  fakeSpurs = [];
   forcedLooseChainLeft = 0;
   let y = -160;
   while (y > -2400) {
