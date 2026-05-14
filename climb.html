@@ -686,9 +686,9 @@ function makeRock(x, y, R, type) {
   return {
     x, y, R, type,
     shape: rockShape(R),
-    sideColor: type === 'loose' ? '#d262a8' : violet(58, 48),
-    topColor:  type === 'loose' ? '#ee94c8' : violet(74, 58),
-    rimColor:  type === 'loose' ? '#7a1c5a' : violet(32, 50),
+    sideColor: type === 'loose' ? '#e088c0' : violet(72, 55),
+    topColor:  type === 'loose' ? '#f5b0dc' : violet(86, 65),
+    rimColor:  type === 'loose' ? '#9a3a78' : violet(50, 48),
     crackedT: type === 'loose' ? 1.0 : 999,
     crumbled: false,
   };
@@ -1418,9 +1418,9 @@ function drawBg() {
   // pure cream in the middle, and a deeper violet near the floor so the
   // scene has dimension without going gray.
   const gShade = ctx.createLinearGradient(0, 0, 0, H);
-  gShade.addColorStop(0, 'rgba(170,130,235,0.28)');
+  gShade.addColorStop(0, 'rgba(190,160,240,0.22)');
   gShade.addColorStop(0.55, 'rgba(255,255,255,0)');
-  gShade.addColorStop(1, 'rgba(90,55,160,0.22)');
+  gShade.addColorStop(1, 'rgba(150,115,210,0.16)');
   ctx.fillStyle = gShade; ctx.fillRect(0, 0, W, H);
 
   // Lavender + white "chalk" specks scattered across the wall (parallax with cam).
@@ -1429,7 +1429,7 @@ function drawBg() {
   const off = ((camY * 0.7) % gs + gs) % gs;
   for (let yy = -gs; yy < H + gs; yy += gs) {
     const row = Math.floor((yy + camY * 0.7) / gs);
-    ctx.fillStyle = (row & 1) ? 'rgba(168,128,232,0.50)' : 'rgba(255,255,255,0.85)';
+    ctx.fillStyle = (row & 1) ? 'rgba(190,160,238,0.45)' : 'rgba(255,255,255,0.85)';
     for (let xx = 0; xx < W + gs; xx += gs) {
       const px = xx + (row & 1 ? gs / 2 : 0);
       const py = yy - off;
@@ -1441,7 +1441,7 @@ function drawBg() {
   // Diagonal stratum cracks — two families crossing at ~30° to make the wall
   // read like the reference's textured rock face. Saturated lavender so the
   // lines suggest fracture instead of dust.
-  ctx.strokeStyle = 'rgba(140,95,210,0.28)';
+  ctx.strokeStyle = 'rgba(170,130,225,0.24)';
   ctx.lineWidth = 1.8; ctx.lineCap = 'round';
   const stratStep = 220;
   // Camera-aligned base so the cracks scroll naturally
@@ -1465,7 +1465,7 @@ function drawBg() {
     }
   }
   // Family B: slope down-left (/) — fainter, so the texture isn't too busy
-  ctx.strokeStyle = 'rgba(140,95,210,0.15)';
+  ctx.strokeStyle = 'rgba(170,130,225,0.13)';
   ctx.lineWidth = 1.3;
   for (let row = -1; row < 5; row++) {
     for (let col = -1; col < 4; col++) {
@@ -1489,14 +1489,13 @@ function drawBaseCamp() {
   const groundSy = w2sY(GROUND_Y);
   if (groundSy < -40 || groundSy > H + 200) return;
 
-  // Ground strip (lilac "alpine soil"). The bottom of the screen would
-  // otherwise be the dullest area — instead it's a saturated violet so
-  // the rocks and grass read in punchy contrast against it.
-  ctx.fillStyle = '#7a5cb8';
+  // Ground strip (light lilac "alpine soil"). Saturated enough to anchor
+  // the bottom of the screen without darkening the overall palette.
+  ctx.fillStyle = '#b8a0e8';
   ctx.fillRect(0, groundSy, W, H - groundSy);
-  ctx.fillStyle = '#a07ee0';
+  ctx.fillStyle = '#d4c0f5';
   ctx.fillRect(0, groundSy, W, 6);
-  ctx.fillStyle = 'rgba(40,20,80,0.45)';
+  ctx.fillStyle = 'rgba(90,60,150,0.30)';
   for (let i = 0; i < 30; i++) {
     const sx = ((i * 53 + 11) % W);
     const sy = groundSy + 10 + ((i * 17) % 60);
@@ -1595,17 +1594,17 @@ function drawGrassTuft(sx, sy) {
 function drawClimbSign(sx, baseY) {
   ctx.save();
   // Two posts (deep amethyst)
-  ctx.fillStyle = '#3a1f6a';
+  ctx.fillStyle = '#6a4ec0';
   ctx.fillRect(sx - 36, baseY - 32, 4, 32);
   ctx.fillRect(sx + 32, baseY - 32, 4, 32);
-  // Main board — saturated violet, dark border
-  ctx.fillStyle = '#6a4ea0';
+  // Main board — light violet board, mid-violet border
+  ctx.fillStyle = '#9c7fd4';
   ctx.fillRect(sx - 48, baseY - 74, 96, 44);
-  ctx.strokeStyle = '#2a1450';
+  ctx.strokeStyle = '#4a2a8a';
   ctx.lineWidth = 1.6;
   ctx.strokeRect(sx - 48, baseY - 74, 96, 44);
   // Plank grain lines
-  ctx.strokeStyle = 'rgba(30,15,60,0.45)';
+  ctx.strokeStyle = 'rgba(60,30,120,0.45)';
   ctx.lineWidth = 0.8;
   for (let i = 1; i <= 3; i++) {
     ctx.beginPath();
@@ -1623,7 +1622,7 @@ function drawClimbSign(sx, baseY) {
   ctx.fillText('A MOUNTAIN', sx - 26, baseY - 40);
   ctx.fillText('IN YOUR POCKET', sx + 26, baseY - 40);
   // Mountain-peak logo in the middle, with a snow cap line under it
-  ctx.fillStyle = '#2a1450';
+  ctx.fillStyle = '#4a2a8a';
   ctx.beginPath();
   ctx.moveTo(sx - 9, baseY - 35);
   ctx.lineTo(sx - 3, baseY - 46);
@@ -1638,7 +1637,7 @@ function drawClimbSign(sx, baseY) {
   ctx.lineTo(sx - 1, baseY - 41);
   ctx.closePath(); ctx.fill();
   // Small "records" tag attached at the bottom-right of the sign (like a brass plate)
-  ctx.fillStyle = '#2a1450';
+  ctx.fillStyle = '#4a2a8a';
   ctx.fillRect(sx + 18, baseY - 32, 28, 8);
   ctx.fillStyle = '#f5edff';
   ctx.font = 'bold 6px ui-monospace, monospace';
@@ -1650,7 +1649,7 @@ function drawClimbSign(sx, baseY) {
 function drawWorldRecordsPlaque(sx, baseY) {
   ctx.save();
   // Post
-  ctx.fillStyle = '#3a1f6a';
+  ctx.fillStyle = '#6a4ec0';
   ctx.fillRect(sx - 2, baseY - 20, 4, 20);
   // Card body — cream-lilac note card
   ctx.fillStyle = '#f0e2ff';
@@ -1675,7 +1674,7 @@ function drawWorldRecordsPlaque(sx, baseY) {
   ctx.lineTo(sx - 18, baseY - 54);
   ctx.closePath(); ctx.fill();
   // "WORLD RECORDS" title
-  ctx.fillStyle = '#2a1450';
+  ctx.fillStyle = '#4a2a8a';
   ctx.font = 'bold 7px ui-monospace, monospace';
   ctx.textAlign = 'left';
   ctx.fillText('WORLD', sx - 8, baseY - 47);
@@ -1693,16 +1692,16 @@ function drawWorldRecordsPlaque(sx, baseY) {
 function drawRecordSign(sx, baseY, meters) {
   ctx.save();
   // Post
-  ctx.fillStyle = '#3a1f6a';
+  ctx.fillStyle = '#6a4ec0';
   ctx.fillRect(sx - 2, baseY - 28, 4, 28);
-  // Bright lavender plate (replaces the old yellow record-tag colour)
-  ctx.fillStyle = '#b890ff';
+  // Light lavender plate (replaces the old yellow record-tag colour)
+  ctx.fillStyle = '#d4baff';
   ctx.fillRect(sx - 28, baseY - 52, 56, 24);
-  ctx.strokeStyle = '#2a1454';
+  ctx.strokeStyle = '#4a2a8a';
   ctx.lineWidth = 1.6;
   ctx.strokeRect(sx - 28, baseY - 52, 56, 24);
   // "record:" small + meters big
-  ctx.fillStyle = '#2a1454';
+  ctx.fillStyle = '#4a2a8a';
   ctx.font = 'bold 7px ui-monospace, monospace';
   ctx.textAlign = 'center';
   ctx.fillText('record:', sx, baseY - 41);
@@ -1722,8 +1721,8 @@ function drawRecordSign(sx, baseY, meters) {
 }
 
 function drawHeightTicks() {
-  ctx.fillStyle = 'rgba(60,30,20,0.6)';
-  ctx.strokeStyle = 'rgba(60,30,20,0.45)';
+  ctx.fillStyle = 'rgba(80,50,140,0.55)';
+  ctx.strokeStyle = 'rgba(80,50,140,0.4)';
   ctx.lineWidth = 1.5;
   ctx.font = 'bold 11px ui-monospace, "SF Mono", monospace';
   const step = 50 * META_SCALE;
