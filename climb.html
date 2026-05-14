@@ -1596,8 +1596,15 @@ function update(dt) {
   const STAND_Y = GROUND_Y - FOOT_Y_OFFSET;  // body.y when standing on ground
   meters = Math.max(0, Math.floor((STAND_Y - highestY) / META_SCALE));
   const yShare = climberScreenShare();
-  const targetCamY = Math.min(highestY - H * yShare, body.y - H * yShare);
-  if (camY > targetCamY) camY += (targetCamY - camY) * 0.08;
+  // Camera always tracks the body — previously it pinned at `highestY` so a
+  // fall from peak left the climber sliding off the bottom of the screen.
+  // Asymmetric lerp: gentle when the body is rising (climb feels smooth)
+  // and snappy when the body is sinking faster than the camera (falls
+  // stay visible).
+  const targetCamY = body.y - H * yShare;
+  const err = targetCamY - camY;
+  const lerp = err > 0 ? 0.20 : 0.08;  // err > 0 → body below preferred screen pos → fall
+  camY += err * lerp;
   // Track X smoothly so the climber can drift but stays in frame
   camX += (body.x - camX) * Math.min(1, dt * 3);
 
