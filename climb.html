@@ -987,7 +987,10 @@ function spawnAhead() {
     const m = Math.max(0, Math.floor((-y) / META_SCALE));
     y -= nextRowStep(m);
   }
-  rocks = rocks.filter(r => r.y < camY + H + 250 || r.y > -160);
+  // Cull only rocks below the ground line. Anything above ground is kept
+  // — including rocks the climber climbed past — so a fall back down has
+  // holds to grab onto along the way.
+  rocks = rocks.filter(r => r.y < GROUND_Y + 50);
 }
 
 // Where the climber sits in the viewport, from the TOP of the screen.
