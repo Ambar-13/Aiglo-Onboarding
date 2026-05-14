@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ASCENT</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #d4a878; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; touch-action: none; }
+canvas { display: block; cursor: pointer; }
+
+.hud { position: fixed; top: 14px; left: 14px; pointer-events: none; z-index: 5; }
+.meters {
+  background: #f0c040; color: #4a2a10;
+  padding: 6px 14px;
+  font-size: 22px; font-weight: 900; letter-spacing: 1px;
+  border-radius: 4px;
+  box-shadow: 0 3px 0 #b08818, 0 6px 12px rgba(0,0,0,.25);
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+  border: 2px solid #4a2a10;
+  font-family: ui-monospace, "SF Mono", "Menlo", monospace;
+}
+.stam-wrap {
+  width: 140px; height: 10px;
+  margin-top: 10px;
+  background: rgba(40,20,10,0.55);
+  border: 2px solid rgba(243,227,200,0.55);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 0 rgba(0,0,0,.25);
+}
+.stam-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #6ed060 0%, #c8e060 60%, #f0a040 90%, #d04030 100%);
+  transition: width .15s linear, background .3s;
+}
+.combo-pop {
+  position: fixed;
+  top: 18px; right: 18px;
+  color: #ffe080;
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  text-shadow: 0 4px 0 #5a2a08, 0 8px 16px rgba(0,0,0,.4);
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0.85) rotate(4deg);
+  transition: opacity .15s, transform .15s;
+  z-index: 5;
+}
+.combo-pop.on {
+  opacity: 1;
+  transform: scale(1) rotate(-3deg);
+}
+
+.btns { position: fixed; bottom: 22px; left: 0; right: 0;
+  display: flex; justify-content: space-between; padding: 0 28px;
+  pointer-events: none; z-index: 5;
+}
+.btn {
+  width: 70px; height: 70px; border-radius: 50%;
+  background: rgba(78,45,26,0.4);
+  border: 3px solid rgba(243,227,200,0.55);
+  color: #f3e3c8;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 30px; font-weight: 900;
+  transition: transform .08s, background .08s, border-color .08s;
+}
+.btn.on { background: #f0b070; color: #4e2d1a; transform: scale(0.92); border-color: #f0b070; box-shadow: 0 0 0 4px rgba(240,176,112,0.25); }
+
+.ov {
+  position: fixed; inset: 0;
+  background: rgba(40,20,12,0.62);
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  color: #f3e3c8; text-align: center;
+  padding: 24px; z-index: 10;
+  transition: opacity .3s;
+}
+.ov.hide { opacity: 0; pointer-events: none; }
+.title {
+  font-size: clamp(48px, 12vw, 84px);
+  font-weight: 900; letter-spacing: 8px;
+  margin-bottom: 6px;
+  text-shadow: 0 6px 0 #3a1d0e, 0 14px 24px rgba(0,0,0,.45);
+}
+.title span { color: #f0b070; }
+.tag { font-size: 12px; letter-spacing: 5px; opacity: .65; margin-bottom: 28px; }
+.help {
+  max-width: 380px; font-size: 14px; line-height: 1.6;
+  opacity: 0.92; margin-bottom: 24px;
+}
+.help kbd {
+  background: #4e2d1a; padding: 2px 9px;
+  border-radius: 4px; font-family: inherit; font-weight: 900;
+  color: #f0b070;
+  border-bottom: 2px solid #2a160a;
+  font-size: 13px;
+}
+.go {
+  background: #f0b070; color: #4e2d1a; border: none;
+  padding: 14px 40px;
+  font-size: 20px; font-weight: 900; letter-spacing: 3px;
+  border-radius: 8px; cursor: pointer;
+  box-shadow: 0 5px 0 #b07a3a, 0 10px 22px rgba(0,0,0,.28);
+}
+.go:active { transform: translateY(3px); box-shadow: 0 2px 0 #b07a3a; }
+.best { margin-top: 16px; font-size: 15px; opacity: .85; letter-spacing: 2px; }
+.score-big { font-size: 22px; font-weight: 900; letter-spacing: 2px; margin-bottom: 6px; }
+.score-big b { color: #f0b070; }
+</style>
+</head>
+<body>
+<canvas id="g"></canvas>
+
+<div class="hud">
+  <div class="meters" id="meters">0m</div>
+  <div class="stam-wrap"><div class="stam-fill" id="stamFill"></div></div>
+</div>
+<div class="combo-pop" id="comboPop">x2</div>
+<div class="btns">
+  <div class="btn" id="lbtn">L</div>
+  <div class="btn" id="rbtn">R</div>
+</div>
+
+<div class="ov" id="ov">
+  <div class="title" id="title">CLI<span>M</span>B!</div>
+  <div class="tag" id="tag">A MOUNTAIN IN YOUR POCKET</div>
+  <div class="help" id="help">
+    <p><b>HOLD</b> <kbd>A</kbd> / tap <b>LEFT</b> &nbsp;|&nbsp; <b>HOLD</b> <kbd>L</kbd> / tap <b>RIGHT</b></p>
+    <p style="margin-top:10px;opacity:.85;">A held hand grips any rock it touches. Release a hand to let it swing free &mdash; that's how you swing. Release the second hand at the top of your swing to fly up and grab the next rock.</p>
+  </div>
+  <button class="go" id="play">CLIMB</button>
+  <div class="best" id="best"></div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const cvs = document.getElementById('g');
+const ctx = cvs.getContext('2d');
+const metersEl = document.getElementById('meters');
+const ov = document.getElementById('ov');
+const playBtn = document.getElementById('play');
+const bestEl = document.getElementById('best');
+const titleEl = document.getElementById('title');
+const tagEl = document.getElementById('tag');
+const helpEl = document.getElementById('help');
+const lBtnEl = document.getElementById('lbtn');
+const rBtnEl = document.getElementById('rbtn');
+const stamFillEl = document.getElementById('stamFill');
+const comboPopEl = document.getElementById('comboPop');
+
+let W = 0, H = 0, DPR = 1;
+function resize() {
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = innerWidth; H = innerHeight;
+  cvs.width = W * DPR; cvs.height = H * DPR;
+  cvs.style.width = W + 'px'; cvs.style.height = H + 'px';
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+addEventListener('resize', resize); resize();
+
+// ---- CHARACTER SPRITE (back view) ----
+// Inline SVG. Rendered ONCE into an Image; each frame we just drawImage it
+// with rotation + translation. This is how 2D games actually do characters:
+// the art is authored in vector/raster, not assembled from primitives every
+// frame. Arms attach to the shoulder anchors and are drawn dynamically over
+// the top via two-bone IK.
+const CHAR_SVG = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-36 -54 72 108">
+  <!-- BOOTS -->
+  <ellipse cx="-10" cy="50" rx="7" ry="3.4" fill="#2a1408"/>
+  <ellipse cx="10" cy="50" rx="7" ry="3.4" fill="#2a1408"/>
+  <ellipse cx="-10" cy="48" rx="6.5" ry="3" fill="#5a2d12" stroke="#1a0c04" stroke-width="0.6"/>
+  <ellipse cx="10" cy="48" rx="6.5" ry="3" fill="#5a2d12" stroke="#1a0c04" stroke-width="0.6"/>
+  <!-- JEANS (legs) — longer for proper proportions -->
+  <path d="M-12 21 L-11 46 L-4 46 L-4 21 Z" fill="#3a5a8a" stroke="#1f3458" stroke-width="0.9"/>
+  <path d="M12 21 L11 46 L4 46 L4 21 Z" fill="#3a5a8a" stroke="#1f3458" stroke-width="0.9"/>
+  <!-- Rolled denim cuffs -->
+  <rect x="-12" y="42" width="8.5" height="3.6" fill="#5a82b8" stroke="#1f3458" stroke-width="0.5"/>
+  <rect x="3.5" y="42" width="8.5" height="3.6" fill="#5a82b8" stroke="#1f3458" stroke-width="0.5"/>
+  <!-- Inner seam highlight on each leg -->
+  <line x1="-7" y1="23" x2="-7" y2="42" stroke="#2a4470" stroke-width="0.7"/>
+  <line x1="7" y1="23" x2="7" y2="42" stroke="#2a4470" stroke-width="0.7"/>
+  <!-- BELT (sits at the bottom of the upward-shifted torso) -->
+  <rect x="-16" y="17" width="32" height="4" fill="#3a1f0a" stroke="#1a0c04" stroke-width="0.5"/>
+  <rect x="-3" y="17" width="6" height="4" fill="#c8a060"/>
+  <!-- SHIRT (taller V-shape, shifted UP, slightly narrower) -->
+  <path d="M-24 -23 Q-26 -12 -24 2 L-18 17 L18 17 L24 2 Q26 -12 24 -23 Q15 -26 0 -26 Q-15 -26 -24 -23 Z"
+        fill="#a8321c" stroke="#5a1c0c" stroke-width="1.4"/>
+  <!-- Faint plaid hint on the shirt sides -->
+  <line x1="-20" y1="-20" x2="-20" y2="15" stroke="#7a1c10" stroke-width="0.7" opacity="0.5"/>
+  <line x1="20" y1="-20" x2="20" y2="15" stroke="#7a1c10" stroke-width="0.7" opacity="0.5"/>
+  <line x1="-23" y1="-8" x2="23" y2="-8" stroke="#7a1c10" stroke-width="0.6" opacity="0.4"/>
+  <line x1="-24" y1="4" x2="24" y2="4" stroke="#7a1c10" stroke-width="0.6" opacity="0.4"/>
+  <!-- BACKPACK body (TRAPEZOIDAL: top ±20, bottom ±14, shorter overall) -->
+  <path d="M-20 -19 Q-21 -17 -20 -14 L-14 17 Q-14 19 -12 19 L12 19 Q14 19 14 17 L20 -14 Q21 -17 20 -19 Q14 -20 9 -20 L-9 -20 Q-14 -20 -20 -19 Z"
+        fill="#7a4a26" stroke="#3a1f0a" stroke-width="1.4"/>
+  <!-- Backpack shading on the right side -->
+  <path d="M20 -14 L14 17 Q14 19 12 19 L9 19 L9 -19 L20 -19 Q21 -17 20 -14 Z" fill="#5a3618" opacity="0.45"/>
+  <!-- Center vertical seam dividing the pack into two halves -->
+  <line x1="0" y1="-19" x2="0" y2="18" stroke="#3a1f0a" stroke-width="1.1"/>
+  <!-- Center badge / buckle disc -->
+  <circle cx="0" cy="0" r="5" fill="#dcc89c" stroke="#3a1f0a" stroke-width="0.9"/>
+  <circle cx="0" cy="0" r="1.7" fill="#5a3618"/>
+  <!-- Side compression straps (track the trapezoid's slanted sides) -->
+  <rect x="-20" y="-6" width="5" height="2" fill="#3a1f0a"/>
+  <rect x="15" y="-6" width="5" height="2" fill="#3a1f0a"/>
+  <rect x="-17" y="9" width="5" height="2" fill="#3a1f0a"/>
+  <rect x="12" y="9" width="5" height="2" fill="#3a1f0a"/>
+  <!-- Side pocket pouches (along the slanted sides) -->
+  <path d="M-20 -2 L-16 15 Q-16 17 -14 17 L-11 17 L-14 -2 Z" fill="#5a3618" stroke="#3a1f0a" stroke-width="0.7"/>
+  <path d="M20 -2 L16 15 Q16 17 14 17 L11 17 L14 -2 Z" fill="#5a3618" stroke="#3a1f0a" stroke-width="0.7"/>
+  <!-- Top strap across the lid (matches the wide top) -->
+  <rect x="-11" y="-20.5" width="22" height="3" rx="1.2" fill="#5a3618" stroke="#3a1f0a" stroke-width="0.7"/>
+  <!-- NECK (shifted up so there's a visible gap between head and shirt) -->
+  <rect x="-4" y="-26" width="8" height="6" fill="#a87850" stroke="#5a3618" stroke-width="0.5"/>
+  <!-- HEAD (shifted UP to clear the torso, with a visible neck) -->
+  <path d="M-9 -36 Q-10 -30 -8 -24 L-4 -21 L4 -21 L8 -24 Q10 -30 9 -36 Z"
+        fill="#d8a878" stroke="#7a4a2a" stroke-width="0.9"/>
+  <!-- Subtle jaw shading -->
+  <path d="M-7 -26 L-4 -21 L4 -21 L7 -26 L5 -24 L-5 -24 Z" fill="#a87850" opacity="0.4"/>
+  <!-- HAIR (back of head, visible at the hairline) -->
+  <path d="M-8 -27 Q-7 -23 0 -23 Q7 -23 8 -27 L8 -30 L-8 -30 Z" fill="#1a0c04"/>
+  <!-- BEANIE (blue knit cap covering the top half of the head) -->
+  <path d="M-10 -35 Q-11 -48 0 -49 Q11 -48 10 -35 L10 -31 L-10 -31 Z"
+        fill="#3a6ea8" stroke="#1f4a78" stroke-width="1.2"/>
+  <!-- Beanie shading on the right side -->
+  <path d="M10 -35 L10 -31 L4 -31 L4 -46 Q9 -46 10 -35 Z" fill="#1f4a78" opacity="0.35"/>
+  <!-- Folded cuff (lighter blue band) -->
+  <rect x="-10" y="-33" width="20" height="2.8" fill="#4d82bc" stroke="#1f4a78" stroke-width="0.6"/>
+  <!-- Knit knob at the very top -->
+  <ellipse cx="0" cy="-50" rx="2.4" ry="2" fill="#3a6ea8" stroke="#1f4a78" stroke-width="0.7"/>
+</svg>`;
+
+const charImg = new Image();
+let charImgReady = false;
+charImg.onload = () => { charImgReady = true; };
+charImg.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(CHAR_SVG);
+
+// PRNG
+let seed = 1;
+function srand() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+function rnd(a, b) { return a + srand() * (b - a); }
+function rint(a, b) { return Math.floor(rnd(a, b)); }
+
+// ---- Constants ----
+const GRAVITY = 1500;     // px/s^2
+const ARM = 85;           // max body-to-grip distance (physics constraint) — matches the shorter triangular bones below
+const GRAB_R = 22;        // grab radius around hand pos
+// Character sprite dimensions (drawn from an inline SVG so the body looks
+// like flat-geometric art instead of procedural canvas primitives).
+const CHAR_W = 72, CHAR_H = 108;
+// Arm bone lengths — the upper-arm and forearm are fixed-length rigid bones.
+// L1 + L2 must be ≥ (ARM − shoulder offset) so the rig can reach any grip
+// the physics allows.
+const L1_BONE = 38, L2_BONE = 38;
+// Body-local shoulder positions in the SVG's coordinate system
+const SHOULDER_LX = 21;
+const SHOULDER_LY = -12;
+const DAMP = 0.997;       // slight decay so swings settle to a clean max angle instead of running forever
+const META_SCALE = 12;
+const SWING_KICK = 640;   // px/s impulse when releasing one hand while the other is gripped
+const LAUNCH_KICK = 1000; // px/s impulse for the single-hand "fly toward free hand" release
+const TAP_BOOST  = 320;   // extra impulse when releasing very quickly (tap, not hold)
+const PUMP_KICK  = 340;   // px/s tangential pump when pressing the free side mid-swing
+const PUMP_STAM_COST = 4; // stamina cost per pump
+const JUMP_BOOST = 240;   // upward boost when releasing last grip with upward momentum
+const DOUBLE_WIN = 150;   // ms window: both-hands release counts as a jump
+const DOUBLE_JUMP_V = 680; // velocity for double-release jump (a touch higher than the swing kick)
+
+// Stamina
+const STAM_MAX = 100;
+const STAM_DRAIN_HANG = 1.2;   // /s when holding still on one or two grips
+const STAM_DRAIN_SWING_BASE = 2.4;   // /s baseline while gripped and moving
+const STAM_DRAIN_SWING_SCALE = 0.018; // additional /s per px/s of body speed (big swings bleed hard)
+const STAM_REFILL_GRAB = 8;    // instant refill when grabbing a new rock
+const STAM_REFILL_AIR = 0;     // freefall doesn't drain or refill
+
+// Combo
+const COMBO_WIN = 1400;        // ms between grabs to keep combo alive
+const COMBO_FOR_X2 = 3;        // grabs needed to trigger x2
+
+// ---- State ----
+let body, hands, rocks, particles;
+let camX, camY, highestY, meters, bestMeters, running, started;
+let lastReleaseAt = { L: -9999, R: -9999 };
+let lastPressAt   = { L: -9999, R: -9999 };
+let stamina = STAM_MAX;
+let combo = 0;
+let lastGrabAt = -9999;
+
+bestMeters = 0;
+try { bestMeters = parseInt(localStorage.getItem('ascent_best') || '0', 10) || 0; } catch (e) {}
+
+function rockShape(R) {
+  const sides = rint(5, 7);
+  const pts = [];
+  for (let i = 0; i < sides; i++) {
+    const a = (i / sides) * Math.PI * 2 + rnd(-0.14, 0.14);
+    const r = R * rnd(0.88, 1.12);
+    pts.push([Math.cos(a) * r, Math.sin(a) * r]);
+  }
+  return pts;
+}
+
+function makeRock(x, y, R, type) {
+  R = R || rnd(14, 22);
+  type = type || (srand() < 0.07 ? 'loose' : 'solid');
+  // Sand-stone tan palette, with a subtle hue jitter so the wall reads varied
+  const hueJ = rnd(-8, 8);
+  const tan = (l, s) => `hsl(${30 + hueJ}, ${s}%, ${l}%)`;
+  return {
+    x, y, R, type,
+    shape: rockShape(R),
+    sideColor: type === 'loose' ? '#a06658' : tan(45, 38),
+    topColor:  type === 'loose' ? '#c08878' : tan(60, 48),
+    rimColor:  type === 'loose' ? '#5a2a18' : tan(28, 35),
+    crackedT: type === 'loose' ? 1.0 : 999,
+    crumbled: false,
+  };
+}
+
+// Ground sits at y=0; mountain wall starts above. The starter holds are
+// just above the ground so the climber begins standing, then grips up.
+const GROUND_Y = 0;
+
+function spawnInitial() {
+  rocks = [];
+  // Two starter holds positioned within easy reach of the climber while
+  // he's standing on the ground (body.y = -44, ARM = 110). Pressing L or R
+  // when under one of these grabs it and starts the climb.
+  rocks.push(makeRock(-36, -100, 18, 'solid'));
+  rocks.push(makeRock(36,  -100, 18, 'solid'));
+  let y = -160;
+  while (y > -2200) {
+    // Dense scatter — reference wall is packed with tiny holds
+    const count = rint(5, 9);
+    for (let i = 0; i < count; i++) {
+      const x = rnd(-W * 0.46, W * 0.46);
+      rocks.push(makeRock(x, y + rnd(-18, 18)));
+    }
+    y -= rnd(34, 56);
+  }
+}
+
+function spawnAhead() {
+  let topY = 0;
+  for (const r of rocks) if (!r.crumbled && r.y < topY) topY = r.y;
+  const need = camY - H * 0.5;
+  let y = topY - rnd(34, 56);
+  while (y > need) {
+    const count = rint(5, 9);
+    for (let i = 0; i < count; i++) {
+      const x = rnd(-W * 0.46, W * 0.46);
+      rocks.push(makeRock(x, y + rnd(-18, 18)));
+    }
+    y -= rnd(34, 56);
+  }
+  // Cull anything way off screen below (but keep ground-level rocks)
+  rocks = rocks.filter(r => r.y < camY + H + 250 || r.y > -160);
+}
+
+function reset() {
+  seed = (Date.now() & 0x7fffffff) || 1;
+  // Body starts STANDING on the ground at base camp — feet on the floor,
+  // hands at sides. The player walks left/right with L/R and presses L/R
+  // when under a rock to start climbing.
+  const startBodyY = GROUND_Y - FOOT_Y_OFFSET;
+  body = { x: 0, y: startBodyY, px: 0, py: startBodyY, spineAngle: 0 };
+  hands = {
+    L: { side: 'L', pressed: false, gripped: null, x: -22, y: startBodyY + 8 },
+    R: { side: 'R', pressed: false, gripped: null, x:  22, y: startBodyY + 8 },
+  };
+  particles = [];
+  highestY = 0;
+  meters = 0;
+  camX = 0;
+  camY = -H * 0.45 + body.y;
+  lastReleaseAt = { L: -9999, R: -9999 };
+  lastPressAt   = { L: -9999, R: -9999 };
+  stamina = STAM_MAX;
+  combo = 0;
+  lastGrabAt = -9999;
+  spawnInitial();
+  running = true;
+  started = true;
+}
+
+// ---- Input ----
+const keyToSide = { a: 'L', A: 'L', l: 'R', L: 'R', ArrowLeft: 'L', ArrowRight: 'R' };
+addEventListener('keydown', e => {
+  const s = keyToSide[e.key];
+  if (s) { e.preventDefault(); press(s); }
+  else if (e.key === ' ' || e.key === 'Enter') { if (!running) startGame(); }
+});
+addEventListener('keyup', e => {
+  const s = keyToSide[e.key];
+  if (s) { e.preventDefault(); release(s); }
+});
+
+const pidSide = new Map();
+function sideAt(x) { return x < W / 2 ? 'L' : 'R'; }
+
+cvs.addEventListener('pointerdown', e => {
+  if (!running) return;
+  const s = sideAt(e.clientX);
+  pidSide.set(e.pointerId, s);
+  press(s);
+  try { cvs.setPointerCapture(e.pointerId); } catch (err) {}
+  e.preventDefault();
+});
+function endPointer(e) {
+  const s = pidSide.get(e.pointerId);
+  if (!s) return;
+  pidSide.delete(e.pointerId);
+  let still = false;
+  for (const v of pidSide.values()) if (v === s) { still = true; break; }
+  if (!still) release(s);
+}
+cvs.addEventListener('pointerup', endPointer);
+cvs.addEventListener('pointercancel', endPointer);
+cvs.addEventListener('pointerleave', endPointer);
+
+function applyImpulse(vx, vy) {
+  // In Verlet, velocity is implied by (x - px). Add v px/s by shifting px backward by v*dt.
+  const dt = 1 / 60;
+  body.px -= vx * dt;
+  body.py -= vy * dt;
+}
+
+function press(side) {
+  const h = hands[side];
+  if (h.pressed) return;
+  h.pressed = true;
+  lastPressAt[side] = performance.now();
+  tryGrab(side);
+  // PUMP: if the press didn't result in a grab but the other hand is gripped,
+  // this acts as an active swing pump in the pressed direction (like a kid
+  // pumping their legs on a swing).
+  if (!h.gripped) {
+    const other = hands[side === 'L' ? 'R' : 'L'];
+    if (other.gripped && stamina > PUMP_STAM_COST) {
+      const r = other.gripped;
+      const armX = body.x - r.x;
+      const armY = body.y - r.y;
+      const armLen = Math.hypot(armX, armY) || 1;
+      // Perpendicular to the arm: rotate (armX, armY) by 90 degrees.
+      const t1x = -armY / armLen, t1y = armX / armLen;
+      // Pick whichever perpendicular points toward the pressed side
+      const sideSign = side === 'L' ? -1 : 1;
+      const sign = (t1x * sideSign >= 0) ? 1 : -1;
+      applyImpulse(t1x * sign * PUMP_KICK, t1y * sign * PUMP_KICK);
+      stamina = Math.max(0, stamina - PUMP_STAM_COST);
+      // visual feedback: small puff at body
+      for (let i = 0; i < 4; i++) particles.push({
+        x: body.x, y: body.y,
+        vx: rnd(-40, 40) - t1x * sign * 60,
+        vy: rnd(-40, 40) - t1y * sign * 60,
+        life: 0.3, max: 0.3, c: '#f0d8a0', s: 1.8,
+      });
+    }
+  }
+}
+function release(side) {
+  const h = hands[side];
+  if (!h.pressed) return;
+  h.pressed = false;
+
+  const now = performance.now();
+
+  // L+R double-release from the GROUND (no grips active) = jump straight up.
+  // Lets the player launch from base camp toward the starter rocks by
+  // spamming L+R. Without this, spamming does nothing because tryGrab
+  // misses (hands at side, not on rocks).
+  if (!h.gripped) {
+    const otherSide = side === 'L' ? 'R' : 'L';
+    const otherReleasedAgo = now - lastReleaseAt[otherSide];
+    const standY = GROUND_Y - FOOT_Y_OFFSET;
+    const groundedDouble = otherReleasedAgo < DOUBLE_WIN
+                        && body.y >= standY - 6
+                        && !hands.L.gripped && !hands.R.gripped;
+    if (groundedDouble) {
+      body.px = body.x;
+      body.py = body.y + DOUBLE_JUMP_V / 60;
+    }
+  }
+  if (h.gripped) {
+    const other = hands[side === 'L' ? 'R' : 'L'];
+    const gripPos = { x: h.gripped.x, y: h.gripped.y };
+
+    // Direction from body toward where the released hand was (the "let go" side)
+    const dx = gripPos.x - body.x;
+    const dy = gripPos.y - body.y;
+    const d  = Math.hypot(dx, dy) || 1;
+    const nx = dx / d, ny = dy / d;
+
+    if (other.gripped) {
+      // Releasing ONE hand while the OTHER is still gripped is just
+      // dropping a grip — no impulse, no jump. The active-swing physics
+      // will take over on the remaining hand. (Previously this fired a
+      // sideways swing kick, which made rapid press/release glitchy.)
+    } else {
+      // Other hand not gripped: this release puts us fully in freefall.
+      // Double-release within the window = JUMP straight up.
+      const otherReleasedAgo = now - lastReleaseAt[side === 'L' ? 'R' : 'L'];
+      const curVx = (body.x - body.px) * 60;
+      const curVy = (body.y - body.py) * 60;
+
+      if (otherReleasedAgo < DOUBLE_WIN) {
+        // Double-release within the window = clean vertical jump. Cancel
+        // lateral velocity from the first release's swing kick so the
+        // climber goes STRAIGHT up regardless of key-release order.
+        body.px = body.x;
+        body.py = body.y + DOUBLE_JUMP_V / 60;
+      } else {
+        // Single-hand release: LAUNCH in the direction the FREE hand is
+        // currently extended. The free hand sits in the active reach pose
+        // during the swing, so the launch sends the climber exactly where
+        // it was visually aiming. Combined with the existing swing tangent
+        // velocity (already in Verlet px/py from the time-driven swing),
+        // this gives a clean "fly toward the free hand" launch.
+        const otherSide = side === 'L' ? 'R' : 'L';
+        const freeHand = hands[otherSide];
+        const fx = freeHand.x - body.x;
+        const fy = freeHand.y - body.y;
+        const fd = Math.hypot(fx, fy) || 1;
+        applyImpulse(fx / fd * LAUNCH_KICK, fy / fd * LAUNCH_KICK);
+      }
+    }
+
+    // Release dust
+    for (let i = 0; i < 6; i++) particles.push({
+      x: gripPos.x, y: gripPos.y,
+      vx: rnd(-80, 80), vy: rnd(-80, 80),
+      life: 0.4, max: 0.4, c: '#d4b896', s: 2,
+    });
+    h.gripped = null;
+  }
+  lastReleaseAt[side] = now;
+}
+
+function updateButtonUI() {
+  lBtnEl.classList.toggle('on', !!hands.L.gripped || hands.L.pressed);
+  rBtnEl.classList.toggle('on', !!hands.R.gripped || hands.R.pressed);
+}
+
+function tryGrab(side) {
+  const h = hands[side];
+  if (h.gripped) return;
+  // Hand must actually overlap the rock (within rock radius + a small skin
+  // margin), not just be "in the neighborhood." Otherwise pressing any
+  // direction grabs whatever rock happens to be nearby, which makes the
+  // player feel like they're not aiming.
+  const HAND_MARGIN = 4;
+  let best = null, bestD = Infinity;
+  for (const r of rocks) {
+    if (r.crumbled) continue;
+    // Body must be within arm length of this rock
+    const dxB = r.x - body.x, dyB = r.y - body.y;
+    if (Math.hypot(dxB, dyB) > ARM + 4) continue;
+    // Hand must actually be on the rock (overlapping)
+    const dxH = r.x - h.x, dyH = r.y - h.y;
+    const dH = Math.hypot(dxH, dyH);
+    if (dH < r.R + HAND_MARGIN && dH < bestD) {
+      bestD = dH;
+      best = r;
+    }
+  }
+  // Fallback: if no rock was under the palm, but the OTHER hand is gripped
+  // on a rock within reach, grab THAT same rock — both hands on one rock.
+  // Lets the player do a hand-swap: grip L, press R (grabs L's rock),
+  // release L, now climbing on R alone.
+  if (!best) {
+    const otherGrip = hands[side === 'L' ? 'R' : 'L'].gripped;
+    if (otherGrip && !otherGrip.crumbled) {
+      const dB = Math.hypot(otherGrip.x - body.x, otherGrip.y - body.y);
+      if (dB <= ARM + 4) best = otherGrip;
+    }
+  }
+  if (best) {
+    h.gripped = best;
+    // Combo: chained quick grabs build a streak
+    const now = performance.now();
+    if (now - lastGrabAt < COMBO_WIN) combo++;
+    else combo = 1;
+    lastGrabAt = now;
+    // Stamina refill on a fresh grab
+    stamina = Math.min(STAM_MAX, stamina + STAM_REFILL_GRAB);
+    for (let i = 0; i < 9; i++) particles.push({
+      x: best.x + rnd(-best.R*0.3, best.R*0.3),
+      y: best.y + rnd(-best.R*0.3, best.R*0.3),
+      vx: rnd(-90, 90), vy: rnd(-90, 90),
+      life: 0.5, max: 0.5, c: '#e8c89a', s: 2.5,
+    });
+    if (best.type === 'loose') best.crackedT = 0.9;
+  }
+}
+
+// Walking + ground constants
+const FOOT_Y_OFFSET = 50;   // local y of boots in the SVG sprite (body.y + this = ground level when standing)
+const WALK_SPEED = 150;     // px/s while walking on the floor
+
+// ---- Update ----
+function update(dt) {
+  // Verlet
+  let vx = (body.x - body.px) * DAMP;
+  let vy = (body.y - body.py) * DAMP;
+  body.px = body.x; body.py = body.y;
+  body.x += vx;
+  body.y += vy + GRAVITY * dt * dt;
+
+  // Rope constraints to gripped rocks
+  for (let iter = 0; iter < 6; iter++) {
+    for (const s of ['L', 'R']) {
+      const h = hands[s];
+      if (!h.gripped) continue;
+      const r = h.gripped;
+      const dx = body.x - r.x, dy = body.y - r.y;
+      const d = Math.hypot(dx, dy) || 0.0001;
+      if (d > ARM) {
+        const f = (d - ARM) / d;
+        body.x -= dx * f;
+        body.y -= dy * f;
+      }
+    }
+  }
+
+  // ---- ACTIVE SWING (force-based, asymmetric arc).
+  // When exactly ONE hand is gripped, a tangential force pushes the body
+  // toward a moving target angle that traces a sine wave around the rock.
+  // Asymmetric: 70° to the FREE-HAND side, 50° to the OTHER side.
+  // Force-based (not position-override) so player impulses add to motion
+  // instead of being wiped, and so there's no teleport when transitions
+  // happen (e.g. dropping from two-hand-on-same-rock to one-hand).
+  {
+    const oneHand = (!!hands.L.gripped) !== (!!hands.R.gripped);
+    if (oneHand && running) {
+      const grip = hands.L.gripped || hands.R.gripped;
+      const isR = !!hands.R.gripped;
+      const SA_FREE  = 75 * Math.PI / 180;
+      const SA_OTHER = 50 * Math.PI / 180;
+      const SA_lo = isR ? -SA_FREE  : -SA_OTHER;
+      const SA_hi = isR ?  SA_OTHER :  SA_FREE;
+      const SA_mid = (SA_lo + SA_hi) / 2;
+      const SA_amp = (SA_hi - SA_lo) / 2;
+      const t = performance.now() / 1000;
+      const SWING_FREQ = 0.55;
+      const phase = Math.sin(t * SWING_FREQ * 2 * Math.PI);
+      const targetSA = SA_mid + phase * SA_amp;
+      // Where the body currently sits around the rock
+      const dx = body.x - grip.x, dy = body.y - grip.y;
+      const d = Math.hypot(dx, dy) || 1;
+      const curSA = Math.atan2(dx, dy);
+      // Shortest-path angle error
+      let err = targetSA - curSA;
+      while (err >  Math.PI) err -= 2 * Math.PI;
+      while (err < -Math.PI) err += 2 * Math.PI;
+      // Tangential unit-vector around the rock (CCW direction)
+      const tangX = dy / d, tangY = -dx / d;
+      // Strong tangential acceleration toward the moving target.
+      // Scales with |err| (gentle near target, strong far from it).
+      const SWING_ACCEL = 6500;
+      const sign = err > 0 ? 1 : -1;
+      const mag = Math.min(1, Math.abs(err) * 3) * SWING_ACCEL;
+      body.x += tangX * sign * mag * dt * dt;
+      body.y += tangY * sign * mag * dt * dt;
+    }
+  }
+
+  // ---- Ground collision: when nothing is gripped and the feet reach the
+  // floor, snap the body to ground level and zero vertical velocity.
+  const onGround = !hands.L.gripped && !hands.R.gripped
+                   && body.y + FOOT_Y_OFFSET >= GROUND_Y;
+  if (onGround) {
+    body.y = GROUND_Y - FOOT_Y_OFFSET;
+    if (body.py > body.y) body.py = body.y;
+  }
+
+  // ---- Walking on the floor: while alive AND grounded, L/R press moves
+  // the climber horizontally instead of doing anything climby. (The same
+  // press also keeps trying to grab a rock — so when the player is under
+  // a starter rock and presses L/R, the press grabs it.)
+  if (running && onGround) {
+    let walkVx = 0;
+    if (hands.L.pressed) walkVx -= WALK_SPEED;
+    if (hands.R.pressed) walkVx += WALK_SPEED;
+    if (walkVx !== 0) {
+      body.x += walkVx * dt;
+      body.px = body.x - walkVx * dt;
+    } else {
+      // Snap to a stop — no sliding on the ground
+      body.px = body.x;
+    }
+  }
+
+  // Auto-grab if button is held and free hand swings into a rock
+  if (running) for (const s of ['L', 'R']) {
+    if (hands[s].pressed && !hands[s].gripped) tryGrab(s);
+  }
+
+  // Loose rock crumble timer
+  if (running) for (const r of rocks) {
+    if (r.type !== 'loose' || r.crumbled) continue;
+    if (hands.L.gripped === r || hands.R.gripped === r) {
+      r.crackedT -= dt;
+      if (r.crackedT <= 0) {
+        r.crumbled = true;
+        if (hands.L.gripped === r) hands.L.gripped = null;
+        if (hands.R.gripped === r) hands.R.gripped = null;
+        for (let i = 0; i < 18; i++) particles.push({
+          x: r.x + rnd(-r.R*0.4, r.R*0.4),
+          y: r.y + rnd(-r.R*0.4, r.R*0.4),
+          vx: rnd(-180, 180), vy: rnd(-200, 100),
+          life: 0.8 + srand() * 0.4, max: 1.2, c: r.sideColor, s: 3,
+        });
+      }
+    }
+  }
+
+  // Update hand visual positions
+  for (const s of ['L', 'R']) {
+    const h = hands[s];
+    if (h.gripped) {
+      h.x = h.gripped.x;
+      h.y = h.gripped.y;
+    } else {
+      // Hand-target rules:
+      // - OTHER HAND IS GRIPPED: this is the FREE/REACHING hand. Lock it into a
+      //   fully-extended body-local pose pointing OUT to this hand's side at
+      //   ~20° above horizontal. The position is FIXED in body-local space,
+      //   so as the body swings, the hand sweeps through world space along
+      //   the swing arc. PRESS doesn't move the hand; it can only grab a
+      //   rock if the body has swung such that the palm is literally on it.
+      // - NO HAND GRIPPED & on the ground & not pressing: hands at the sides.
+      // - NO HAND GRIPPED & pressing on the ground / in the air: auto-seek
+      //   nearest rock (so the player can pick up the starter rocks from
+      //   base camp).
+      let tx, ty;
+      const otherGrip = (s === 'L' ? hands.R.gripped : hands.L.gripped);
+      if (otherGrip) {
+        // Fully extended reach pose in body-local coords. The hand sits at
+        // the shoulder + (full arm length) along an outward-and-slightly-up
+        // direction. As the body rotates with the swing, the hand sweeps a
+        // world-space arc, just like a real climber reaching for the next hold.
+        const sideSign = s === 'L' ? -1 : 1;
+        const ARM_FULL = L1_BONE + L2_BONE;
+        const REACH_ANGLE_UP = 20 * Math.PI / 180;
+        const handLx = sideSign * SHOULDER_LX + sideSign * ARM_FULL * Math.cos(REACH_ANGLE_UP);
+        const handLy = SHOULDER_LY - ARM_FULL * Math.sin(REACH_ANGLE_UP);
+        const c = Math.cos(body.spineAngle), sn = Math.sin(body.spineAngle);
+        tx = body.x + handLx * c - handLy * sn;
+        ty = body.y + handLx * sn + handLy * c;
+      } else if (h.pressed) {
+        // No hand gripped (e.g. on the ground or in the air after a release)
+        // and the player is pressing: seek nearest reachable rock so the
+        // starter rocks can be grabbed easily.
+        const sideSign = s === 'L' ? -1 : 1;
+        let best = null, bestD = ARM + 8;
+        for (const r of rocks) {
+          if (r.crumbled) continue;
+          const dxB = r.x - body.x, dyB = r.y - body.y;
+          const dB = Math.hypot(dxB, dyB);
+          if (dB > ARM + 4) continue;
+          const onCorrectSide = (r.x - body.x) * sideSign >= -8 || r.y < body.y - 4;
+          if (!onCorrectSide) continue;
+          if (dB < bestD) { bestD = dB; best = r; }
+        }
+        if (best) {
+          tx = best.x; ty = best.y;
+        } else {
+          const sxOff = s === 'L' ? -16 : 16;
+          tx = body.x + sxOff;
+          ty = body.y - 32;
+        }
+      } else if (onGround) {
+        // Idle akimbo "<V>" pose: hands rest ON the waist — placed at the
+        // outer edges of the belt (belt spans x=-16 to +16, y=17 to 21).
+        // Hands sit on each hip.
+        const sxOff = s === 'L' ? -16 : 16;
+        tx = body.x + sxOff;
+        ty = body.y + 19;
+      } else {
+        const sxOff = s === 'L' ? -16 : 16;
+        tx = body.x + sxOff;
+        ty = body.y - 32;
+      }
+      h.x += (tx - h.x) * Math.min(1, dt * 18);
+      h.y += (ty - h.y) * Math.min(1, dt * 18);
+    }
+  }
+
+  // ---- Body spine angle: torso rotates so its "up" points toward the grip(s).
+  // When swinging on one hand the climber goes nearly horizontal; when both
+  // hands are above on the same level he stays roughly upright; in freefall
+  // he eases back toward vertical.
+  let targetAngle = 0;
+  if (!running && onGround) {
+    // Dead and lying on the ground — body slumps flat. We pick +π/2 so the
+    // head ends up to the right of the boots; combined with the fact that
+    // body.y already snapped to the ground line, this draws the climber on
+    // his side along the floor.
+    targetAngle = Math.PI / 2;
+  } else if (hands.L.gripped && hands.R.gripped) {
+    const gx = (hands.L.gripped.x + hands.R.gripped.x) / 2;
+    const gy = (hands.L.gripped.y + hands.R.gripped.y) / 2;
+    targetAngle = Math.atan2(gx - body.x, -(gy - body.y));
+  } else if (hands.L.gripped) {
+    // Visual angle follows the body's actual position — its head points
+    // toward the gripped rock. The active-swing force (further down in
+    // update) drives the body PHYSICALLY toward the +110° / -110° swing
+    // peak; the angle naturally tracks via atan2 as the body moves there.
+    targetAngle = Math.atan2(hands.L.gripped.x - body.x, -(hands.L.gripped.y - body.y));
+  } else if (hands.R.gripped) {
+    targetAngle = Math.atan2(hands.R.gripped.x - body.x, -(hands.R.gripped.y - body.y));
+  } else {
+    // In freefall, ease back to upright
+    targetAngle = 0;
+  }
+  // Cap at ±70° — the asymmetric active-swing arc keeps the body within
+  // 70° of vertical at its most extreme, so the head never approaches
+  // horizontal and the pose never reads as sideways.
+  targetAngle = Math.max(-7 * Math.PI / 18, Math.min(7 * Math.PI / 18, targetAngle));
+  // Shortest-path angular lerp
+  let da = targetAngle - body.spineAngle;
+  while (da >  Math.PI) da -= Math.PI * 2;
+  while (da < -Math.PI) da += Math.PI * 2;
+  body.spineAngle += da * Math.min(1, dt * 8);
+
+  // Height & camera (loose follow on both axes; player stays roughly centered).
+  // Meters measures climb height FROM the standing-on-ground baseline, not
+  // from world y=0 — otherwise standing at base camp shows ~3m on the HUD.
+  if (body.y < highestY) highestY = body.y;
+  const STAND_Y = GROUND_Y - FOOT_Y_OFFSET;  // body.y when standing on ground
+  meters = Math.max(0, Math.floor((STAND_Y - highestY) / META_SCALE));
+  const targetCamY = Math.min(highestY - H * 0.5, body.y - H * 0.5);
+  if (camY > targetCamY) camY += (targetCamY - camY) * 0.08;
+  // Track X smoothly so the climber can drift but stays in frame
+  camX += (body.x - camX) * Math.min(1, dt * 3);
+
+  if (running) {
+    // Stamina: drains while gripped (more if swinging fast), pauses in air
+    const speed = Math.hypot((body.x - body.px), (body.y - body.py)) * 60;
+    const anyGrip = !!(hands.L.gripped || hands.R.gripped);
+    if (anyGrip) {
+      const drain = speed > 30
+        ? STAM_DRAIN_SWING_BASE + STAM_DRAIN_SWING_SCALE * speed
+        : STAM_DRAIN_HANG;
+      stamina = Math.max(0, stamina - drain * dt);
+    }
+    if (stamina <= 0 && anyGrip) {
+      if (hands.L.gripped) { hands.L.gripped = null; hands.L.pressed = false; }
+      if (hands.R.gripped) { hands.R.gripped = null; hands.R.pressed = false; }
+      for (let i = 0; i < 12; i++) particles.push({
+        x: body.x, y: body.y - 10,
+        vx: rnd(-80, 80), vy: rnd(-40, 0),
+        life: 0.6, max: 0.6, c: '#f0c890', s: 2.2,
+      });
+    }
+    if (performance.now() - lastGrabAt > COMBO_WIN) combo = 0;
+
+    spawnAhead();
+
+    // Game over: the climber falls back to the ground AFTER having climbed
+    // at least 80px above the standing baseline. (Hitting the floor at the
+    // very start is just standing — not a fall.)
+    if (onGround && highestY < STAND_Y - 80) {
+      gameOver();
+    }
+  }
+
+  // Particles
+  for (const p of particles) {
+    p.x += p.vx * dt; p.y += p.vy * dt;
+    p.vx *= 0.94; p.vy *= 0.94;
+    p.vy += 500 * dt;
+    p.life -= dt;
+  }
+  particles = particles.filter(p => p.life > 0);
+
+  metersEl.textContent = meters + 'm';
+  // Stamina bar
+  const stamPct = Math.max(0, stamina / STAM_MAX) * 100;
+  stamFillEl.style.width = stamPct.toFixed(1) + '%';
+  // Combo indicator
+  if (combo >= COMBO_FOR_X2) {
+    comboPopEl.textContent = 'x' + Math.min(5, Math.floor(combo / COMBO_FOR_X2) + 1);
+    comboPopEl.classList.add('on');
+  } else {
+    comboPopEl.classList.remove('on');
+  }
+}
+
+function gameOver() {
+  running = false;
+  for (let i = 0; i < 30; i++) particles.push({
+    x: body.x, y: body.y,
+    vx: rnd(-220, 220), vy: rnd(-320, -40),
+    life: 1, max: 1, c: '#c08866', s: 3,
+  });
+  hands.L.pressed = hands.R.pressed = false;
+  hands.L.gripped = hands.R.gripped = null;
+  if (meters > bestMeters) {
+    bestMeters = meters;
+    try { localStorage.setItem('ascent_best', String(bestMeters)); } catch (e) {}
+  }
+  setTimeout(showGameOver, 700);
+}
+
+function showGameOver() {
+  titleEl.innerHTML = 'HEIGHT<br>REACHED';
+  tagEl.textContent = 'TOUCH TO GET UP';
+  helpEl.innerHTML = '<div class="score-big"><b>' + meters + ' METERS</b></div>'
+    + '<p style="opacity:.7;font-size:13px;letter-spacing:2px;">' + (bestMeters > meters ? 'RECORD ' + bestMeters + 'm' : 'NEW RECORD!') + '</p>';
+  playBtn.textContent = 'TRY AGAIN';
+  bestEl.textContent = '';
+  ov.classList.remove('hide');
+}
+
+// ---- Rendering ----
+function w2sX(x) { return x - camX + W / 2; }
+function w2sY(y) { return y - camY; }
+
+function drawBg() {
+  // Sand-tan wall (matches reference)
+  ctx.fillStyle = '#d4a878';
+  ctx.fillRect(0, 0, W, H);
+  // Slight top→bottom shading so the wall feels deep
+  const gShade = ctx.createLinearGradient(0, 0, 0, H);
+  gShade.addColorStop(0, 'rgba(180,120,70,0.18)');
+  gShade.addColorStop(0.6, 'rgba(0,0,0,0)');
+  gShade.addColorStop(1, 'rgba(80,40,15,0.20)');
+  ctx.fillStyle = gShade; ctx.fillRect(0, 0, W, H);
+
+  // Faint white "chalk" specks scattered across the wall (parallax with cam)
+  const gs = 56;
+  const off = ((camY * 0.7) % gs + gs) % gs;
+  ctx.fillStyle = 'rgba(255,250,235,0.35)';
+  for (let yy = -gs; yy < H + gs; yy += gs) {
+    const row = Math.floor((yy + camY * 0.7) / gs);
+    for (let xx = 0; xx < W + gs; xx += gs) {
+      const px = xx + (row & 1 ? gs / 2 : 0);
+      const py = yy - off;
+      ctx.beginPath();
+      ctx.arc(px, py, 1.6, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  // Diagonal stratum cracks — two families crossing at ~30° to make the wall
+  // read like the reference's textured rock face. Color is a slightly darker
+  // tan than the wall, so it suggests fracture lines without being noisy.
+  ctx.strokeStyle = 'rgba(110,70,40,0.22)';
+  ctx.lineWidth = 1.8; ctx.lineCap = 'round';
+  const stratStep = 220;
+  // Camera-aligned base so the cracks scroll naturally
+  const baseY = Math.floor(camY / stratStep) * stratStep;
+  const baseX = Math.floor((camX * 0.7) / stratStep) * stratStep;
+  // Family A: slope down-right (\)
+  for (let row = -1; row < 5; row++) {
+    for (let col = -1; col < 4; col++) {
+      const cx0 = baseX + col * stratStep - camX * 0.7 + W * 0.5;
+      const cy0 = baseY + row * stratStep - camY;
+      ctx.beginPath();
+      ctx.moveTo(cx0, cy0);
+      // Slight wobble using a sine so the line isn't a perfect ruler
+      const len = stratStep * 0.95;
+      for (let t = 0; t <= 1; t += 0.2) {
+        const lx = cx0 + Math.cos(0.6) * len * t;
+        const ly = cy0 + Math.sin(0.6) * len * t + Math.sin(t * 6 + row) * 4;
+        ctx.lineTo(lx, ly);
+      }
+      ctx.stroke();
+    }
+  }
+  // Family B: slope down-left (/) — fainter, so the texture isn't too busy
+  ctx.strokeStyle = 'rgba(110,70,40,0.13)';
+  ctx.lineWidth = 1.3;
+  for (let row = -1; row < 5; row++) {
+    for (let col = -1; col < 4; col++) {
+      const cx0 = baseX + col * stratStep - camX * 0.7 + W * 0.5 + stratStep * 0.5;
+      const cy0 = baseY + row * stratStep - camY;
+      ctx.beginPath();
+      ctx.moveTo(cx0, cy0);
+      const len = stratStep * 0.95;
+      for (let t = 0; t <= 1; t += 0.2) {
+        const lx = cx0 - Math.cos(0.6) * len * t;
+        const ly = cy0 + Math.sin(0.6) * len * t + Math.sin(t * 5 + col) * 3;
+        ctx.lineTo(lx, ly);
+      }
+      ctx.stroke();
+    }
+  }
+}
+
+// Base camp drawn in WORLD space (so it scrolls naturally with the camera)
+function drawBaseCamp() {
+  const groundSy = w2sY(GROUND_Y);
+  if (groundSy < -40 || groundSy > H + 200) return;
+
+  // Ground strip (warm brown soil)
+  ctx.fillStyle = '#8a5a2e';
+  ctx.fillRect(0, groundSy, W, H - groundSy);
+  ctx.fillStyle = '#a8702e';
+  ctx.fillRect(0, groundSy, W, 6);
+  ctx.fillStyle = 'rgba(60,30,10,0.4)';
+  for (let i = 0; i < 30; i++) {
+    const sx = ((i * 53 + 11) % W);
+    const sy = groundSy + 10 + ((i * 17) % 60);
+    ctx.beginPath();
+    ctx.arc(sx, sy, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Bushes (small green clumps at the base)
+  const bushes = [-230, -150, 150, 230, 270];
+  for (const wx of bushes) {
+    const sx = w2sX(wx);
+    if (sx < -40 || sx > W + 40) continue;
+    drawBush(sx, groundSy + 1);
+  }
+
+  // Grass tufts
+  const tufts = [-200, -120, -80, -30, 30, 80, 130, 200];
+  for (const wx of tufts) {
+    const sx = w2sX(wx);
+    if (sx < -30 || sx > W + 30) continue;
+    drawGrassTuft(sx, groundSy + 1);
+  }
+
+  // Tree stump (small, between the two signs)
+  drawTreeStump(w2sX(245), groundSy + 1);
+
+  // CLIMB! sign on the right of start; WORLD RECORDS plaque to its right
+  drawClimbSign(w2sX(150), groundSy - 4);
+  drawWorldRecordsPlaque(w2sX(310), groundSy - 4);
+  // RECORD yellow plate on a post, to the left of start
+  drawRecordSign(w2sX(-180), groundSy - 4, bestMeters);
+}
+
+function drawBush(sx, sy) {
+  // Three lobes of green forming a chunky bush
+  ctx.fillStyle = '#3d7a2a';
+  ctx.beginPath();
+  ctx.arc(sx - 6, sy - 4, 7, 0, Math.PI * 2);
+  ctx.arc(sx + 6, sy - 4, 7, 0, Math.PI * 2);
+  ctx.arc(sx, sy - 8, 8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#1a3a10'; ctx.lineWidth = 1.2; ctx.stroke();
+  // Lighter top highlight
+  ctx.fillStyle = '#5aa83a';
+  ctx.beginPath();
+  ctx.arc(sx, sy - 11, 4, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawTreeStump(sx, sy) {
+  // Stump body (light tan, with rings on top)
+  ctx.fillStyle = '#7a4a26';
+  ctx.fillRect(sx - 8, sy - 14, 16, 14);
+  ctx.strokeStyle = '#3a1f0a'; ctx.lineWidth = 1.2;
+  ctx.strokeRect(sx - 8, sy - 14, 16, 14);
+  // Top oval (cut surface)
+  ctx.fillStyle = '#c89868';
+  ctx.beginPath();
+  ctx.ellipse(sx, sy - 14, 8, 2.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = '#7a4a26'; ctx.lineWidth = 0.8;
+  ctx.beginPath();
+  ctx.ellipse(sx, sy - 14, 5, 1.6, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.ellipse(sx, sy - 14, 2.5, 0.8, 0, 0, Math.PI * 2);
+  ctx.stroke();
+  // Bark texture (vertical strokes)
+  ctx.strokeStyle = 'rgba(40,20,5,0.55)'; ctx.lineWidth = 0.9;
+  for (let i = -2; i <= 2; i++) {
+    ctx.beginPath();
+    ctx.moveTo(sx + i * 3, sy - 12);
+    ctx.lineTo(sx + i * 3 + 0.5, sy - 1);
+    ctx.stroke();
+  }
+}
+
+function drawGrassTuft(sx, sy) {
+  ctx.strokeStyle = '#3d7a2a';
+  ctx.lineWidth = 2;
+  ctx.lineCap = 'round';
+  for (let i = -2; i <= 2; i++) {
+    ctx.beginPath();
+    ctx.moveTo(sx + i, sy);
+    ctx.lineTo(sx + i * 1.4, sy - 6 - Math.abs(i) * -1.2);
+    ctx.stroke();
+  }
+  ctx.fillStyle = '#5aa83a';
+  ctx.beginPath();
+  ctx.ellipse(sx, sy - 1, 8, 2, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function drawClimbSign(sx, baseY) {
+  ctx.save();
+  // Two posts (the reference sign sits on a pair of legs, not one center post)
+  ctx.fillStyle = '#5a3618';
+  ctx.fillRect(sx - 36, baseY - 32, 4, 32);
+  ctx.fillRect(sx + 32, baseY - 32, 4, 32);
+  // Main wooden board
+  ctx.fillStyle = '#7a4a26';
+  ctx.fillRect(sx - 48, baseY - 74, 96, 44);
+  ctx.strokeStyle = '#3a1f0a';
+  ctx.lineWidth = 1.6;
+  ctx.strokeRect(sx - 48, baseY - 74, 96, 44);
+  // Plank grain lines
+  ctx.strokeStyle = 'rgba(40,20,5,0.45)';
+  ctx.lineWidth = 0.8;
+  for (let i = 1; i <= 3; i++) {
+    ctx.beginPath();
+    ctx.moveTo(sx - 46, baseY - 74 + i * 11);
+    ctx.lineTo(sx + 46, baseY - 74 + i * 11);
+    ctx.stroke();
+  }
+  // Big "CLIMB!" text
+  ctx.fillStyle = '#f3e3c8';
+  ctx.font = 'bold 22px ui-monospace, "SF Mono", monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('CLIMB!', sx, baseY - 53);
+  // Tiny "A MOUNTAIN  IN YOUR POCKET" flanking a mountain logo
+  ctx.font = 'bold 6px ui-monospace, monospace';
+  ctx.fillText('A MOUNTAIN', sx - 26, baseY - 40);
+  ctx.fillText('IN YOUR POCKET', sx + 26, baseY - 40);
+  // Mountain-peak logo in the middle, with a blue cap line under it
+  ctx.fillStyle = '#3a1f0a';
+  ctx.beginPath();
+  ctx.moveTo(sx - 9, baseY - 35);
+  ctx.lineTo(sx - 3, baseY - 46);
+  ctx.lineTo(sx + 1, baseY - 39);
+  ctx.lineTo(sx + 4, baseY - 44);
+  ctx.lineTo(sx + 9, baseY - 35);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#f3e3c8';
+  ctx.beginPath();
+  ctx.moveTo(sx - 5, baseY - 41);
+  ctx.lineTo(sx - 3, baseY - 44);
+  ctx.lineTo(sx - 1, baseY - 41);
+  ctx.closePath(); ctx.fill();
+  // Small "records" tag attached at the bottom-right of the sign (like a brass plate)
+  ctx.fillStyle = '#3a1f0a';
+  ctx.fillRect(sx + 18, baseY - 32, 28, 8);
+  ctx.fillStyle = '#f3e3c8';
+  ctx.font = 'bold 6px ui-monospace, monospace';
+  ctx.fillText('records', sx + 32, baseY - 26);
+  ctx.textAlign = 'start';
+  ctx.restore();
+}
+
+function drawWorldRecordsPlaque(sx, baseY) {
+  ctx.save();
+  // Post
+  ctx.fillStyle = '#5a3618';
+  ctx.fillRect(sx - 2, baseY - 20, 4, 20);
+  // Card body
+  ctx.fillStyle = '#dcc89c';
+  ctx.fillRect(sx - 32, baseY - 56, 64, 36);
+  ctx.strokeStyle = '#7a4a26'; ctx.lineWidth = 1.6;
+  ctx.strokeRect(sx - 32, baseY - 56, 64, 36);
+  // Small mountain icon in the top-left
+  ctx.fillStyle = '#7a4a26';
+  ctx.beginPath();
+  ctx.moveTo(sx - 28, baseY - 38);
+  ctx.lineTo(sx - 23, baseY - 50);
+  ctx.lineTo(sx - 19, baseY - 44);
+  ctx.lineTo(sx - 16, baseY - 47);
+  ctx.lineTo(sx - 12, baseY - 38);
+  ctx.closePath(); ctx.fill();
+  // Tiny red flag on the peak
+  ctx.fillStyle = '#d04030';
+  ctx.beginPath();
+  ctx.moveTo(sx - 23, baseY - 50);
+  ctx.lineTo(sx - 23, baseY - 56);
+  ctx.lineTo(sx - 18, baseY - 54);
+  ctx.closePath(); ctx.fill();
+  // "WORLD RECORDS" title
+  ctx.fillStyle = '#3a1f0a';
+  ctx.font = 'bold 7px ui-monospace, monospace';
+  ctx.textAlign = 'left';
+  ctx.fillText('WORLD', sx - 8, baseY - 47);
+  ctx.fillText('RECORDS', sx - 8, baseY - 39);
+  // Stat lines
+  ctx.fillStyle = '#5a3618';
+  ctx.font = 'bold 5px ui-monospace, monospace';
+  ctx.fillText('summits: 0', sx - 28, baseY - 30);
+  ctx.fillText('best time: -', sx - 28, baseY - 25);
+  ctx.fillText('fewer falls: -', sx - 28, baseY - 20);
+  ctx.textAlign = 'start';
+  ctx.restore();
+}
+
+function drawRecordSign(sx, baseY, meters) {
+  ctx.save();
+  // Post
+  ctx.fillStyle = '#5a3618';
+  ctx.fillRect(sx - 2, baseY - 28, 4, 28);
+  // Yellow plate
+  ctx.fillStyle = '#f0c040';
+  ctx.fillRect(sx - 28, baseY - 52, 56, 24);
+  ctx.strokeStyle = '#4a2a10';
+  ctx.lineWidth = 1.6;
+  ctx.strokeRect(sx - 28, baseY - 52, 56, 24);
+  // "record:" small + meters big
+  ctx.fillStyle = '#4a2a10';
+  ctx.font = 'bold 7px ui-monospace, monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('record:', sx, baseY - 41);
+  ctx.font = 'bold 13px ui-monospace, monospace';
+  ctx.fillText(meters + 'm', sx, baseY - 31);
+  ctx.textAlign = 'start';
+  // Small directional arrow on a tag at the post
+  ctx.fillStyle = '#7a4a26';
+  ctx.fillRect(sx - 14, baseY - 16, 12, 6);
+  ctx.fillStyle = '#f3e3c8';
+  ctx.beginPath();
+  ctx.moveTo(sx - 12, baseY - 13);
+  ctx.lineTo(sx - 6, baseY - 16);
+  ctx.lineTo(sx - 6, baseY - 11);
+  ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+function drawHeightTicks() {
+  ctx.fillStyle = 'rgba(60,30,20,0.6)';
+  ctx.strokeStyle = 'rgba(60,30,20,0.45)';
+  ctx.lineWidth = 1.5;
+  ctx.font = 'bold 11px ui-monospace, "SF Mono", monospace';
+  const step = 50 * META_SCALE;
+  const startM = Math.floor(camY / step);
+  const endM = Math.floor((camY + H) / step);
+  for (let m = startM; m <= endM; m++) {
+    const wy = -m * step;
+    const sy = wy - camY;
+    if (sy < 4 || sy > H - 4) continue;
+    const label = (m * 50);
+    if (label === 0) continue;
+    ctx.beginPath();
+    ctx.moveTo(6, sy); ctx.lineTo(18, sy);
+    ctx.stroke();
+    ctx.fillText(label + 'm', 22, sy + 4);
+  }
+}
+
+function drawRock(r) {
+  const sx = w2sX(r.x), sy = w2sY(r.y);
+  if (sy < -60 || sy > H + 60) return;
+  ctx.save();
+  ctx.translate(sx, sy);
+  // Drop shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.22)';
+  ctx.beginPath();
+  for (let i = 0; i < r.shape.length; i++) {
+    const [x, y] = r.shape[i];
+    if (i === 0) ctx.moveTo(x + 2, y + 4); else ctx.lineTo(x + 2, y + 4);
+  }
+  ctx.closePath(); ctx.fill();
+  // Heavy dark outline (the reference's defining stylistic mark — every rock
+  // has a clear ring around it, not a soft edge).
+  ctx.fillStyle = '#3a1f0a';
+  ctx.beginPath();
+  for (let i = 0; i < r.shape.length; i++) {
+    const [x, y] = r.shape[i];
+    const k = 1.18;
+    if (i === 0) ctx.moveTo(x * k, y * k); else ctx.lineTo(x * k, y * k);
+  }
+  ctx.closePath(); ctx.fill();
+  // Main face (side)
+  ctx.fillStyle = r.sideColor;
+  ctx.beginPath();
+  for (let i = 0; i < r.shape.length; i++) {
+    const [x, y] = r.shape[i];
+    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+  }
+  ctx.closePath(); ctx.fill();
+  // Top highlight (smaller, brighter — sits like a sun-lit cap on the rock)
+  ctx.fillStyle = r.topColor;
+  ctx.beginPath();
+  for (let i = 0; i < r.shape.length; i++) {
+    const [x, y] = r.shape[i];
+    if (i === 0) ctx.moveTo(x * 0.68, y * 0.68 - 3);
+    else ctx.lineTo(x * 0.68, y * 0.68 - 3);
+  }
+  ctx.closePath(); ctx.fill();
+  // Loose rock: pulse + cracks
+  if (r.type === 'loose') {
+    if (r.crackedT < 0.9 && r.crackedT > 0) {
+      const intensity = 1 - r.crackedT / 0.9;
+      ctx.globalAlpha = 0.25 + 0.55 * Math.abs(Math.sin(Date.now() / (90 - intensity * 55)));
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      for (let i = 0; i < r.shape.length; i++) {
+        const [x, y] = r.shape[i];
+        if (i === 0) ctx.moveTo(x * 0.72, y * 0.72 - 2.5);
+        else ctx.lineTo(x * 0.72, y * 0.72 - 2.5);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    ctx.strokeStyle = 'rgba(50,20,10,0.6)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(-r.R * 0.35, -r.R * 0.12);
+    ctx.lineTo(r.R * 0.05, r.R * 0.05);
+    ctx.lineTo(r.R * 0.30, -r.R * 0.05);
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawHand(hx, hy, wx, wy, gripped, pressed, side) {
+  // Skin-toned closed fist, aligned with the arm direction so it always looks
+  // attached. Reference character sheet: hands are small fists about the same
+  // width as the forearm — NOT giant mittens. A faint chalk-white wash gets
+  // overlaid when gripping for the climbing look.
+  const dx = hx - wx, dy = hy - wy;
+  const theta = Math.atan2(dy, dx);
+  const thumbDir = side === 'L' ? 1 : -1;
+  const skin = '#c89868';
+  const skinShade = '#a07444';
+  const skinDark = '#7a4a26';
+
+  ctx.save();
+  ctx.translate(hx, hy);
+  ctx.rotate(theta);
+
+  // Drop shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.22)';
+  ctx.beginPath();
+  ctx.ellipse(0.8, 1.2, 5.2, 4.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // FIST BODY — skin oval, smaller than before
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 5.2, 4.4, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = skinDark;
+  ctx.lineWidth = 1.1;
+  ctx.stroke();
+
+  // Knuckle ridge (a couple of faint bumps along the back of the fist)
+  ctx.fillStyle = skinShade;
+  for (let i = -1; i <= 1; i++) {
+    ctx.beginPath();
+    ctx.arc(i * 1.6, -2.3 * thumbDir, 0.9, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  // Curl seam where fingers fold into palm
+  ctx.strokeStyle = 'rgba(80,50,20,0.45)';
+  ctx.lineWidth = 0.7;
+  ctx.beginPath();
+  ctx.moveTo(-3.5, -1 * thumbDir);
+  ctx.quadraticCurveTo(0, -1.6 * thumbDir, 3.5, -1 * thumbDir);
+  ctx.stroke();
+
+  // Thumb tucked on the inboard side
+  ctx.fillStyle = skin;
+  ctx.beginPath();
+  ctx.ellipse(1.5, 2.8 * thumbDir, 2.4, 1.7, 0.4 * thumbDir, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = skinDark;
+  ctx.lineWidth = 0.8;
+  ctx.stroke();
+
+  // Chalk wash when gripping (semi-transparent white over the fist)
+  if (gripped) {
+    ctx.fillStyle = 'rgba(245,236,214,0.7)';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 5.5, 4.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.55)';
+    ctx.beginPath();
+    ctx.ellipse(3.5, 0, 1.8, 2, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.restore();
+}
+
+function drawClimber() {
+  const sx = w2sX(body.x), sy = w2sY(body.y);
+  if (sy < -160 || sy > H + 160) return;
+
+  // Spine angle drives every part of the body. 0 = upright; +π/2 = horizontal
+  // head-right; -π/2 = horizontal head-left. Computed in update() so it lerps.
+  const ang = body.spineAngle;
+  const cosA = Math.cos(ang), sinA = Math.sin(ang);
+  // Rotate a body-local point (lx, ly) into screen space
+  const lx2sx = (lx, ly) => sx + cosA * lx - sinA * ly;
+  const ly2sy = (lx, ly) => sy + sinA * lx + cosA * ly;
+
+  const bodyVx = (body.x - body.px) * 60;
+  const bodyVy = (body.y - body.py) * 60;
+  const legSway = Math.max(-6, Math.min(6, -bodyVx * 0.018));
+  const legLift = Math.max(-3, Math.min(3, bodyVy * 0.012));
+
+  // ---- ARMS — proper TWO-BONE IK rig (not stretchy curves).
+  // The upper arm and forearm are FIXED-LENGTH bones (L1, L2). Given the
+  // shoulder position and the hand position, the elbow lies on the circle
+  // of intersections between two bone-spheres. We pick the solution that
+  // bends the elbow AWAY from the body center — that's how a real climber
+  // looks reaching for a hold above them.
+  const L1 = L1_BONE;
+  const L2 = L2_BONE;
+
+  // Body-local "outward" axis: the +X side of body-local space is the
+  // outboard side of the right arm; -X is outboard of the left arm. When
+  // the body rotates, we transform these into world coords.
+  const outLBody = { x: -1, y: 0 };
+  const outRBody = { x:  1, y: 0 };
+  const outL = { x: cosA * outLBody.x - sinA * outLBody.y,
+                 y: sinA * outLBody.x + cosA * outLBody.y };
+  const outR = { x: cosA * outRBody.x - sinA * outRBody.y,
+                 y: sinA * outRBody.x + cosA * outRBody.y };
+
+  for (const sd of ['L', 'R']) {
+    const h = hands[sd];
+    const hx = w2sX(h.x), hy = w2sY(h.y);
+    // Shoulder anchor lives in body-local space (matching the SVG sprite's
+    // shoulder positions); rotate it with the spine.
+    const shLX = sd === 'L' ? -SHOULDER_LX : SHOULDER_LX, shLY = SHOULDER_LY;
+    const shSx = lx2sx(shLX, shLY);
+    const shSy = ly2sy(shLX, shLY);
+
+    // Outward direction for THIS shoulder (the side the elbow should bow to)
+    const outDir = sd === 'L' ? outL : outR;
+
+    // ===== Two-bone IK =====
+    let dx = hx - shSx, dy = hy - shSy;
+    let D = Math.hypot(dx, dy);
+    const Dmax = L1 + L2 - 0.5;  // tiny epsilon prevents singularity
+    if (D > Dmax) {
+      // Hand farther than arms can reach — clamp the visual hand position
+      // toward the shoulder so the bones never tear apart (physics keeps
+      // body within ARM of any grip so this only happens transiently)
+      const k = Dmax / D;
+      dx *= k; dy *= k; D = Dmax;
+    }
+    // Foot-of-perpendicular along the shoulder→hand line
+    const dProj = (L1 * L1 - L2 * L2 + D * D) / (2 * D);
+    // Distance of elbow from the line (height of the IK triangle).
+    // Cap tuned so the akimbo "<V>" idle elbows clearly poke past the
+    // (now-wider) torso silhouette while climbing poses (which have the
+    // hand near full reach, raw hPerp small) are unaffected.
+    const rawHPerp = Math.sqrt(Math.max(0, L1 * L1 - dProj * dProj));
+    const hPerp = Math.min(rawHPerp, 28);
+    // Unit vector along the line
+    const lineX = dx / D, lineY = dy / D;
+    // Two candidate perpendiculars; pick the one pointing outward
+    let perpX = -lineY, perpY = lineX;
+    if (perpX * outDir.x + perpY * outDir.y < 0) { perpX = -perpX; perpY = -perpY; }
+    const elX = shSx + lineX * dProj + perpX * hPerp;
+    const elY = shSy + lineY * dProj + perpY * hPerp;
+
+    // Wrist sits just before the hand along the forearm bone
+    const handX = shSx + dx, handY = shSy + dy;  // possibly clamped hand
+    const fdx = handX - elX, fdy = handY - elY;
+    const fLen = Math.hypot(fdx, fdy) || 1;
+    const wristT = Math.max(0, 1 - 6 / fLen);
+    const wx = elX + fdx * wristT;
+    const wy = elY + fdy * wristT;
+    // For drawHand: pass the actual hand position from physics (so it still
+    // appears at the grip even if the IK had to clamp)
+    const visHx = hx, visHy = hy;
+
+    // Arm-direction perpendicular sign for muscle highlights/shadows
+    const armDX = handX - shSx, armDY = handY - shSy;
+    const armLen = Math.max(1, Math.hypot(armDX, armDY));
+    const outSign = (-armDY * outDir.x + armDX * outDir.y) > 0 ? 1 : -1;
+
+    // ===== Arms drawn as FILLED TRAPEZOID POLYGONS (not strokes).
+    // Each bone is a quad: wider at the joint that bears load, narrower at
+    // the joint that flexes. This is how flat-design character art reads as
+    // MUSCULAR — the bicep flares out near the shoulder and tapers to the
+    // elbow; the forearm flares at the elbow and tapers to the wrist.
+    //
+    // Widths (in screen pixels). Tuned to match the SVG sprite's shoulder
+    // width (~14 wide).
+    // Each bone is a TRIANGLE, not a trapezoid: both segments taper hard
+    // toward the elbow (their shared point), wide at the outer ends.
+    //   Upper arm: shoulder = wide top (\-/), elbow = narrow apex
+    //   Forearm:   elbow    = narrow apex,    wrist = wide base (/_\)
+    // Stacked, the two triangles touch tip-to-tip at the elbow — an
+    // hourglass silhouette like the reference / your ASCII sketch.
+    const W_SH = 26;     // upper arm at the shoulder (very chunky deltoid base)
+    const W_SLEEVE = 22; // sleeve-end: still wide, sleeve covers the bicep top
+    const W_EL = 3;      // tiny APEX where both bones meet at the elbow
+    const W_WR = 15;     // forearm at the wrist (wide — blends into the fist)
+
+    // Upper arm direction
+    const u1dx = elX - shSx, u1dy = elY - shSy;
+    const u1Len = Math.max(1, Math.hypot(u1dx, u1dy));
+    const u1x = u1dx / u1Len, u1y = u1dy / u1Len;
+    const p1x = -u1y, p1y = u1x;
+    // Forearm direction
+    const u2dx = wx - elX, u2dy = wy - elY;
+    const u2Len = Math.max(1, Math.hypot(u2dx, u2dy));
+    const u2x = u2dx / u2Len, u2y = u2dy / u2Len;
+    const p2x = -u2y, p2y = u2x;
+
+    // Sleeve ends 35% down the upper arm (rolled-up red flannel)
+    const sleeveT = 0.35;
+    const slX = shSx + u1dx * sleeveT;
+    const slY = shSy + u1dy * sleeveT;
+
+    // --- UPPER ARM trapezoid #1: red flannel sleeve (shoulder → sleeve-end) ---
+    drawTrap(shSx, shSy, slX, slY, p1x, p1y, W_SH, W_SLEEVE,
+             '#a8321c', '#5a1c0c', 1.2);
+    // Rolled-cuff dark band at the sleeve end (a thin trapezoid that wraps the bottom of the sleeve)
+    drawTrap(slX - u1x * 1.8, slY - u1y * 1.8, slX, slY, p1x, p1y, W_SLEEVE + 0.6, W_SLEEVE + 0.6,
+             '#5a1808', '#3a0c04', 1.0);
+
+    // --- UPPER ARM trapezoid #2: bare bicep (sleeve-end → elbow) ---
+    drawTrap(slX, slY, elX, elY, p1x, p1y, W_SLEEVE - 0.5, W_EL,
+             '#c89868', '#7a4a26', 1.2);
+    // Bicep muscle highlight — a slim brighter strip along the top edge
+    drawTrap(
+      slX - p1x * outSign * (W_SLEEVE - 0.5) / 2 * 0.75,
+      slY - p1y * outSign * (W_SLEEVE - 0.5) / 2 * 0.75,
+      elX - p1x * outSign * W_EL / 2 * 0.7,
+      elY - p1y * outSign * W_EL / 2 * 0.7,
+      p1x, p1y,
+      2.6, 2.0,
+      '#e4b888', null, 0
+    );
+
+    // --- ELBOW JOINT — small flat disc covering the meeting point of the
+    // two triangle apexes. Sized just slightly larger than W_EL so it hides
+    // the seam without ballooning the hinge.
+    ctx.fillStyle = '#a07444';
+    ctx.beginPath();
+    ctx.arc(elX, elY, W_EL / 2 + 1.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#7a4a26';
+    ctx.lineWidth = 1.0;
+    ctx.stroke();
+
+    // --- FOREARM trapezoid (elbow → wrist) — flares at the elbow, tapers to the wrist ---
+    drawTrap(elX, elY, wx, wy, p2x, p2y, W_EL - 0.5, W_WR,
+             '#c89868', '#7a4a26', 1.2);
+    // Forearm muscle highlight (top edge strip)
+    drawTrap(
+      elX - p2x * outSign * (W_EL - 0.5) / 2 * 0.75,
+      elY - p2y * outSign * (W_EL - 0.5) / 2 * 0.75,
+      wx  - p2x * outSign * W_WR / 2 * 0.7,
+      wy  - p2y * outSign * W_WR / 2 * 0.7,
+      p2x, p2y,
+      2.2, 1.6,
+      '#e4b888', null, 0
+    );
+
+    // --- SHOULDER CAP — drawn LAST so it overlays the upper-arm seam to torso ---
+    const shAng = Math.atan2(u1dy, u1dx);
+    ctx.save();
+    ctx.translate(shSx, shSy);
+    ctx.rotate(shAng);
+    ctx.fillStyle = '#a8321c';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 8, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#5a1c0c'; ctx.lineWidth = 1.2; ctx.stroke();
+    ctx.fillStyle = '#c84a30';
+    ctx.beginPath();
+    ctx.ellipse(-2, -3.2 * outSign, 4, 1.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    // --- HAND — fist at the world hand position, oriented along the forearm ---
+    drawHand(visHx, visHy, wx, wy, h.gripped, h.pressed, sd);
+  }
+
+  // ---- BODY: drawn as a single SVG sprite. The sprite is back-view art
+  // (the climber faces the wall), with vector-clean colors and hard edges
+  // that procedural canvas primitives can't match. We rotate the canvas so
+  // the body tilts with the spine angle, then blit the sprite.
+  ctx.save();
+  ctx.translate(sx, sy);
+  ctx.rotate(ang);
+  if (charImgReady) {
+    ctx.drawImage(charImg, -CHAR_W / 2, -CHAR_H / 2, CHAR_W, CHAR_H);
+  }
+  ctx.restore();
+}
+
+// Filled trapezoid quad from (ax,ay) to (bx,by). Width at A is wA, width at
+// B is wB. (perpX, perpY) is the unit perpendicular to the A→B axis (caller
+// computes it once and passes in). Optional stroke for the outline.
+function drawTrap(ax, ay, bx, by, perpX, perpY, wA, wB, fill, stroke, lineW) {
+  const ha = wA / 2, hb = wB / 2;
+  ctx.beginPath();
+  ctx.moveTo(ax + perpX * ha, ay + perpY * ha);
+  ctx.lineTo(bx + perpX * hb, by + perpY * hb);
+  ctx.lineTo(bx - perpX * hb, by - perpY * hb);
+  ctx.lineTo(ax - perpX * ha, ay - perpY * ha);
+  ctx.closePath();
+  if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lineW || 1; ctx.stroke(); }
+}
+
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
+function drawParticles() {
+  for (const p of particles) {
+    ctx.globalAlpha = Math.max(0, Math.min(1, p.life / p.max));
+    ctx.fillStyle = p.c;
+    const x = w2sX(p.x), y = w2sY(p.y);
+    ctx.beginPath();
+    ctx.arc(x, y, p.s, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+}
+
+function render() {
+  drawBg();
+  drawHeightTicks();
+  for (const r of rocks) if (!r.crumbled) drawRock(r);
+  drawBaseCamp();
+  if (started) drawClimber();
+  drawParticles();
+  updateButtonUI();
+}
+
+// ---- Main loop ----
+let lastT = performance.now();
+function loop(t) {
+  const dt = Math.min(0.033, (t - lastT) / 1000);
+  lastT = t;
+  update(dt);
+  render();
+  requestAnimationFrame(loop);
+}
+
+function startGame() {
+  titleEl.innerHTML = 'CLI<span>M</span>B!';
+  tagEl.textContent = 'A MOUNTAIN IN YOUR POCKET';
+  helpEl.innerHTML =
+    '<p><b>HOLD</b> <kbd>A</kbd> / tap <b>LEFT</b> &nbsp;|&nbsp; <b>HOLD</b> <kbd>L</kbd> / tap <b>RIGHT</b></p>'
+  + '<p style="margin-top:10px;opacity:.85;">A held hand grips any rock it touches. Release a hand to let it swing free &mdash; that\'s how you swing. '
+  + 'Release the <b>second</b> hand at the top of your swing to fly up and grab the next rock.</p>'
+  + '<p style="margin-top:8px;opacity:.65;font-size:13px;">Both hands released at the same time while hanging still &mdash; <b>jump straight up</b>.</p>';
+  playBtn.textContent = 'CLIMB';
+  reset();
+  ov.classList.add('hide');
+}
+playBtn.addEventListener('click', startGame);
+playBtn.addEventListener('touchend', e => { e.preventDefault(); startGame(); });
+
+// Show menu state with climber visible
+reset();
+running = false;
+hands.L.pressed = false; hands.R.pressed = false;
+bestEl.textContent = bestMeters > 0 ? 'BEST: ' + bestMeters + 'm' : '';
+ov.classList.remove('hide');
+requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>
