@@ -738,7 +738,7 @@ function reset() {
   // hands at sides. The player walks left/right with L/R and presses L/R
   // when under a rock to start climbing.
   const startBodyY = GROUND_Y - FOOT_Y_OFFSET;
-  body = { x: 0, y: startBodyY, px: 0, py: startBodyY, spineAngle: 0, deathPose: null };
+  body = { x: 0, y: startBodyY, px: 0, py: startBodyY, spineAngle: 0 };
   hands = {
     L: { side: 'L', pressed: false, gripped: null, x: -22, y: startBodyY + 8, grippedAt: -9999, pressedAt: -9999 },
     R: { side: 'R', pressed: false, gripped: null, x:  22, y: startBodyY + 8, grippedAt: -9999, pressedAt: -9999 },
@@ -1257,16 +1257,6 @@ function update(dt) {
           tx = body.x + sxOff;
           ty = body.y - 32;
         }
-      } else if (onGround && !running && body.deathPose) {
-        // Quirky death pose: place hand at the pose's body-local offset
-        // rotated by the spine angle so it lies on the ground next to
-        // the (also rotated) body.
-        const dp = body.deathPose;
-        const hlx = s === 'L' ? dp.lhx : dp.rhx;
-        const hly = s === 'L' ? dp.lhy : dp.rhy;
-        const c = Math.cos(body.spineAngle), sn = Math.sin(body.spineAngle);
-        tx = body.x + hlx * c - hly * sn;
-        ty = body.y + hlx * sn + hly * c;
       } else if (onGround) {
         // Idle akimbo "<V>" pose: hands rest ON the waist — placed at the
         // outer edges of the belt (belt spans x=-16 to +16, y=17 to 21).
@@ -1289,13 +1279,12 @@ function update(dt) {
   // hands are above on the same level he stays roughly upright; in freefall
   // he eases back toward vertical.
   let targetAngle = 0;
-  let skipAngleClamp = false;
   if (!running && onGround) {
-    // Dead — collapse into one of the quirky death poses chosen at gameOver.
-    // Angle is allowed past the swing-arc clamp (e.g. face-plant or back-
-    // flop go beyond 70°). Hand placement is handled separately below.
-    targetAngle = body.deathPose ? body.deathPose.angle : Math.PI / 2;
-    skipAngleClamp = true;
+    // Dead and lying on the ground — body slumps flat. We pick +π/2 so the
+    // head ends up to the right of the boots; combined with the fact that
+    // body.y already snapped to the ground line, this draws the climber on
+    // his side along the floor.
+    targetAngle = Math.PI / 2;
   } else if (hands.L.gripped && hands.R.gripped) {
     const gx = (hands.L.gripped.x + hands.R.gripped.x) / 2;
     const gy = (hands.L.gripped.y + hands.R.gripped.y) / 2;
@@ -1314,11 +1303,8 @@ function update(dt) {
   }
   // Cap at ±70° — the asymmetric active-swing arc keeps the body within
   // 70° of vertical at its most extreme, so the head never approaches
-  // horizontal and the pose never reads as sideways. Death poses skip
-  // this clamp so the body can lie fully flat (±90°) or beyond.
-  if (!skipAngleClamp) {
-    targetAngle = Math.max(-7 * Math.PI / 18, Math.min(7 * Math.PI / 18, targetAngle));
-  }
+  // horizontal and the pose never reads as sideways.
+  targetAngle = Math.max(-7 * Math.PI / 18, Math.min(7 * Math.PI / 18, targetAngle));
   // Shortest-path angular lerp
   let da = targetAngle - body.spineAngle;
   while (da >  Math.PI) da -= Math.PI * 2;
@@ -1391,29 +1377,8 @@ function update(dt) {
   }
 }
 
-// Quirky death poses. Each = body's final spine angle + body-local hand
-// offsets. Picked at random on death so back-to-back wipeouts look
-// different. Angles can exceed the swing-arc clamp (death pose ignores it).
-const DEATH_POSES = [
-  // Side-right, arms tucked along body
-  { angle:  Math.PI / 2,        lhx: -10, lhy:  22, rhx:  14, rhy:  22 },
-  // Side-left, arms tucked along body
-  { angle: -Math.PI / 2,        lhx: -14, lhy:  22, rhx:  10, rhy:  22 },
-  // Side-right, arms flung outward like a starfish
-  { angle:  Math.PI / 2,        lhx: -36, lhy: -12, rhx:  36, rhy:  16 },
-  // Side-left, arms flung outward
-  { angle: -Math.PI / 2,        lhx: -36, lhy:  16, rhx:  36, rhy: -12 },
-  // Face-plant: spine tilted, both arms thrown above the head
-  { angle:  Math.PI * 0.55,     lhx: -22, lhy: -34, rhx:  22, rhy: -34 },
-  // Slumped sit: only mildly tipped, arms slack
-  { angle:  Math.PI * 0.35,     lhx: -20, lhy:  10, rhx:  22, rhy:  14 },
-  // Backflop: tipped backward, arms above head
-  { angle: -Math.PI * 0.55,     lhx: -22, lhy: -34, rhx:  22, rhy: -34 },
-];
-
 function gameOver() {
   running = false;
-  body.deathPose = DEATH_POSES[Math.floor(Math.random() * DEATH_POSES.length)];
   for (let i = 0; i < 30; i++) particles.push({
     x: body.x, y: body.y,
     vx: rnd(-220, 220), vy: rnd(-320, -40),
