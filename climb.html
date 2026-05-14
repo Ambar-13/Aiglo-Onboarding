@@ -624,7 +624,7 @@ const SHOULDER_LY = -12;
 const DAMP = 0.997;       // slight decay so swings settle to a clean max angle instead of running forever
 const META_SCALE = 12;
 const SWING_KICK = 640;   // px/s impulse when releasing one hand while the other is gripped
-const LAUNCH_KICK = 500;  // px/s base impulse for single-hand "fly toward free hand" release
+const LAUNCH_KICK = 350;  // px/s base impulse for single-hand "fly toward free hand" release
 // Near-vertical launches lose most of their speed immediately to gravity (with
 // g=1500 a 500 px/s straight-up kick peaks at only ~83 px = 7 m). Multiply the
 // kick by (1 + LAUNCH_VERTICAL_BOOST · upwardness) so a fully-vertical launch
