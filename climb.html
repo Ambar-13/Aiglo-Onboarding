@@ -723,11 +723,16 @@ const GROUND_Y = 0;
 //     6 k+ varied infinite with "rest zones" every 2.5 km.
 
 const SPINE_STEP_MAX    = 55;    // Pythagoras-validated; see math above
-const DECOY_MIN_DIST    = 70;    // Bridson r ≈ 0.82·ARM — clear breathing room
-const DECOY_TIGHT_DIST  = 32;    // for high-altitude "ambiguity" decoys
-const DECOY_CAMO_BAND   = [38, 70];  // band around the spine where camouflage decoys cluster
-const SPINE_BRANCH_PROB = 0.15;
-const ROCK_PER_PX       = 1 / 110; // sparser wall, more readable holds
+// IMPORTANT: decoy min-distance is now > ARM=85 on purpose. With the old
+// value of 70, every decoy was reachable from its neighbours, so the whole
+// wall was a connected graph and the player could climb from anywhere.
+// With min-distance 95, decoys in a single row are NOT reachable from each
+// other (95 > ARM), so the ONLY reliable upward path is the spine.
+const DECOY_MIN_DIST    = 95;
+const DECOY_TIGHT_DIST  = 55;    // high-altitude ambiguity band: just past ARM
+const DECOY_CAMO_BAND   = [55, 85]; // camouflage near-spine band — at the EDGE of reach
+const SPINE_BRANCH_PROB = 0.12;
+const ROCK_PER_PX       = 1 / 145; // genuinely sparse, fewer ambient decoys
 const ROW_STRETCH_MAX   = 64;    // max row spacing that still leaves √(55²+64²)≈84 < 85
 const ROW_STRETCH_MIN   = 28;    // tight "chimney" rows — overshoot risk
 // Fake-spine state — dead-end spurs branching off the real path. They look
