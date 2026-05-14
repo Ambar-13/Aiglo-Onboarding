@@ -649,9 +649,14 @@ let body, hands, rocks, particles;
 let camX, camY, highestY, meters, bestMeters, running, started;
 let lastReleaseAt = { L: -9999, R: -9999 };
 let lastPressAt   = { L: -9999, R: -9999 };
-// Used to soften the active-swing force right after any grip change, so the
-// body doesn't get yanked to the sine-wave's current phase when hands swap.
+// Used to soften the active-swing force right after any grip change.
 let lastGripChangeAt = -9999;
+// The sine-wave-driven swing target uses this phase, advanced each frame.
+// On grip change we RESYNC it to match the body's current SA + velocity
+// direction so the active force starts at zero and the target only drifts
+// away from the body smoothly — no "jump to whatever phase the global
+// clock happened to be at" pop.
+let swingPhase = 0;
 let stamina = STAM_MAX;
 let combo = 0;
 let lastGrabAt = -9999;
@@ -789,6 +794,37 @@ cvs.addEventListener('pointerup', endPointer);
 cvs.addEventListener('pointercancel', endPointer);
 cvs.addEventListener('pointerleave', endPointer);
 
+// Set swingPhase such that the sine-wave-driven target SA matches the
+// body's CURRENT swing angle (and the wave's direction matches the body's
+// current tangential velocity). Called whenever a grip is acquired or
+// released so the active-swing force starts from a settled state instead
+// of yanking the body toward an arbitrary phase.
+function syncSwingPhase() {
+  const oneHand = (!!hands.L.gripped) !== (!!hands.R.gripped);
+  if (!oneHand) return;
+  const grip = hands.L.gripped || hands.R.gripped;
+  const isR = !!hands.R.gripped;
+  const SA_FREE  = 75 * Math.PI / 180;
+  const SA_OTHER = 50 * Math.PI / 180;
+  const SA_lo = isR ? -SA_FREE  : -SA_OTHER;
+  const SA_hi = isR ?  SA_OTHER :  SA_FREE;
+  const SA_mid = (SA_lo + SA_hi) / 2;
+  const SA_amp = (SA_hi - SA_lo) / 2;
+  const dx = body.x - grip.x, dy = body.y - grip.y;
+  const d = Math.hypot(dx, dy) || 1;
+  const curSA = Math.atan2(dx, dy);
+  // sin(swingPhase) should produce (curSA - SA_mid) / SA_amp
+  const normalized = Math.max(-1, Math.min(1, (curSA - SA_mid) / SA_amp));
+  let newPhase = Math.asin(normalized);  // in [-π/2, π/2]
+  // Choose the half-cycle whose cos sign matches body's current angular
+  // direction (so the target moves the SAME direction the body is moving).
+  const vx = body.x - body.px, vy = body.y - body.py;
+  const tangX = dy / d, tangY = -dx / d;
+  const tangVel = vx * tangX + vy * tangY;
+  if (tangVel < 0) newPhase = Math.PI - newPhase;
+  swingPhase = newPhase;
+}
+
 function applyImpulse(vx, vy) {
   // In Verlet, velocity is implied by (x - px). Add v px/s by shifting px backward by v*dt.
   const dt = 1 / 60;
@@ -904,6 +940,7 @@ function release(side) {
     });
     h.gripped = null;
     lastGripChangeAt = now;
+    syncSwingPhase();
   }
   lastReleaseAt[side] = now;
 }
@@ -951,6 +988,7 @@ function tryGrab(side) {
     // Combo: chained quick grabs build a streak
     const now = performance.now();
     lastGripChangeAt = now;
+    syncSwingPhase();
     if (now - lastGrabAt < COMBO_WIN) combo++;
     else combo = 1;
     lastGrabAt = now;
@@ -1013,9 +1051,11 @@ function update(dt) {
       const SA_hi = isR ?  SA_OTHER :  SA_FREE;
       const SA_mid = (SA_lo + SA_hi) / 2;
       const SA_amp = (SA_hi - SA_lo) / 2;
-      const t = performance.now() / 1000;
       const SWING_FREQ = 0.55;
-      const phase = Math.sin(t * SWING_FREQ * 2 * Math.PI);
+      // Stateful sine-wave phase. Advances each frame, RESET to match
+      // body's current position at every grip change (see syncSwingPhase).
+      swingPhase += SWING_FREQ * 2 * Math.PI * dt;
+      const phase = Math.sin(swingPhase);
       const targetSA = SA_mid + phase * SA_amp;
       // Where the body currently sits around the rock
       const dx = body.x - grip.x, dy = body.y - grip.y;
@@ -1028,15 +1068,13 @@ function update(dt) {
       // Tangential unit-vector around the rock (CCW direction)
       const tangX = dy / d, tangY = -dx / d;
       // Strong tangential acceleration toward the moving target. Scales
-      // with |err| (gentle near target, strong far from it) AND with a
-      // ramp factor that fades in over the first 350 ms after any grip
-      // change — so the body doesn't get yanked toward the sine-wave's
-      // current phase the instant a hand-swap or release happens.
+      // with |err| (gentle near target, strong far from it). Because
+      // swingPhase is resynced to body position on every grip change,
+      // err starts at zero and the target only DRIFTS away from the body
+      // smoothly — no yank-and-wiggle on hand swaps.
       const SWING_ACCEL = 6500;
-      const sinceSwap = performance.now() - lastGripChangeAt;
-      const rampFactor = Math.min(1, Math.max(0, sinceSwap / 350));
       const sign = err > 0 ? 1 : -1;
-      const mag = Math.min(1, Math.abs(err) * 3) * SWING_ACCEL * rampFactor;
+      const mag = Math.min(1, Math.abs(err) * 3) * SWING_ACCEL;
       body.x += tangX * sign * mag * dt * dt;
       body.y += tangY * sign * mag * dt * dt;
     }
@@ -1083,6 +1121,7 @@ function update(dt) {
         if (hands.L.gripped === r) hands.L.gripped = null;
         if (hands.R.gripped === r) hands.R.gripped = null;
         lastGripChangeAt = performance.now();
+        syncSwingPhase();
         for (let i = 0; i < 18; i++) particles.push({
           x: r.x + rnd(-r.R*0.4, r.R*0.4),
           y: r.y + rnd(-r.R*0.4, r.R*0.4),
@@ -1227,6 +1266,7 @@ function update(dt) {
       if (hands.L.gripped) { hands.L.gripped = null; hands.L.pressed = false; }
       if (hands.R.gripped) { hands.R.gripped = null; hands.R.pressed = false; }
       lastGripChangeAt = performance.now();
+      syncSwingPhase();
       for (let i = 0; i < 12; i++) particles.push({
         x: body.x, y: body.y - 10,
         vx: rnd(-80, 80), vy: rnd(-40, 0),
