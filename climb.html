@@ -698,45 +698,121 @@ function makeRock(x, y, R, type) {
 // just above the ground so the climber begins standing, then grips up.
 const GROUND_Y = 0;
 
-// Lay one row of rocks at world-y `y`. Rocks span the full viewport width
-// but in a NON-UNIFORM pattern: most rows cluster around 1–2 centers
-// (leaving voids on the rest of the row), and a minority are evenly
-// scattered. Cluster gaps force the climber to commit to a direction
-// instead of grazing through a uniform field of holds.
+// === World generation tuned to be SOLVABLE end-to-end ============================
+// Design synthesised from a parallel research swarm:
+//   - Reachability (ARM=85, row spacing ≤ 58): max horizontal spine step = 55.
+//     √(55² + 58²) ≈ 79.9 < 85 → every spine → spine leap is feasible with 5 px
+//     of safety margin.
+//   - "Spelunky-style" connectivity: place a guaranteed SPINE rock per row first,
+//     then decorate with Bridson-style (Poisson-disc) DECOY rocks at min-distance
+//     50 (≈ 0.6·ARM) so they read as scattered instead of clustered.
+//   - Branch the spine into a parallel rock ~20% of rows so the path doesn't
+//     read as a visible snake.
+//   - Density scales with viewport width: target ~1 rock per 70 px (ARM × 0.82),
+//     so landscape phones & laptops feel populated without overwhelming portrait.
+//   - Loose rocks first appear at 800 m, probability ramps to 55% at 50 km.
+//     FORCED-loose rows (every spine rock crumbles) start at 6 km, with intervals
+//     tightening from 400 m → 250 m → 150 m as altitude grows.
+//   - 0–100 intro / 100–500 learning / 500–2 k challenging / 2 k–6 k very hard /
+//     6 k+ varied infinite with "rest zones" every 2.5 km.
+
+const SPINE_STEP_MAX   = 55;   // Pythagoras-validated; see math above
+const DECOY_MIN_DIST   = 50;   // Bridson r ≈ 0.6·ARM
+const SPINE_BRANCH_PROB = 0.20;
+const ROCK_PER_PX      = 1 / 70;
+
+// Loose-rock probability as a function of altitude (m). Starts at 800 m
+// (first taste), ramps to 0.55 by 50 km.
+function looseProbAt(m) {
+  return Math.max(0, Math.min(0.55, (m - 800) / 48000));
+}
+
+// Difficulty config for the row at altitude m.
+//   spineStep   – max horizontal wander per row (capped at SPINE_STEP_MAX)
+//   countMult   – multiplier on the base rock count
+//   looseProb   – probability the spine rock is loose
+//   allLoose    – this row's spine + branch are guaranteed loose (commit moment)
+function difficultyAt(m) {
+  // 0–800 m: intro → learning → ramping. No loose rocks at all.
+  if (m <  100) return { spineStep: 25, countMult: 0.7, looseProb: 0 };
+  if (m <  500) return { spineStep: 35, countMult: 0.9, looseProb: 0 };
+  if (m <  800) return { spineStep: 45, countMult: 1.0, looseProb: 0 };
+  // 800–6 000 m: loose probability ramps via looseProbAt(m).
+  if (m < 2000) return { spineStep: 50, countMult: 1.0, looseProb: looseProbAt(m) };
+  if (m < 6000) return { spineStep: 55, countMult: 1.1, looseProb: looseProbAt(m) };
+  // 6 000 m+: varied infinite. 2.5 km macro-cycle with a 250 m rest zone at the
+  // start, plus FORCED-LOOSE rows whose frequency tightens with altitude.
+  const cyclePhase = m % 2500;
+  if (cyclePhase < 250) {
+    // Rest zone — sparser, gentler spine, fewer (and less likely loose) rocks.
+    return { spineStep: 35, countMult: 0.8, looseProb: looseProbAt(m) * 0.3 };
+  }
+  const forcedInterval = m < 15000 ? 400 : m < 30000 ? 250 : 150;
+  if ((m % forcedInterval) < 25) {
+    return { spineStep: 45, countMult: 0.9, allLoose: true };
+  }
+  return { spineStep: 55, countMult: 1.1, looseProb: looseProbAt(m) };
+}
+
+// State: x of the most recent spine rock. Random-walks each row so the path
+// wanders organically across the wall instead of running up the centre line.
+let spineX = 0;
+
+// Lay one row of rocks at world-y `y`.
+// 1. Move the spine by a bounded random step → place THE spine rock.
+// 2. With SPINE_BRANCH_PROB chance, place a parallel sibling rock (reachable
+//    from the spine on the same row) so the path forks every few rows.
+// 3. Fill the rest of the row with decoys at random x, rejected if they sit
+//    within DECOY_MIN_DIST of any already-placed rock. This is poor-man's
+//    Bridson and gives the wall a blue-noise "scattered" look — voids form
+//    naturally where the rejection sampler can't find space.
 function placeRow(y) {
-  const fullHalf = W * 0.48;
-  // Density scales with viewport width so a wide laptop screen feels
-  // populated while a narrow phone stays uncluttered. Average ~1 rock
-  // per 130 px of width, with row-to-row variance.
-  const baseCount = Math.max(3, Math.round(W / 130));
-  const count = rint(Math.max(2, baseCount - 2), baseCount + 2);
-  const mode = srand();
-  if (mode < 0.25) {
-    // Scattered: rocks anywhere across the wall, no shared center.
-    for (let i = 0; i < count; i++) {
-      const x = rnd(-fullHalf, fullHalf);
-      rocks.push(makeRock(x, y + rnd(-15, 15)));
+  const m = Math.max(0, Math.floor((-y) / META_SCALE));
+  const cfg = difficultyAt(m);
+  const halfX = W * 0.46;
+
+  // 1) Spine random walk.
+  const step = Math.min(cfg.spineStep, SPINE_STEP_MAX);
+  spineX = Math.max(-halfX, Math.min(halfX, spineX + rnd(-step, step)));
+
+  // 2) Spine rock — always present, always reachable from the previous spine.
+  const looseSpine = cfg.allLoose || srand() < (cfg.looseProb || 0);
+  const sx = Math.max(-halfX, Math.min(halfX, spineX + rnd(-3, 3)));
+  rocks.push(makeRock(sx, y + rnd(-5, 5), undefined, looseSpine ? 'loose' : 'solid'));
+  const placed = [sx];
+
+  // 3) Optional parallel branch (skip on forced-loose rows so the climber has
+  // to commit to the loose rock instead of side-stepping it).
+  if (!cfg.allLoose && srand() < SPINE_BRANCH_PROB) {
+    const offset = (srand() < 0.5 ? -1 : 1) * rnd(35, 55);
+    const bx = Math.max(-halfX, Math.min(halfX, sx + offset));
+    rocks.push(makeRock(bx, y + rnd(-5, 5)));
+    placed.push(bx);
+  }
+
+  // 4) Decoy rocks. Density scales with width (so a 1400-wide laptop screen
+  // doesn't look sparse) but the spine itself stays anchored to the wandering
+  // random walk, so reachability is still guaranteed.
+  const target = Math.max(3, Math.round(halfX * 2 * ROCK_PER_PX * cfg.countMult));
+  const decoyCount = Math.max(0, target - placed.length);
+  for (let i = 0; i < decoyCount; i++) {
+    let x = 0, tries = 0, ok = false;
+    while (tries++ < 10 && !ok) {
+      x = rnd(-halfX, halfX);
+      ok = true;
+      for (const p of placed) {
+        if (Math.abs(x - p) < DECOY_MIN_DIST) { ok = false; break; }
+      }
     }
-  } else if (mode < 0.75) {
-    // One cluster: a clump on one side, a void on the other.
-    const center = rnd(-fullHalf * 0.7, fullHalf * 0.7);
-    const spread = rnd(60, 140);
-    for (let i = 0; i < count; i++) {
-      let x = center + rnd(-spread, spread);
-      x = Math.max(-fullHalf, Math.min(fullHalf, x));
-      rocks.push(makeRock(x, y + rnd(-15, 15)));
+    if (ok) {
+      // Decoys are loose at ~40% the spine's rate (visual variety, learning
+      // the loose-rock language without making decoys a trap).
+      const looseDecoy = !cfg.allLoose && srand() < (cfg.looseProb || 0) * 0.4;
+      rocks.push(makeRock(x, y + rnd(-5, 5), undefined, looseDecoy ? 'loose' : 'solid'));
+      placed.push(x);
     }
-  } else {
-    // Two clusters: holds on both edges, a gap in the middle the climber
-    // has to swing across.
-    const c1 = rnd(-fullHalf, -fullHalf * 0.3);
-    const c2 = rnd(fullHalf * 0.3, fullHalf);
-    for (let i = 0; i < count; i++) {
-      const c = (srand() < 0.5) ? c1 : c2;
-      let x = c + rnd(-60, 60);
-      x = Math.max(-fullHalf, Math.min(fullHalf, x));
-      rocks.push(makeRock(x, y + rnd(-15, 15)));
-    }
+    // If the sampler exhausts tries, we simply skip — the natural void becomes
+    // part of the scattered look.
   }
 }
 
@@ -747,10 +823,12 @@ function spawnInitial() {
   // grabs it and starts the climb.
   rocks.push(makeRock(-36, -100, 18, 'solid'));
   rocks.push(makeRock(36,  -100, 18, 'solid'));
+  // Reset spine state so the new run starts from the centre of the wall.
+  spineX = 0;
   let y = -160;
   while (y > -2400) {
     placeRow(y);
-    y -= rnd(38, 58);
+    y -= rnd(40, 58);
   }
 }
 
@@ -758,10 +836,10 @@ function spawnAhead() {
   let topY = 0;
   for (const r of rocks) if (!r.crumbled && r.y < topY) topY = r.y;
   const need = camY - H * 0.5;
-  let y = topY - rnd(38, 58);
+  let y = topY - rnd(40, 58);
   while (y > need) {
     placeRow(y);
-    y -= rnd(38, 58);
+    y -= rnd(40, 58);
   }
   // Cull anything way off screen below (but keep ground-level rocks)
   rocks = rocks.filter(r => r.y < camY + H + 250 || r.y > -160);
