@@ -728,7 +728,7 @@ const GROUND_Y = 0;
 // happens to leave no rock within ARM of any previous-row rock — then
 // one fallback anchor rock is placed near a previous-row rock. That way
 // the path is emergent, mostly natural, occasionally rescued.
-const ROCK_MIN_DIST   = 75;       // base Bridson rejection radius
+const ROCK_MIN_DIST   = 65;       // base Bridson rejection radius (< ARM so neighbours often chain)
 const ARM_REACH       = 85;       // hard physics reach (same as ARM)
 const ROW_STRETCH_MAX = 64;       // max vertical row gap — √(55²+64²)≈84
 const ROW_STRETCH_MIN = 28;       // tight rows — overshoot risk
@@ -797,17 +797,14 @@ function difficultyAt(m) {
   if (m >= 5000 && (m % 2500) < 200) {
     return { rocksPerRow: 1.5, looseProb: looseProbAt(m) * 0.25, fakeSuppress: true };
   }
-  // 3) Main band table — climbs from 1.6 → 2.2 rocks/row as the player
-  //    progresses. Loose-rock probability and fake-spur density carry the
-  //    actual difficulty increase, not raw rock count.
-  if (m <  1000) return { rocksPerRow: 1.6, looseProb: 0 };
-  if (m <  2000) return { rocksPerRow: 1.8, looseProb: looseProbAt(m) };
-  if (m <  3000) return { rocksPerRow: 1.9, looseProb: looseProbAt(m) };
-  if (m <  5000) return { rocksPerRow: 2.0, looseProb: looseProbAt(m) };
-  if (m <  8000) return { rocksPerRow: 2.0, looseProb: looseProbAt(m) };
-  if (m < 12000) return { rocksPerRow: 2.1, looseProb: looseProbAt(m) };
-  if (m < 18000) return { rocksPerRow: 2.0, looseProb: looseProbAt(m) };
-  if (m < 25000) return { rocksPerRow: 2.2, looseProb: looseProbAt(m) };
+  // 3) Main band table — uniform 2.0 rocks/row baseline. Density doesn't
+  //    carry the difficulty curve any more (it stays comfortable so the
+  //    wall doesn't read as a dust-cloud); loose-rock probability and
+  //    fake-spur density do all the lifting.
+  //    The very first 100 m is a learn-the-ropes ramp where the wall is
+  //    extra-dense and fake-spurs are suppressed.
+  if (m <   100) return { rocksPerRow: 2.8, looseProb: 0, fakeSuppress: true };
+  if (m <  1000) return { rocksPerRow: 2.0, looseProb: 0 };
   return { rocksPerRow: 2.0, looseProb: looseProbAt(m) };
 }
 
