@@ -1628,8 +1628,14 @@ function update(dt) {
   const err = targetCamY - camY;
   const lerp = err > 0 ? 0.20 : 0.08;  // err > 0 → body below preferred screen pos → fall
   camY += err * lerp;
-  // Track X smoothly so the climber can drift but stays in frame
+  // Horizontal camera: the wall (±W·0.46) is narrower than the viewport
+  // (±W·0.5), so any horizontal pan would expose the empty 4% gutter on
+  // one side. Keep camX clamped so the entire wall stays framed at all
+  // times — body remains visible no matter where on the wall it is.
+  const halfX = W * 0.46;
+  const camXLimit = Math.max(0, halfX - W / 2);  // 0 when wall ≤ viewport
   camX += (body.x - camX) * Math.min(1, dt * 3);
+  camX = Math.max(-camXLimit, Math.min(camXLimit, camX));
 
   if (running) {
     // Stamina: drains while gripped. At altitude the drain rate scales up so
