@@ -6,44 +6,44 @@
 <title>ASCENT</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
-html, body { width: 100%; height: 100%; overflow: hidden; background: #d4a878; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; touch-action: none; }
+html, body { width: 100%; height: 100%; overflow: hidden; background: #faf6ff; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; touch-action: none; }
 canvas { display: block; cursor: pointer; }
 
 .hud { position: fixed; top: 14px; left: 14px; pointer-events: none; z-index: 5; }
 .meters {
-  background: #f0c040; color: #4a2a10;
+  background: #b890ff; color: #2a1454;
   padding: 6px 14px;
   font-size: 22px; font-weight: 900; letter-spacing: 1px;
   border-radius: 4px;
-  box-shadow: 0 3px 0 #b08818, 0 6px 12px rgba(0,0,0,.25);
+  box-shadow: 0 3px 0 #6a3ec8, 0 6px 12px rgba(80,40,140,.25);
   display: inline-block;
   font-variant-numeric: tabular-nums;
-  border: 2px solid #4a2a10;
+  border: 2px solid #2a1454;
   font-family: ui-monospace, "SF Mono", "Menlo", monospace;
 }
 .stam-wrap {
   width: 140px; height: 10px;
   margin-top: 10px;
-  background: rgba(40,20,10,0.55);
-  border: 2px solid rgba(243,227,200,0.55);
+  background: rgba(50,30,90,0.55);
+  border: 2px solid rgba(245,237,255,0.7);
   border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 2px 0 rgba(0,0,0,.25);
+  box-shadow: 0 2px 0 rgba(60,30,120,.25);
 }
 .stam-fill {
   height: 100%;
   width: 100%;
-  background: linear-gradient(90deg, #6ed060 0%, #c8e060 60%, #f0a040 90%, #d04030 100%);
+  background: linear-gradient(90deg, #a070ff 0%, #d870e8 55%, #ff6090 85%, #ff3068 100%);
   transition: width .15s linear, background .3s;
 }
 .combo-pop {
   position: fixed;
   top: 18px; right: 18px;
-  color: #ffe080;
+  color: #fff;
   font-size: 32px;
   font-weight: 900;
   letter-spacing: 3px;
-  text-shadow: 0 4px 0 #5a2a08, 0 8px 16px rgba(0,0,0,.4);
+  text-shadow: 0 4px 0 #6a3ec8, 0 8px 16px rgba(80,40,140,.45);
   pointer-events: none;
   opacity: 0;
   transform: scale(0.85) rotate(4deg);
@@ -61,40 +61,40 @@ canvas { display: block; cursor: pointer; }
 }
 .btn {
   width: 70px; height: 70px; border-radius: 50%;
-  background: rgba(78,45,26,0.4);
-  border: 3px solid rgba(243,227,200,0.55);
-  color: #f3e3c8;
+  background: rgba(74,42,122,0.4);
+  border: 3px solid rgba(245,237,255,0.7);
+  color: #f5edff;
   display: flex; align-items: center; justify-content: center;
   font-size: 30px; font-weight: 900;
   transition: transform .08s, background .08s, border-color .08s;
 }
-.btn.on { background: #f0b070; color: #4e2d1a; transform: scale(0.92); border-color: #f0b070; box-shadow: 0 0 0 4px rgba(240,176,112,0.25); }
+.btn.on { background: #b890ff; color: #2a1454; transform: scale(0.92); border-color: #b890ff; box-shadow: 0 0 0 4px rgba(184,144,255,0.3); }
 
 .wardrobe-btn {
   position: fixed;
   top: 14px; right: 14px;
   width: 48px; height: 48px; border-radius: 50%;
-  background: #4e2d1a; color: #f3e3c8;
-  border: 2px solid rgba(243,227,200,0.55);
+  background: #4a2a7a; color: #f5edff;
+  border: 2px solid rgba(245,237,255,0.7);
   font-size: 22px; line-height: 1;
   display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 3px 0 #2a160a, 0 6px 14px rgba(0,0,0,.3);
+  box-shadow: 0 3px 0 #2a1450, 0 6px 14px rgba(60,30,120,.35);
   z-index: 6; cursor: pointer; padding: 0;
 }
-.wardrobe-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #2a160a; }
+.wardrobe-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 #2a1450; }
 .wardrobe-ov {
   position: fixed; inset: 0;
-  background: rgba(40,20,12,0.78);
+  background: rgba(40,20,70,0.78);
   backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
   display: none; flex-direction: column; align-items: center; justify-content: center;
   z-index: 20; padding: 24px;
 }
 .wardrobe-ov.on { display: flex; }
 .wardrobe-title {
-  color: #f3e3c8;
+  color: #f5edff;
   font-size: 26px; font-weight: 900; letter-spacing: 5px;
   margin-bottom: 18px;
-  text-shadow: 0 4px 0 #3a1d0e;
+  text-shadow: 0 4px 0 #2a1450;
 }
 .wardrobe-grid {
   display: grid;
@@ -104,38 +104,38 @@ canvas { display: block; cursor: pointer; }
   margin-bottom: 18px;
 }
 .wardrobe-item {
-  background: #7a4a26;
-  color: #f3e3c8;
-  border: 2px solid #3a1f0a;
+  background: #6a4ea0;
+  color: #f5edff;
+  border: 2px solid #2a1450;
   border-radius: 8px;
   padding: 12px 8px;
   font-size: 13px; font-weight: 900; letter-spacing: 1px;
   cursor: pointer;
-  box-shadow: 0 3px 0 #3a1f0a;
+  box-shadow: 0 3px 0 #2a1450;
   transition: transform .08s;
 }
-.wardrobe-item:active { transform: translateY(2px); box-shadow: 0 1px 0 #3a1f0a; }
+.wardrobe-item:active { transform: translateY(2px); box-shadow: 0 1px 0 #2a1450; }
 .wardrobe-item.selected {
-  background: #f0b070; color: #4e2d1a; border-color: #4e2d1a;
-  box-shadow: 0 3px 0 #b07a3a, 0 0 0 3px rgba(240,176,112,0.35);
+  background: #b890ff; color: #2a1454; border-color: #2a1454;
+  box-shadow: 0 3px 0 #6a3ec8, 0 0 0 3px rgba(184,144,255,0.35);
 }
 .wardrobe-close {
-  background: #f3e3c8; color: #4e2d1a; border: none;
+  background: #f5edff; color: #4a2a7a; border: none;
   padding: 10px 28px;
   font-size: 14px; font-weight: 900; letter-spacing: 3px;
   border-radius: 6px;
-  box-shadow: 0 4px 0 #b07a3a;
+  box-shadow: 0 4px 0 #6a3ec8;
   cursor: pointer;
 }
-.wardrobe-close:active { transform: translateY(2px); box-shadow: 0 2px 0 #b07a3a; }
+.wardrobe-close:active { transform: translateY(2px); box-shadow: 0 2px 0 #6a3ec8; }
 
 .ov {
   position: fixed; inset: 0;
-  background: rgba(40,20,12,0.62);
+  background: rgba(40,20,70,0.62);
   backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
   display: flex; flex-direction: column;
   align-items: center; justify-content: center;
-  color: #f3e3c8; text-align: center;
+  color: #f5edff; text-align: center;
   padding: 24px; z-index: 10;
   transition: opacity .3s;
 }
@@ -144,32 +144,32 @@ canvas { display: block; cursor: pointer; }
   font-size: clamp(48px, 12vw, 84px);
   font-weight: 900; letter-spacing: 8px;
   margin-bottom: 6px;
-  text-shadow: 0 6px 0 #3a1d0e, 0 14px 24px rgba(0,0,0,.45);
+  text-shadow: 0 6px 0 #2a1450, 0 14px 24px rgba(40,20,70,.55);
 }
-.title span { color: #f0b070; }
+.title span { color: #b890ff; }
 .tag { font-size: 12px; letter-spacing: 5px; opacity: .65; margin-bottom: 28px; }
 .help {
   max-width: 380px; font-size: 14px; line-height: 1.6;
   opacity: 0.92; margin-bottom: 24px;
 }
 .help kbd {
-  background: #4e2d1a; padding: 2px 9px;
+  background: #4a2a7a; padding: 2px 9px;
   border-radius: 4px; font-family: inherit; font-weight: 900;
-  color: #f0b070;
-  border-bottom: 2px solid #2a160a;
+  color: #b890ff;
+  border-bottom: 2px solid #2a1450;
   font-size: 13px;
 }
 .go {
-  background: #f0b070; color: #4e2d1a; border: none;
+  background: #b890ff; color: #2a1454; border: none;
   padding: 14px 40px;
   font-size: 20px; font-weight: 900; letter-spacing: 3px;
   border-radius: 8px; cursor: pointer;
-  box-shadow: 0 5px 0 #b07a3a, 0 10px 22px rgba(0,0,0,.28);
+  box-shadow: 0 5px 0 #6a3ec8, 0 10px 22px rgba(60,30,120,.32);
 }
-.go:active { transform: translateY(3px); box-shadow: 0 2px 0 #b07a3a; }
+.go:active { transform: translateY(3px); box-shadow: 0 2px 0 #6a3ec8; }
 .best { margin-top: 16px; font-size: 15px; opacity: .85; letter-spacing: 2px; }
 .score-big { font-size: 22px; font-weight: 900; letter-spacing: 2px; margin-bottom: 6px; }
-.score-big b { color: #f0b070; }
+.score-big b { color: #b890ff; }
 </style>
 </head>
 <body>
@@ -678,15 +678,17 @@ function rockShape(R) {
 function makeRock(x, y, R, type) {
   R = R || rnd(14, 22);
   type = type || (srand() < 0.07 ? 'loose' : 'solid');
-  // Sand-stone tan palette, with a subtle hue jitter so the wall reads varied
-  const hueJ = rnd(-8, 8);
-  const tan = (l, s) => `hsl(${30 + hueJ}, ${s}%, ${l}%)`;
+  // Violet stone palette, with hue jitter so the wall reads varied instead
+  // of being a flat block of identical purples. Loose rocks shift to a hot
+  // magenta so the player can spot them against the violet solids.
+  const hueJ = rnd(-12, 12);
+  const violet = (l, s) => `hsl(${272 + hueJ}, ${s}%, ${l}%)`;
   return {
     x, y, R, type,
     shape: rockShape(R),
-    sideColor: type === 'loose' ? '#a06658' : tan(45, 38),
-    topColor:  type === 'loose' ? '#c08878' : tan(60, 48),
-    rimColor:  type === 'loose' ? '#5a2a18' : tan(28, 35),
+    sideColor: type === 'loose' ? '#d262a8' : violet(58, 48),
+    topColor:  type === 'loose' ? '#ee94c8' : violet(74, 58),
+    rimColor:  type === 'loose' ? '#7a1c5a' : violet(32, 50),
     crackedT: type === 'loose' ? 1.0 : 999,
     crumbled: false,
   };
@@ -892,7 +894,7 @@ function press(side) {
         x: body.x, y: body.y,
         vx: rnd(-40, 40) - t1x * sign * 60,
         vy: rnd(-40, 40) - t1y * sign * 60,
-        life: 0.3, max: 0.3, c: '#f0d8a0', s: 1.8,
+        life: 0.3, max: 0.3, c: '#b890ff', s: 1.8,
       });
     }
   }
@@ -968,7 +970,7 @@ function release(side) {
     for (let i = 0; i < 6; i++) particles.push({
       x: gripPos.x, y: gripPos.y,
       vx: rnd(-80, 80), vy: rnd(-80, 80),
-      life: 0.4, max: 0.4, c: '#d4b896', s: 2,
+      life: 0.4, max: 0.4, c: '#a878d8', s: 2,
     });
     h.gripped = null;
     lastGripChangeAt = now;
@@ -1046,7 +1048,7 @@ function tryGrab(side) {
       x: best.x + rnd(-best.R*0.3, best.R*0.3),
       y: best.y + rnd(-best.R*0.3, best.R*0.3),
       vx: rnd(-90, 90), vy: rnd(-90, 90),
-      life: 0.5, max: 0.5, c: '#e8c89a', s: 2.5,
+      life: 0.5, max: 0.5, c: '#c8a0ff', s: 2.5,
     });
     if (best.type === 'loose') best.crackedT = 0.9;
   }
@@ -1340,7 +1342,7 @@ function update(dt) {
       for (let i = 0; i < 12; i++) particles.push({
         x: body.x, y: body.y - 10,
         vx: rnd(-80, 80), vy: rnd(-40, 0),
-        life: 0.6, max: 0.6, c: '#f0c890', s: 2.2,
+        life: 0.6, max: 0.6, c: '#ff8fd0', s: 2.2,
       });
     }
     if (performance.now() - lastGrabAt > COMBO_WIN) combo = 0;
@@ -1382,7 +1384,7 @@ function gameOver() {
   for (let i = 0; i < 30; i++) particles.push({
     x: body.x, y: body.y,
     vx: rnd(-220, 220), vy: rnd(-320, -40),
-    life: 1, max: 1, c: '#c08866', s: 3,
+    life: 1, max: 1, c: '#7a5cb8', s: 3,
   });
   hands.L.pressed = hands.R.pressed = false;
   hands.L.gripped = hands.R.gripped = null;
@@ -1408,22 +1410,26 @@ function w2sX(x) { return x - camX + W / 2; }
 function w2sY(y) { return y - camY; }
 
 function drawBg() {
-  // Sand-tan wall (matches reference)
-  ctx.fillStyle = '#d4a878';
+  // Cream-white wall with a lavender wash so the whole scene reads as
+  // "alpine snow shaded by twilight" instead of a flat dull beige.
+  ctx.fillStyle = '#faf6ff';
   ctx.fillRect(0, 0, W, H);
-  // Slight top→bottom shading so the wall feels deep
+  // Vertical lavender wash — saturated up top (the sky-ish edge), almost
+  // pure cream in the middle, and a deeper violet near the floor so the
+  // scene has dimension without going gray.
   const gShade = ctx.createLinearGradient(0, 0, 0, H);
-  gShade.addColorStop(0, 'rgba(180,120,70,0.18)');
-  gShade.addColorStop(0.6, 'rgba(0,0,0,0)');
-  gShade.addColorStop(1, 'rgba(80,40,15,0.20)');
+  gShade.addColorStop(0, 'rgba(170,130,235,0.28)');
+  gShade.addColorStop(0.55, 'rgba(255,255,255,0)');
+  gShade.addColorStop(1, 'rgba(90,55,160,0.22)');
   ctx.fillStyle = gShade; ctx.fillRect(0, 0, W, H);
 
-  // Faint white "chalk" specks scattered across the wall (parallax with cam)
+  // Lavender + white "chalk" specks scattered across the wall (parallax with cam).
+  // Alternating colors per row keeps the texture lively, not dusty.
   const gs = 56;
   const off = ((camY * 0.7) % gs + gs) % gs;
-  ctx.fillStyle = 'rgba(255,250,235,0.35)';
   for (let yy = -gs; yy < H + gs; yy += gs) {
     const row = Math.floor((yy + camY * 0.7) / gs);
+    ctx.fillStyle = (row & 1) ? 'rgba(168,128,232,0.50)' : 'rgba(255,255,255,0.85)';
     for (let xx = 0; xx < W + gs; xx += gs) {
       const px = xx + (row & 1 ? gs / 2 : 0);
       const py = yy - off;
@@ -1433,9 +1439,9 @@ function drawBg() {
     }
   }
   // Diagonal stratum cracks — two families crossing at ~30° to make the wall
-  // read like the reference's textured rock face. Color is a slightly darker
-  // tan than the wall, so it suggests fracture lines without being noisy.
-  ctx.strokeStyle = 'rgba(110,70,40,0.22)';
+  // read like the reference's textured rock face. Saturated lavender so the
+  // lines suggest fracture instead of dust.
+  ctx.strokeStyle = 'rgba(140,95,210,0.28)';
   ctx.lineWidth = 1.8; ctx.lineCap = 'round';
   const stratStep = 220;
   // Camera-aligned base so the cracks scroll naturally
@@ -1459,7 +1465,7 @@ function drawBg() {
     }
   }
   // Family B: slope down-left (/) — fainter, so the texture isn't too busy
-  ctx.strokeStyle = 'rgba(110,70,40,0.13)';
+  ctx.strokeStyle = 'rgba(140,95,210,0.15)';
   ctx.lineWidth = 1.3;
   for (let row = -1; row < 5; row++) {
     for (let col = -1; col < 4; col++) {
@@ -1483,12 +1489,14 @@ function drawBaseCamp() {
   const groundSy = w2sY(GROUND_Y);
   if (groundSy < -40 || groundSy > H + 200) return;
 
-  // Ground strip (warm brown soil)
-  ctx.fillStyle = '#8a5a2e';
+  // Ground strip (lilac "alpine soil"). The bottom of the screen would
+  // otherwise be the dullest area — instead it's a saturated violet so
+  // the rocks and grass read in punchy contrast against it.
+  ctx.fillStyle = '#7a5cb8';
   ctx.fillRect(0, groundSy, W, H - groundSy);
-  ctx.fillStyle = '#a8702e';
+  ctx.fillStyle = '#a07ee0';
   ctx.fillRect(0, groundSy, W, 6);
-  ctx.fillStyle = 'rgba(60,30,10,0.4)';
+  ctx.fillStyle = 'rgba(40,20,80,0.45)';
   for (let i = 0; i < 30; i++) {
     const sx = ((i * 53 + 11) % W);
     const sy = groundSy + 10 + ((i * 17) % 60);
@@ -1524,33 +1532,34 @@ function drawBaseCamp() {
 }
 
 function drawBush(sx, sy) {
-  // Three lobes of green forming a chunky bush
-  ctx.fillStyle = '#3d7a2a';
+  // Three lobes of teal — a cool accent against the violet soil, with a
+  // mint highlight on top so it reads as foliage and not a stain.
+  ctx.fillStyle = '#3aa890';
   ctx.beginPath();
   ctx.arc(sx - 6, sy - 4, 7, 0, Math.PI * 2);
   ctx.arc(sx + 6, sy - 4, 7, 0, Math.PI * 2);
   ctx.arc(sx, sy - 8, 8, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = '#1a3a10'; ctx.lineWidth = 1.2; ctx.stroke();
+  ctx.strokeStyle = '#1a4a3a'; ctx.lineWidth = 1.2; ctx.stroke();
   // Lighter top highlight
-  ctx.fillStyle = '#5aa83a';
+  ctx.fillStyle = '#7adbc0';
   ctx.beginPath();
   ctx.arc(sx, sy - 11, 4, 0, Math.PI * 2);
   ctx.fill();
 }
 
 function drawTreeStump(sx, sy) {
-  // Stump body (light tan, with rings on top)
-  ctx.fillStyle = '#7a4a26';
+  // Stump body — deep "amethyst wood".
+  ctx.fillStyle = '#5a3a8c';
   ctx.fillRect(sx - 8, sy - 14, 16, 14);
-  ctx.strokeStyle = '#3a1f0a'; ctx.lineWidth = 1.2;
+  ctx.strokeStyle = '#2a1450'; ctx.lineWidth = 1.2;
   ctx.strokeRect(sx - 8, sy - 14, 16, 14);
   // Top oval (cut surface)
-  ctx.fillStyle = '#c89868';
+  ctx.fillStyle = '#c8a8e8';
   ctx.beginPath();
   ctx.ellipse(sx, sy - 14, 8, 2.5, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = '#7a4a26'; ctx.lineWidth = 0.8;
+  ctx.strokeStyle = '#5a3a8c'; ctx.lineWidth = 0.8;
   ctx.beginPath();
   ctx.ellipse(sx, sy - 14, 5, 1.6, 0, 0, Math.PI * 2);
   ctx.stroke();
@@ -1558,7 +1567,7 @@ function drawTreeStump(sx, sy) {
   ctx.ellipse(sx, sy - 14, 2.5, 0.8, 0, 0, Math.PI * 2);
   ctx.stroke();
   // Bark texture (vertical strokes)
-  ctx.strokeStyle = 'rgba(40,20,5,0.55)'; ctx.lineWidth = 0.9;
+  ctx.strokeStyle = 'rgba(30,15,60,0.55)'; ctx.lineWidth = 0.9;
   for (let i = -2; i <= 2; i++) {
     ctx.beginPath();
     ctx.moveTo(sx + i * 3, sy - 12);
@@ -1568,7 +1577,7 @@ function drawTreeStump(sx, sy) {
 }
 
 function drawGrassTuft(sx, sy) {
-  ctx.strokeStyle = '#3d7a2a';
+  ctx.strokeStyle = '#3aa890';
   ctx.lineWidth = 2;
   ctx.lineCap = 'round';
   for (let i = -2; i <= 2; i++) {
@@ -1577,7 +1586,7 @@ function drawGrassTuft(sx, sy) {
     ctx.lineTo(sx + i * 1.4, sy - 6 - Math.abs(i) * -1.2);
     ctx.stroke();
   }
-  ctx.fillStyle = '#5aa83a';
+  ctx.fillStyle = '#7adbc0';
   ctx.beginPath();
   ctx.ellipse(sx, sy - 1, 8, 2, 0, 0, Math.PI * 2);
   ctx.fill();
@@ -1585,18 +1594,18 @@ function drawGrassTuft(sx, sy) {
 
 function drawClimbSign(sx, baseY) {
   ctx.save();
-  // Two posts (the reference sign sits on a pair of legs, not one center post)
-  ctx.fillStyle = '#5a3618';
+  // Two posts (deep amethyst)
+  ctx.fillStyle = '#3a1f6a';
   ctx.fillRect(sx - 36, baseY - 32, 4, 32);
   ctx.fillRect(sx + 32, baseY - 32, 4, 32);
-  // Main wooden board
-  ctx.fillStyle = '#7a4a26';
+  // Main board — saturated violet, dark border
+  ctx.fillStyle = '#6a4ea0';
   ctx.fillRect(sx - 48, baseY - 74, 96, 44);
-  ctx.strokeStyle = '#3a1f0a';
+  ctx.strokeStyle = '#2a1450';
   ctx.lineWidth = 1.6;
   ctx.strokeRect(sx - 48, baseY - 74, 96, 44);
   // Plank grain lines
-  ctx.strokeStyle = 'rgba(40,20,5,0.45)';
+  ctx.strokeStyle = 'rgba(30,15,60,0.45)';
   ctx.lineWidth = 0.8;
   for (let i = 1; i <= 3; i++) {
     ctx.beginPath();
@@ -1605,7 +1614,7 @@ function drawClimbSign(sx, baseY) {
     ctx.stroke();
   }
   // Big "CLIMB!" text
-  ctx.fillStyle = '#f3e3c8';
+  ctx.fillStyle = '#f5edff';
   ctx.font = 'bold 22px ui-monospace, "SF Mono", monospace';
   ctx.textAlign = 'center';
   ctx.fillText('CLIMB!', sx, baseY - 53);
@@ -1613,8 +1622,8 @@ function drawClimbSign(sx, baseY) {
   ctx.font = 'bold 6px ui-monospace, monospace';
   ctx.fillText('A MOUNTAIN', sx - 26, baseY - 40);
   ctx.fillText('IN YOUR POCKET', sx + 26, baseY - 40);
-  // Mountain-peak logo in the middle, with a blue cap line under it
-  ctx.fillStyle = '#3a1f0a';
+  // Mountain-peak logo in the middle, with a snow cap line under it
+  ctx.fillStyle = '#2a1450';
   ctx.beginPath();
   ctx.moveTo(sx - 9, baseY - 35);
   ctx.lineTo(sx - 3, baseY - 46);
@@ -1622,16 +1631,16 @@ function drawClimbSign(sx, baseY) {
   ctx.lineTo(sx + 4, baseY - 44);
   ctx.lineTo(sx + 9, baseY - 35);
   ctx.closePath(); ctx.fill();
-  ctx.fillStyle = '#f3e3c8';
+  ctx.fillStyle = '#f5edff';
   ctx.beginPath();
   ctx.moveTo(sx - 5, baseY - 41);
   ctx.lineTo(sx - 3, baseY - 44);
   ctx.lineTo(sx - 1, baseY - 41);
   ctx.closePath(); ctx.fill();
   // Small "records" tag attached at the bottom-right of the sign (like a brass plate)
-  ctx.fillStyle = '#3a1f0a';
+  ctx.fillStyle = '#2a1450';
   ctx.fillRect(sx + 18, baseY - 32, 28, 8);
-  ctx.fillStyle = '#f3e3c8';
+  ctx.fillStyle = '#f5edff';
   ctx.font = 'bold 6px ui-monospace, monospace';
   ctx.fillText('records', sx + 32, baseY - 26);
   ctx.textAlign = 'start';
@@ -1641,15 +1650,15 @@ function drawClimbSign(sx, baseY) {
 function drawWorldRecordsPlaque(sx, baseY) {
   ctx.save();
   // Post
-  ctx.fillStyle = '#5a3618';
+  ctx.fillStyle = '#3a1f6a';
   ctx.fillRect(sx - 2, baseY - 20, 4, 20);
-  // Card body
-  ctx.fillStyle = '#dcc89c';
+  // Card body — cream-lilac note card
+  ctx.fillStyle = '#f0e2ff';
   ctx.fillRect(sx - 32, baseY - 56, 64, 36);
-  ctx.strokeStyle = '#7a4a26'; ctx.lineWidth = 1.6;
+  ctx.strokeStyle = '#6a4ea0'; ctx.lineWidth = 1.6;
   ctx.strokeRect(sx - 32, baseY - 56, 64, 36);
   // Small mountain icon in the top-left
-  ctx.fillStyle = '#7a4a26';
+  ctx.fillStyle = '#6a4ea0';
   ctx.beginPath();
   ctx.moveTo(sx - 28, baseY - 38);
   ctx.lineTo(sx - 23, baseY - 50);
@@ -1657,21 +1666,22 @@ function drawWorldRecordsPlaque(sx, baseY) {
   ctx.lineTo(sx - 16, baseY - 47);
   ctx.lineTo(sx - 12, baseY - 38);
   ctx.closePath(); ctx.fill();
-  // Tiny red flag on the peak
-  ctx.fillStyle = '#d04030';
+  // Tiny hot-pink flag on the peak (the only warm accent on the plaque
+  // — pops against the lilac card)
+  ctx.fillStyle = '#ff4080';
   ctx.beginPath();
   ctx.moveTo(sx - 23, baseY - 50);
   ctx.lineTo(sx - 23, baseY - 56);
   ctx.lineTo(sx - 18, baseY - 54);
   ctx.closePath(); ctx.fill();
   // "WORLD RECORDS" title
-  ctx.fillStyle = '#3a1f0a';
+  ctx.fillStyle = '#2a1450';
   ctx.font = 'bold 7px ui-monospace, monospace';
   ctx.textAlign = 'left';
   ctx.fillText('WORLD', sx - 8, baseY - 47);
   ctx.fillText('RECORDS', sx - 8, baseY - 39);
   // Stat lines
-  ctx.fillStyle = '#5a3618';
+  ctx.fillStyle = '#5a3a8c';
   ctx.font = 'bold 5px ui-monospace, monospace';
   ctx.fillText('summits: 0', sx - 28, baseY - 30);
   ctx.fillText('best time: -', sx - 28, baseY - 25);
@@ -1683,16 +1693,16 @@ function drawWorldRecordsPlaque(sx, baseY) {
 function drawRecordSign(sx, baseY, meters) {
   ctx.save();
   // Post
-  ctx.fillStyle = '#5a3618';
+  ctx.fillStyle = '#3a1f6a';
   ctx.fillRect(sx - 2, baseY - 28, 4, 28);
-  // Yellow plate
-  ctx.fillStyle = '#f0c040';
+  // Bright lavender plate (replaces the old yellow record-tag colour)
+  ctx.fillStyle = '#b890ff';
   ctx.fillRect(sx - 28, baseY - 52, 56, 24);
-  ctx.strokeStyle = '#4a2a10';
+  ctx.strokeStyle = '#2a1454';
   ctx.lineWidth = 1.6;
   ctx.strokeRect(sx - 28, baseY - 52, 56, 24);
   // "record:" small + meters big
-  ctx.fillStyle = '#4a2a10';
+  ctx.fillStyle = '#2a1454';
   ctx.font = 'bold 7px ui-monospace, monospace';
   ctx.textAlign = 'center';
   ctx.fillText('record:', sx, baseY - 41);
@@ -1700,9 +1710,9 @@ function drawRecordSign(sx, baseY, meters) {
   ctx.fillText(meters + 'm', sx, baseY - 31);
   ctx.textAlign = 'start';
   // Small directional arrow on a tag at the post
-  ctx.fillStyle = '#7a4a26';
+  ctx.fillStyle = '#6a4ea0';
   ctx.fillRect(sx - 14, baseY - 16, 12, 6);
-  ctx.fillStyle = '#f3e3c8';
+  ctx.fillStyle = '#f5edff';
   ctx.beginPath();
   ctx.moveTo(sx - 12, baseY - 13);
   ctx.lineTo(sx - 6, baseY - 16);
