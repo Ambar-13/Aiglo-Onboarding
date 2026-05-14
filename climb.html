@@ -878,17 +878,31 @@ function placeRow(y) {
     return n;
   }
   if (prevRowRocks.length > 0) {
-    let safety = 0;
-    while (reachableCount() < 3 && safety++ < 20 && placedX.length < 14) {
-      const anchor = prevRowRocks[Math.floor(srand() * prevRowRocks.length)];
-      const dx = (srand() - 0.5) * 2 * maxReachDx * 0.85;
-      const x = Math.max(-halfX, Math.min(halfX, anchor + dx));
-      // Refuse to stack rocks directly on existing ones (visual sanity).
-      let stacked = false;
-      for (const p of placedX) {
-        if (Math.abs(x - p) < 30) { stacked = true; break; }
+    // STRICT 3-reachable guarantee. Each iteration ALWAYS adds a rock that
+    // is — by construction — within reach of a previous-row anchor, so
+    // each iteration strictly increases reachableCount by exactly 1. The
+    // loop therefore runs at most (3 − initial reachable count) iterations
+    // and terminates in O(1) every row.
+    //
+    // The inner loop tries up to 8 times to find a position that doesn't
+    // stack on an existing rock (within 30 px); if all 8 candidate
+    // positions stack, we accept the last one anyway. Stacking is rare
+    // (it'd require existing rocks to densely cover every ±58 px window
+    // around every prev-row anchor) and at worst looks like two close
+    // rocks; the reachability guarantee is preserved either way.
+    while (reachableCount() < 3 && placedX.length < 20) {
+      let x = 0;
+      for (let attempts = 0; attempts < 8; attempts++) {
+        const anchor = prevRowRocks[Math.floor(srand() * prevRowRocks.length)];
+        const dx = (srand() - 0.5) * 2 * maxReachDx * 0.85;
+        x = Math.max(-halfX, Math.min(halfX, anchor + dx));
+        let stacked = false;
+        for (const p of placedX) {
+          if (Math.abs(x - p) < 30) { stacked = true; break; }
+        }
+        if (!stacked) break;
       }
-      if (!stacked) placedX.push(x);
+      placedX.push(x);   // unconditional — guarantees reachableCount++
     }
   } else if (placedX.length === 0) {
     placedX.push(0);
