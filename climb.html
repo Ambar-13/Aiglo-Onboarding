@@ -1648,16 +1648,20 @@ function drawBaseCamp() {
   const groundSy = w2sY(GROUND_Y);
   if (groundSy < -40 || groundSy > H + 200) return;
 
-  // Ground strip (light lilac "alpine soil"). Saturated enough to anchor
-  // the bottom of the screen without darkening the overall palette.
+  // Ground strip (light lilac "alpine soil"). Kept as a SHORT band — the
+  // dirt is just a base anchor for grass / bushes, not the dominant element
+  // of the screen. Below the band we let the cream wall continue.
+  const GROUND_BAND = 70;
+  const groundH = Math.min(GROUND_BAND, Math.max(0, H - groundSy));
   ctx.fillStyle = '#b8a0e8';
-  ctx.fillRect(0, groundSy, W, H - groundSy);
+  ctx.fillRect(0, groundSy, W, groundH);
   ctx.fillStyle = '#d4c0f5';
   ctx.fillRect(0, groundSy, W, 6);
   ctx.fillStyle = 'rgba(90,60,150,0.30)';
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 14; i++) {
     const sx = ((i * 53 + 11) % W);
-    const sy = groundSy + 10 + ((i * 17) % 60);
+    const sy = groundSy + 10 + ((i * 17) % (groundH - 12));
+    if (sy > groundSy + groundH - 2) continue;
     ctx.beginPath();
     ctx.arc(sx, sy, 1.6, 0, Math.PI * 2);
     ctx.fill();
