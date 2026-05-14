@@ -624,7 +624,7 @@ const SHOULDER_LY = -12;
 const DAMP = 0.997;       // slight decay so swings settle to a clean max angle instead of running forever
 const META_SCALE = 12;
 const SWING_KICK = 640;   // px/s impulse when releasing one hand while the other is gripped
-const LAUNCH_KICK = 700;  // px/s impulse for the single-hand "fly toward free hand" release
+const LAUNCH_KICK = 1000; // px/s impulse for the single-hand "fly toward free hand" release
 const TAP_BOOST  = 320;   // extra impulse when releasing very quickly (tap, not hold)
 const PUMP_KICK  = 340;   // px/s tangential pump when pressing the free side mid-swing
 const PUMP_STAM_COST = 4; // stamina cost per pump
@@ -698,11 +698,6 @@ function makeRock(x, y, R, type) {
 // just above the ground so the climber begins standing, then grips up.
 const GROUND_Y = 0;
 
-// Half-width of the climbable column. Capped so the path stays consistent
-// on wide laptop / landscape phones — extra lateral viewport just becomes
-// empty wall instead of an unreachable spread of holds.
-function columnHalf() { return Math.min(W * 0.46, 200); }
-
 function spawnInitial() {
   rocks = [];
   // Two starter holds positioned within easy reach of the climber while
@@ -711,17 +706,14 @@ function spawnInitial() {
   rocks.push(makeRock(-36, -100, 18, 'solid'));
   rocks.push(makeRock(36,  -100, 18, 'solid'));
   let y = -160;
-  const halfX = columnHalf();
   while (y > -2200) {
-    // Sparser scatter — only the rocks that actually lead UP, not a wall
-    // of dust. 3–5 holds per row keeps a clear path while leaving room
-    // for the player to pick a line.
-    const count = rint(3, 5);
+    // Dense scatter — reference wall is packed with tiny holds
+    const count = rint(5, 9);
     for (let i = 0; i < count; i++) {
-      const x = rnd(-halfX, halfX);
+      const x = rnd(-W * 0.46, W * 0.46);
       rocks.push(makeRock(x, y + rnd(-18, 18)));
     }
-    y -= rnd(38, 60);
+    y -= rnd(34, 56);
   }
 }
 
@@ -729,15 +721,14 @@ function spawnAhead() {
   let topY = 0;
   for (const r of rocks) if (!r.crumbled && r.y < topY) topY = r.y;
   const need = camY - H * 0.5;
-  let y = topY - rnd(38, 60);
-  const halfX = columnHalf();
+  let y = topY - rnd(34, 56);
   while (y > need) {
-    const count = rint(3, 5);
+    const count = rint(5, 9);
     for (let i = 0; i < count; i++) {
-      const x = rnd(-halfX, halfX);
+      const x = rnd(-W * 0.46, W * 0.46);
       rocks.push(makeRock(x, y + rnd(-18, 18)));
     }
-    y -= rnd(38, 60);
+    y -= rnd(34, 56);
   }
   // Cull anything way off screen below (but keep ground-level rocks)
   rocks = rocks.filter(r => r.y < camY + H + 250 || r.y > -160);
