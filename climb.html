@@ -810,18 +810,18 @@ function difficultyAt(m) {
   };
 }
 
-// 0–100 m: 4.0 (dense tutorial). Drops by 0.07 every 100 m past that,
-// floored at 1.0. Slow taper — density stays readable for ~4 km of
-// climb before settling into the sparse ladder.
-//   0–100   → 4.0
-//   1000    → 3.3
-//   2000    → 2.6
-//   3000    → 1.9
-//   4000+   → 1.0 (floor reached at ~4200 m)
+// 0–100 m: 5.0 (dense tutorial). Drops by 0.07 every 100 m past that,
+// floored at 3.0. The 3.0 floor is intentional: combined with the
+// reachable-rescue check in placeRow it guarantees at least 3 viable
+// upward moves from every row.
+//   0–100   → 5.0
+//   1000    → 4.3
+//   2000    → 3.6
+//   3000+   → 3.0 (floor reached ~2900 m)
 function densityAt(m) {
-  if (m < 100) return 4.0;
+  if (m < 100) return 5.0;
   const band = Math.floor(m / 100);  // 1, 2, 3, ...
-  return Math.max(1.0, 4.0 - 0.07 * band);
+  return Math.max(3.0, 5.0 - 0.07 * band);
 }
 
 // Lay one row of rocks at world-y `y`.
@@ -860,28 +860,35 @@ function placeRow(y) {
     if (ok) placedX.push(x);
   }
 
-  // 3) Connectivity rescue. If no placed rock is within ARM of a prev-row
-  // rock, force-place one near a random prev-row anchor. This is the ONLY
-  // place world-gen guarantees connectivity — and only when the natural
-  // scatter happens to fail.
-  if (prevRowRocks.length > 0) {
-    // Use the typical row spacing (~50 px) for the diagonal reach budget.
-    const dyTypical = 50;
-    const maxReachDx = Math.sqrt(Math.max(1, ARM_REACH * ARM_REACH - dyTypical * dyTypical));
-    let connected = false;
+  // 3) Connectivity rescue. INVARIANT: at least 3 rocks in this row must be
+  // reachable from some rock in the previous row, so the climber always has
+  // ≥3 plausible upward moves. After random scatter we count how many
+  // placed rocks satisfy that, and force-place additional anchors near
+  // previous-row rocks until the count hits 3.
+  const dyTypical = 50;
+  const maxReachDx = Math.sqrt(Math.max(1, ARM_REACH * ARM_REACH - dyTypical * dyTypical));
+  function reachableCount() {
+    if (prevRowRocks.length === 0) return placedX.length;
+    let n = 0;
     for (const px of placedX) {
       for (const ppx of prevRowRocks) {
-        if (Math.abs(px - ppx) <= maxReachDx) { connected = true; break; }
+        if (Math.abs(px - ppx) <= maxReachDx) { n++; break; }
       }
-      if (connected) break;
     }
-    if (!connected) {
+    return n;
+  }
+  if (prevRowRocks.length > 0) {
+    let safety = 0;
+    while (reachableCount() < 3 && safety++ < 20 && placedX.length < 14) {
       const anchor = prevRowRocks[Math.floor(srand() * prevRowRocks.length)];
-      const dx = (srand() - 0.5) * 2 * maxReachDx * 0.75;
+      const dx = (srand() - 0.5) * 2 * maxReachDx * 0.85;
       const x = Math.max(-halfX, Math.min(halfX, anchor + dx));
-      // Try to keep min-distance from other rocks in this row, but accept
-      // the rescue even if it has to sit a little close.
-      placedX.push(x);
+      // Refuse to stack rocks directly on existing ones (visual sanity).
+      let stacked = false;
+      for (const p of placedX) {
+        if (Math.abs(x - p) < 30) { stacked = true; break; }
+      }
+      if (!stacked) placedX.push(x);
     }
   } else if (placedX.length === 0) {
     placedX.push(0);
