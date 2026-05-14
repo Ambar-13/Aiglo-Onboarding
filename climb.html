@@ -624,7 +624,7 @@ const SHOULDER_LY = -12;
 const DAMP = 0.997;       // slight decay so swings settle to a clean max angle instead of running forever
 const META_SCALE = 12;
 const SWING_KICK = 640;   // px/s impulse when releasing one hand while the other is gripped
-const LAUNCH_KICK = 600;  // px/s impulse for the single-hand "fly toward free hand" release
+const LAUNCH_KICK = 650;  // px/s impulse for the single-hand "fly toward free hand" release
 const TAP_BOOST  = 320;   // extra impulse when releasing very quickly (tap, not hold)
 const PUMP_KICK  = 340;   // px/s tangential pump when pressing the free side mid-swing
 const PUMP_STAM_COST = 4; // stamina cost per pump
@@ -722,36 +722,61 @@ const SPINE_BRANCH_PROB = 0.18;
 const ROCK_PER_PX      = 1 / 110; // sparser wall, more readable holds
 
 // Loose-rock probability as a function of altitude (m). Starts at 800 m
-// (first taste), ramps to 0.55 by 50 km.
+// (first taste), ramps quickly to 0.55 by 18 km so the mid-game actually
+// punishes — players were trivially reaching 2 km because P stayed under 3%
+// for the entire run.
 function looseProbAt(m) {
-  return Math.max(0, Math.min(0.55, (m - 800) / 48000));
+  if (m < 800) return 0;
+  return Math.min(0.55, (m - 800) / 17200 * 0.55);  // 0.55 at m = 18000
+}
+
+// How often forced-loose rows (the ENTIRE spine is loose, must commit) fire.
+// Returns the period in meters, or -1 if none yet. Tightens aggressively from
+// 3 km onward — 25 km is the design target for "hard plateau".
+function forcedLoosePeriod(m) {
+  if (m < 3000)  return -1;
+  if (m < 5000)  return 700;
+  if (m < 8000)  return 450;
+  if (m < 12000) return 320;
+  if (m < 16000) return 220;
+  if (m < 20000) return 160;
+  if (m < 25000) return 120;
+  return 100;
 }
 
 // Difficulty config for the row at altitude m.
-//   spineStep   – max horizontal wander per row (capped at SPINE_STEP_MAX)
-//   countMult   – multiplier on the base rock count
-//   looseProb   – probability the spine rock is loose
-//   allLoose    – this row's spine + branch are guaranteed loose (commit moment)
+//   spineStep        – max horizontal wander per row (capped at SPINE_STEP_MAX)
+//   countMult        – multiplier on the base rock count
+//   looseProb        – probability the spine rock is loose
+//   allLoose         – this row's spine + branch are guaranteed loose
+//   decoyNearSpine   – fraction of decoys allowed to spawn CLOSE to the spine
+//                      (= visual ambiguity, hard to tell path apart from noise)
 function difficultyAt(m) {
-  // 0–800 m: intro → learning → ramping. No loose rocks at all.
-  if (m <  100) return { spineStep: 25, countMult: 0.7, looseProb: 0 };
-  if (m <  500) return { spineStep: 35, countMult: 0.9, looseProb: 0 };
-  if (m <  800) return { spineStep: 45, countMult: 1.0, looseProb: 0 };
-  // 800–6 000 m: loose probability ramps via looseProbAt(m).
-  if (m < 2000) return { spineStep: 50, countMult: 1.0, looseProb: looseProbAt(m) };
-  if (m < 6000) return { spineStep: 55, countMult: 1.1, looseProb: looseProbAt(m) };
-  // 6 000 m+: varied infinite. 2.5 km macro-cycle with a 250 m rest zone at the
-  // start, plus FORCED-LOOSE rows whose frequency tightens with altitude.
-  const cyclePhase = m % 2500;
-  if (cyclePhase < 250) {
-    // Rest zone — sparser, gentler spine, fewer (and less likely loose) rocks.
-    return { spineStep: 35, countMult: 0.8, looseProb: looseProbAt(m) * 0.3 };
+  // 1) Forced-loose check fires first: a single deliberately punishing row
+  //    cutting through whatever band we're in.
+  const fli = forcedLoosePeriod(m);
+  if (fli > 0 && (m % fli) < 22) {
+    return { spineStep: 55, countMult: 1.0, allLoose: true };
   }
-  const forcedInterval = m < 15000 ? 400 : m < 30000 ? 250 : 150;
-  if ((m % forcedInterval) < 25) {
-    return { spineStep: 45, countMult: 0.9, allLoose: true };
+  // 2) Rest zones above 5 km — 200 m breather at the start of every 2.5 km
+  //    macro cycle, sparser and almost no loose rocks. Players need these
+  //    to recover rhythm after long forced-loose stretches.
+  if (m >= 5000 && (m % 2500) < 200) {
+    return { spineStep: 35, countMult: 0.7, looseProb: looseProbAt(m) * 0.25 };
   }
-  return { spineStep: 55, countMult: 1.1, looseProb: looseProbAt(m) };
+  // 3) Base bands — tutorial → learning → loose intro → ambiguity ramp.
+  if (m <   100) return { spineStep: 25, countMult: 0.6, looseProb: 0 };
+  if (m <   300) return { spineStep: 30, countMult: 0.7, looseProb: 0 };
+  if (m <   800) return { spineStep: 40, countMult: 0.8, looseProb: 0 };
+  if (m <  1500) return { spineStep: 45, countMult: 0.9, looseProb: looseProbAt(m), decoyNearSpine: 0.10 };
+  if (m <  3000) return { spineStep: 50, countMult: 1.0, looseProb: looseProbAt(m), decoyNearSpine: 0.20 };
+  if (m <  5000) return { spineStep: 55, countMult: 1.0, looseProb: looseProbAt(m), decoyNearSpine: 0.30 };
+  if (m < 10000) return { spineStep: 55, countMult: 1.05, looseProb: looseProbAt(m), decoyNearSpine: 0.45 };
+  if (m < 15000) return { spineStep: 55, countMult: 1.10, looseProb: looseProbAt(m), decoyNearSpine: 0.55 };
+  if (m < 20000) return { spineStep: 55, countMult: 1.10, looseProb: looseProbAt(m), decoyNearSpine: 0.65 };
+  if (m < 25000) return { spineStep: 55, countMult: 1.15, looseProb: looseProbAt(m), decoyNearSpine: 0.75 };
+  // 4) 25 km+ plateau — variety carries the engagement, not more difficulty.
+  return { spineStep: 55, countMult: 1.15, looseProb: looseProbAt(m), decoyNearSpine: 0.75 };
 }
 
 // State: x of the most recent spine rock. Random-walks each row so the path
@@ -793,15 +818,25 @@ function placeRow(y) {
   // 4) Decoy rocks. Density scales with width (so a 1400-wide laptop screen
   // doesn't look sparse) but the spine itself stays anchored to the wandering
   // random walk, so reachability is still guaranteed.
+  //
+  // At high altitudes a configurable FRACTION of decoys (`decoyNearSpine`)
+  // can spawn within `DECOY_TIGHT_DIST` of an existing rock instead of the
+  // full `DECOY_MIN_DIST`. This creates visual AMBIGUITY — at 15 km+ the
+  // spine is no longer obvious in a sea of nearby decoys, so route-reading
+  // becomes the actual skill ceiling.
   const target = Math.max(3, Math.round(halfX * 2 * ROCK_PER_PX * cfg.countMult));
   const decoyCount = Math.max(0, target - placed.length);
+  const nearProb = cfg.decoyNearSpine || 0;
+  const DECOY_TIGHT_DIST = 32;  // still > rock-radius (~22) so they don't overlap
   for (let i = 0; i < decoyCount; i++) {
+    const tight = srand() < nearProb;
+    const minDist = tight ? DECOY_TIGHT_DIST : DECOY_MIN_DIST;
     let x = 0, tries = 0, ok = false;
     while (tries++ < 10 && !ok) {
       x = rnd(-halfX, halfX);
       ok = true;
       for (const p of placed) {
-        if (Math.abs(x - p) < DECOY_MIN_DIST) { ok = false; break; }
+        if (Math.abs(x - p) < minDist) { ok = false; break; }
       }
     }
     if (ok) {
