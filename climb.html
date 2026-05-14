@@ -740,8 +740,8 @@ function reset() {
   const startBodyY = GROUND_Y - FOOT_Y_OFFSET;
   body = { x: 0, y: startBodyY, px: 0, py: startBodyY, spineAngle: 0 };
   hands = {
-    L: { side: 'L', pressed: false, gripped: null, x: -22, y: startBodyY + 8 },
-    R: { side: 'R', pressed: false, gripped: null, x:  22, y: startBodyY + 8 },
+    L: { side: 'L', pressed: false, gripped: null, x: -22, y: startBodyY + 8, grippedAt: -9999, pressedAt: -9999 },
+    R: { side: 'R', pressed: false, gripped: null, x:  22, y: startBodyY + 8, grippedAt: -9999, pressedAt: -9999 },
   };
   particles = [];
   highestY = 0;
@@ -836,7 +836,9 @@ function press(side) {
   const h = hands[side];
   if (h.pressed) return;
   h.pressed = true;
-  lastPressAt[side] = performance.now();
+  const tnow = performance.now();
+  h.pressedAt = tnow;
+  lastPressAt[side] = tnow;
   tryGrab(side);
   // PUMP: if the press didn't result in a grab but the other hand is gripped,
   // this acts as an active swing pump in the pressed direction (like a kid
@@ -953,11 +955,15 @@ function updateButtonUI() {
 function tryGrab(side) {
   const h = hands[side];
   if (h.gripped) return;
-  // Hand must actually overlap the rock (within rock radius + a small skin
-  // margin), not just be "in the neighborhood." Otherwise pressing any
-  // direction grabs whatever rock happens to be nearby, which makes the
-  // player feel like they're not aiming.
-  const HAND_MARGIN = 4;
+  // Hand must actually overlap the rock (within rock radius + a skin
+  // margin). The margin is small for ground-pickup (so pressing any
+  // direction doesn't snap to a far-away rock), but generous when the
+  // OTHER hand is already gripped and the player is actively pressing
+  // this side — the free hand is sweeping through an arc and we want it
+  // to catch rocks it passes near, not slip past them.
+  const otherHand = hands[side === 'L' ? 'R' : 'L'];
+  const isReaching = h.pressed && !!otherHand.gripped;
+  const HAND_MARGIN = isReaching ? 14 : 4;
   let best = null, bestD = Infinity;
   for (const r of rocks) {
     if (r.crumbled) continue;
@@ -972,13 +978,24 @@ function tryGrab(side) {
       best = r;
     }
   }
-  // Fallback: if no rock was under the palm, but the OTHER hand is gripped
-  // on a rock within reach, grab THAT same rock — both hands on one rock.
-  // Lets the player do a hand-swap: grip L, press R (grabs L's rock),
-  // release L, now climbing on R alone.
+  // Fallback (hand-swap intent): if no rock was under the palm, but the
+  // OTHER hand has been GRIPPED for a while AND this hand has been
+  // pressed-and-seeking for a while, grab THAT same rock.
+  // The dwell gates prevent simultaneous L+R presses from doubling onto
+  // one rock, and give the free swinging hand a chance to sweep into its
+  // own rock instead of snapping to the other hand's hold.
   if (!best) {
-    const otherGrip = hands[side === 'L' ? 'R' : 'L'].gripped;
-    if (otherGrip && !otherGrip.crumbled) {
+    const otherGrip = otherHand.gripped;
+    const tnow = performance.now();
+    const HAND_SWAP_DWELL = 300; // ms
+    // Fallback fires only if this hand was pressed AFTER the other hand
+    // was already gripped (true hand-swap intent), and enough time has
+    // passed for both to settle. Simultaneous L+R presses fail the
+    // "pressed AFTER gripped" check and never fall back.
+    if (otherGrip && !otherGrip.crumbled
+        && h.pressedAt > otherHand.grippedAt + 50
+        && tnow - otherHand.grippedAt > HAND_SWAP_DWELL
+        && tnow - h.pressedAt         > HAND_SWAP_DWELL) {
       const dB = Math.hypot(otherGrip.x - body.x, otherGrip.y - body.y);
       if (dB <= ARM + 4) best = otherGrip;
     }
@@ -987,6 +1004,7 @@ function tryGrab(side) {
     h.gripped = best;
     // Combo: chained quick grabs build a streak
     const now = performance.now();
+    h.grippedAt = now;
     lastGripChangeAt = now;
     syncSwingPhase();
     if (now - lastGrabAt < COMBO_WIN) combo++;
@@ -1165,19 +1183,41 @@ function update(dt) {
         const c = Math.cos(body.spineAngle), sn = Math.sin(body.spineAngle);
         tx = body.x + handLx * c - handLy * sn;
         ty = body.y + handLx * sn + handLy * c;
+        // If the player is actively pressing this side, let the free hand
+        // BIAS toward a real rock on its side rather than rigidly holding
+        // the fixed reach pose. The hand still mostly follows the body's
+        // swing arc, but it nudges toward a nearby same-side rock so the
+        // climber can actually catch holds while swinging.
+        if (h.pressed) {
+          let bestR = null, bestDH = (L1_BONE + L2_BONE) * 0.9;
+          for (const r of rocks) {
+            if (r.crumbled) continue;
+            if (r === otherGrip) continue; // never bias to the other hand's rock
+            const dxB = r.x - body.x, dyB = r.y - body.y;
+            const dB = Math.hypot(dxB, dyB);
+            if (dB > ARM + 4) continue;
+            if ((r.x - body.x) * sideSign < -8) continue; // own-side only
+            const dH = Math.hypot(r.x - tx, r.y - ty);
+            if (dH < bestDH) { bestDH = dH; bestR = r; }
+          }
+          if (bestR) { tx = bestR.x; ty = bestR.y; }
+        }
       } else if (h.pressed) {
         // No hand gripped (e.g. on the ground or in the air after a release)
         // and the player is pressing: seek nearest reachable rock so the
         // starter rocks can be grabbed easily.
+        // Strict side bias so L+R pressed together pick DIFFERENT rocks
+        // (each hand prefers rocks on its own side of the body).
         const sideSign = s === 'L' ? -1 : 1;
+        const otherHand = s === 'L' ? hands.R : hands.L;
         let best = null, bestD = ARM + 8;
         for (const r of rocks) {
           if (r.crumbled) continue;
+          if (otherHand.gripped === r) continue; // don't pile onto the other hand
           const dxB = r.x - body.x, dyB = r.y - body.y;
           const dB = Math.hypot(dxB, dyB);
           if (dB > ARM + 4) continue;
-          const onCorrectSide = (r.x - body.x) * sideSign >= -8 || r.y < body.y - 4;
-          if (!onCorrectSide) continue;
+          if ((r.x - body.x) * sideSign < -4) continue; // own-side only
           if (dB < bestD) { bestD = dB; best = r; }
         }
         if (best) {
