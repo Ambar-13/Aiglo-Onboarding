@@ -24,68 +24,80 @@
     {"id": "other",       "label": "Other",       "emoji": "✨"}
   ],
   "stage1": {
-    "title": "Welcome",
-    "subtitle": "Two minutes to find your way in.",
-    "nameLabel": "First, what should we call you?",
+    "title": "Hello",
+    "subtitle": "Tell us your name, then take a quick climb.",
+    "nameLabel": "What should we call you?",
     "namePlaceholder": "Your first name",
-    "namePersist": "We'll only keep this on your device.",
-    "panels": [
-      {
-        "title": "What this is",
-        "body": "AI Global is built with MIT Professional Education. The mission, in their words: open systems, practical AI, clear stewardship. The tagline: one quarter, one domain, real systems."
-      },
-      {
-        "title": "How a quarter works",
-        "body": "Each quarter the community focuses on one domain. Q1 2026 is Marketing. GloLabs Vol 1 (Apr 2026) shipped six peer-reviewed case studies — workshop pipelines, multimedia, community growth, content, ambassadors."
-      },
-      {
-        "title": "Why volunteers matter",
-        "body": "Ambassadors, AI.MRKT teachers, GloLabs authors, contributors — the open-source side of AI Global is people-powered. You're not signing up for anything. You're just looking around."
-      }
-    ],
-    "ctaLabel": "Try a 100 m climb",
-    "ctaHint": "It's the warm-up. We'll show you which rock to grab next.",
-    "outcomeWin": "100 m reached. Nice climb. The flow's about to make more sense.",
-    "outcomeFall": "Fell off. No score-keeping here — just a feel for the controls."
+    "namePersist": "Stays on your device.",
+    "pre": {
+      "title": "What AI Global is",
+      "body": "Built with MIT Professional Education. One quarter, one domain, real AI systems. Q1 2026 is Marketing. The climb is your warm-up — we'll fill in the rest as you go."
+    },
+    "ctaLabel": "Start the climb",
+    "ctaHint": "100 m. Soft hint shown for the first few holds.",
+    "outcome": {
+      "winTitle": "100 m. Nice climb.",
+      "winBody": "While you were climbing — AI Global runs in quarterly cycles around one domain. Each quarter ships GloLabs (peer-reviewed case studies) and GloGames (interactive lessons). You'll meet GloGames in Stage 4.",
+      "failTitle": "Off the wall.",
+      "failBody": "No score-keeping. The climb is just to get a feel. Read on while you catch your breath: AI Global runs in quarterly cycles around one domain. Q1 2026 is Marketing.",
+      "next": "When you're ready, Stage 2 is the first intro you'd post in Discord."
+    }
   },
   "stage2": {
     "title": "Your first intro",
-    "subtitle": "One line that won't make you cringe.",
-    "aboutDiscord": {
-      "title": "About the server",
-      "body": "AI Global runs on Discord. The first stop is #👋introduce-yourself — name, role, country, what you're here for. There's a #🤝onboarding bot that walks you through what's where, and channels for healthcare, finance, ethics, news, and a buddy-finding board."
+    "subtitle": "One line you'd actually post.",
+    "pre": {
+      "title": "The Discord, briefly",
+      "body": "First stop is #👋introduce-yourself. The format is light: name, role, country, what you're here for. Pick a lane below and we'll draft a starter line in your name. You can shuffle, or write your own."
     },
-    "categoryPrompt": "Pick the lane that feels closest to you. Doesn't have to be perfect.",
+    "categoryPrompt": "Your lane:",
     "shuffleLabel": "🔄 shuffle",
     "ownLabel": "✏️ write my own",
     "ownPlaceholder": "Hi, I'm {name}. ",
     "ctaLabel": "Climb to 150 m",
-    "ctaHint": "Same wall, no training rocks this time.",
-    "outcomeWinTitle": "Summit at 150 m",
-    "outcomeWinBody": "That's the climb. Now the intro — copy, head to Discord, paste, and you're in.",
-    "outcomeFallTitle": "Reached {meters} m",
-    "outcomeFallBody": "Wall got you. The intro's still ready to go though — copy it, post it, then come back for round two."
+    "ctaHint": "Same wall, no hints this time.",
+    "outcome": {
+      "winTitle": "150 m. Crisp.",
+      "winBody": "Now the intro. Three programs to know before you post: GloLabs (case studies — Vol 1 covered Marketing), GloGames (interactive AI lessons), SPC (paid 4-course governance program). The Discord routes you to all of them.",
+      "failTitle": "Reached {meters} m.",
+      "failBody": "The wall got you. The intro's still ready — copy and post it, then come back for another go. Programs to know: GloLabs (case studies), GloGames (interactive lessons), SPC (governance courses).",
+      "lovedPrompt": "Optional — one line about what you took away from this so far. Goes on the share card.",
+      "lovedPlaceholder": "e.g. The community-first framing is what hooked me.",
+      "next": "Stage 3 is the longer post for #find-a-buddy."
+    }
   },
   "stage3": {
-    "title": "The buddy post",
-    "subtitle": "There's a #🤝find-a-buddy channel. It expects a specific format. Fill it in.",
-    "introBlurb": "Two minutes of forms. The output is one copy-paste-ready Discord post.",
-    "ctaLabel": "Climb as high as you can",
-    "ctaHint": "No target. Just see how far you get.",
-    "outcomePosterTitle": "Reached {meters} m",
-    "outcomePosterBody": "That's the run. Your buddy post is ready — pick a channel to drop it in."
+    "title": "Find a buddy",
+    "subtitle": "The longer post. We'll format it for you.",
+    "pre": {
+      "title": "How buddies work",
+      "body": "#🤝find-a-buddy expects a specific format — location, role, what you'd teach, what you'd learn. Fill the form below and we'll produce a copy-paste-ready post. Then climb as high as you can."
+    },
+    "fullPicture": {
+      "title": "Programs worth knowing",
+      "body": "GloLabs publishes peer-reviewed AI case studies each quarter. GloGames makes the lessons interactive (you'll see one in Stage 4). SPC is the four-course governance program. Volunteer paths: Ambassador, AI.MRKT (learn-then-teach), case-study authoring, contributor pathway. None of this is required to be part of the community — but it's how it grows."
+    },
+    "ctaLabel": "Climb endlessly",
+    "ctaHint": "No target. Just go as high as you can.",
+    "outcome": {
+      "posterTitle": "Reached {meters} m.",
+      "posterBody": "That's the run. Your buddy post is ready — pick a channel and drop it in.",
+      "lovedPrompt": "Optional — what did you actually like about this? One line. Goes on the share card.",
+      "lovedPlaceholder": "e.g. Felt like a community I'd want to lurk in.",
+      "next": "Stage 4 is one more game — about how a neural net actually learns."
+    }
   },
   "stage4": {
     "title": "One more game",
-    "subtitle": "AI Global also made a tiny one that teaches how a neural net learns.",
-    "body": "Six floors: Inputs → Weights → Neurons → Activation → Loss → the learning loop. About ten minutes if you're curious.",
+    "subtitle": "How a neural net actually learns.",
+    "body": "GloGames' first release: six floors covering Inputs → Weights → Neurons → Activation → Loss → the learning loop. About ten minutes if you're curious.",
     "ctaLabel": "Open Neural Nets",
     "ctaUrl": "https://osangen.github.io/ai-power-users-codex53-demo/"
   },
   "stage5": {
     "title": "Coming soon",
-    "subtitle": "Something else lives here. Watch this space.",
-    "body": "We're leaving the fifth tile open — a future cohort, a project drop, your own contribution. Check back when the next quarter starts."
+    "subtitle": "Something else lives here.",
+    "body": "Reserved for whatever the next quarter brings — a new game, a contribution path, or your own project drop. Check back when Q2 starts."
   },
   "menu": {
     "title": "AI Global",
