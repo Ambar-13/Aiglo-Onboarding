@@ -31,7 +31,7 @@
     "namePersist": "Stays on your device.",
     "pre": {
       "title": "Meet AI Global",
-      "body": "<strong>AI Global @ MIT.</strong> Practitioners treating AI as a craft — open to everyone. Backed by MIT Professional Education.<br><br>Mission: <em>open systems, practical AI, clear stewardship.</em><br><br>The community moves on a <strong>quarterly cycle</strong>. Q1 2026 is marketing.<br><br>Now — 100 m climb. Falling is fine."
+      "body": "<strong>AI Global @ MIT.</strong> Practitioners treating AI as a craft — open to everyone. Backed by MIT Professional Education.<br><br>Mission: <em>open systems, practical AI, clear stewardship.</em><br><br>Each quarter the community goes <strong>deep on one domain</strong> — Q1 2026 is marketing. Case studies (GenMRKT), courses (SPC), peer-reviewed papers, and live sessions drop alongside the always-on <strong>AI for All</strong> work.<br><br>Now — 100 m climb. Falling is fine."
     },
     "ctaLabel": "Start the climb",
     "ctaHint": "100 m. We'll hint the first few holds.",
@@ -57,7 +57,7 @@
     "ctaLabel": "Climb to 150 m",
     "ctaHint": "Same wall, no hints this time. You've got this.",
     "mantra": "Name · country · one specific thing.",
-    "shareLine": "AI Global runs in quarterly cycles. Q1 2026: marketing.",
+    "shareLine": "AI Global goes deep on one domain each quarter. Q1 2026: marketing.",
     "outcome": {
       "winTitle": "150 m. Crisp climb.",
       "winBody": "Your intro is ready to post. Drop it into #👋introduce-yourself — people there are quick to ❤️ and reply.",
