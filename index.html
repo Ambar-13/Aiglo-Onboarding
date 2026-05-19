@@ -96,13 +96,30 @@
   .sheet input:focus, .sheet textarea:focus { outline: none; border-color: var(--lavender); }
   .sheet textarea { min-height: 70px; resize: vertical; line-height: 1.45; }
   .sheet .hint { font-size: 12px; opacity: 0.55; margin-top: 4px; }
-  .sheet .examples { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
-  .sheet .examples button { background: var(--lavender-3); color: var(--violet); border: none; border-radius: 999px; padding: 4px 11px; font-size: 12px; cursor: pointer; font-family: inherit; }
+  .sheet .examples { display: flex; flex-wrap: wrap; align-items: center; gap: 5px; margin-top: 8px; }
+  .sheet .examples::before {
+    content: 'or tap →';
+    font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase;
+    color: var(--violet-2); opacity: 0.65; font-weight: 800;
+    margin-right: 2px;
+  }
+  .sheet .examples button {
+    background: var(--lavender-3); color: var(--violet);
+    border: 1px solid var(--lavender-2);
+    border-radius: 999px; padding: 4px 11px; font-size: 12px;
+    cursor: pointer; font-family: inherit;
+  }
   .sheet .examples button:hover { background: var(--lavender-2); }
 
   .cta { width: 100%; background: var(--lavender); color: var(--violet-deep); border: none; border-radius: 12px; padding: 14px 22px; font-size: 16px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; box-shadow: 0 6px 0 var(--violet-2), 0 10px 22px rgba(80, 40, 140, 0.28); margin-top: 18px; transition: transform 0.08s; font-family: inherit; }
   .cta:active { transform: translateY(3px); box-shadow: 0 3px 0 var(--violet-2); }
-  .cta.secondary { background: white; color: var(--violet); box-shadow: 0 4px 0 var(--lavender-3); font-size: 13px; padding: 11px 16px; }
+  .cta.secondary {
+    background: white; color: var(--violet);
+    border: 1.5px solid var(--lavender-2);
+    box-shadow: 0 4px 0 var(--lavender-3);
+    font-size: 13px; padding: 9.5px 16px;
+  }
+  .cta.secondary:hover { border-color: var(--lavender); }
   .cta.secondary:active { box-shadow: 0 2px 0 var(--lavender-3); }
   .cta.ghost { background: transparent; color: var(--violet); box-shadow: none; border: 2px solid var(--lavender); }
   .cta.tiny { font-size: 12px; padding: 7px 14px; margin-top: 0; box-shadow: 0 3px 0 var(--lavender-3); }
@@ -124,12 +141,46 @@
   .intro-line[contenteditable="true"] { outline: 2px solid var(--lavender); }
 
   /* Madlib form */
-  .madlib { background: white; border: 1px solid var(--lavender-3); border-radius: 14px; padding: 4px; margin-top: 12px; }
-  .madlib-row { border-bottom: 1px dashed var(--lavender-3); padding: 12px 14px; }
+  /* Madlib form — each row has a label, a typeable input, and a row of
+     tappable suggestion chips. The input is the primary action; chips
+     are shortcuts. The styling has to make that order obvious. */
+  .madlib {
+    background: white;
+    border: 1px solid var(--lavender-3);
+    border-radius: 14px;
+    padding: 4px;
+    margin-top: 12px;
+  }
+  .madlib-hint {
+    font-size: 12px; color: var(--violet-2); opacity: 0.78;
+    text-align: center; padding: 10px 14px 4px;
+  }
+  .madlib-row {
+    border-bottom: 1px dashed var(--lavender-3);
+    padding: 14px 14px 16px;
+  }
   .madlib-row:last-child { border-bottom: none; }
-  .madlib-row label { margin-top: 0; margin-bottom: 4px; font-size: 11px; }
-  .madlib-row input { border: none; padding: 4px 0; font-size: 15px; background: transparent; border-bottom: 1.5px solid transparent; border-radius: 0; }
-  .madlib-row input:focus { border-bottom-color: var(--lavender); }
+  .madlib-row label {
+    display: block; margin: 0 0 6px;
+    font-size: 11px; font-weight: 800; letter-spacing: 1.4px;
+    color: var(--violet); text-transform: uppercase;
+  }
+  .madlib-row input {
+    width: 100%;
+    border: 1.5px solid var(--lavender-3);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 15px;
+    background: white;
+    color: var(--violet-deep);
+    font-family: inherit;
+  }
+  .madlib-row input::placeholder { color: var(--violet-2); opacity: 0.55; }
+  .madlib-row input:focus {
+    outline: none;
+    border-color: var(--lavender);
+    box-shadow: 0 0 0 3px rgba(184, 144, 255, 0.18);
+  }
 
   /* Result poster */
   .poster-wrap { display: flex; justify-content: center; margin: 16px 0 8px; }
@@ -815,10 +866,15 @@ function renderStage3(sheet) {
   pre.innerHTML = `<h3>${t.pre.title}</h3><p>${t.pre.body}</p>`;
   sheet.appendChild(pre);
 
-  // Madlib form
+  // Madlib form — labelled hint up top so it reads as "fill the boxes",
+  // not "pick one from the chips".
   state.stage3.fields = state.stage3.fields || {};
   const form = document.createElement('div');
   form.className = 'madlib';
+  const hint = document.createElement('p');
+  hint.className = 'madlib-hint';
+  hint.innerHTML = '<strong>Type your answer in each box</strong> &middot; or tap a suggestion to fill it.';
+  form.appendChild(hint);
   for (const f of MADLIB.fields) {
     const row = document.createElement('div');
     row.className = 'madlib-row';
