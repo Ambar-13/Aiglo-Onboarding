@@ -35,7 +35,7 @@
     },
     "ctaLabel": "Start the climb",
     "ctaHint": "100 m. We'll hint the first few holds.",
-    "mantra": "Say: one quarter · one domain · real systems.",
+    "mantra": "One quarter · one domain · real systems.",
     "fall": {
       "title": "Fall card · The loop catches you",
       "body": "AI Global runs on cycles. A miss is part of the run — pick up, climb again. The lesson stays."
@@ -56,7 +56,7 @@
     "ownPlaceholder": "Hi, I'm {name}. ",
     "ctaLabel": "Climb to 150 m",
     "ctaHint": "Same wall, no hints this time. You've got this.",
-    "mantra": "Try: name · country · one specific thing.",
+    "mantra": "Name · country · one specific thing.",
     "shareLine": "AI Global runs in quarterly cycles. Q1 2026: marketing.",
     "outcome": {
       "winTitle": "150 m. Crisp climb.",
@@ -76,7 +76,7 @@
     "nextLabel": "Next → Neural Nets game",
     "ctaLabel": "Climb endlessly",
     "ctaHint": "No target. Just go as high as you can.",
-    "mantra": "Say: I'd teach X · I'd learn Y.",
+    "mantra": "I'd teach X · I'd learn Y.",
     "shareLine": "The Discord routes you to a buddy in your lane.",
     "outcome": {
       "posterTitle": "Reached {meters} m.",
@@ -92,14 +92,14 @@
     "body": "GloGames' first release. Six floors: Inputs → Weights → Neurons → Activation → Loss → the loop. ~10 minutes.<br><br><em>GloGames</em> is one of three publication streams alongside <strong>GloLabs</strong> (case studies) and <strong>SPC</strong> (courses).",
     "ctaLabel": "Open Neural Nets ↗",
     "ctaUrl": "https://osangen.github.io/ai-power-users-codex53-demo/",
-    "mantra": "Say: inputs · weights · neurons · gates · guess.",
+    "mantra": "Inputs · weights · neurons · gates · guess.",
     "nextLabel": "Next → What's coming"
   },
   "stage5": {
     "title": "What's next",
     "subtitle": "When the cycle rolls.",
     "body": "Reserved for Q2. New game, new domain, new ways to contribute.<br><br><em>By the numbers:</em> <strong>11K+</strong> taught · <strong>200+</strong> upskilled · <strong>1K+</strong> members in 4 weeks · <strong>80%+</strong> weekly active. The energy is real.<br><br>See you when the cycle rolls.",
-    "mantra": "Say: see you next quarter."
+    "mantra": "See you next quarter."
   },
   "menu": {
     "title": "AI Global",
