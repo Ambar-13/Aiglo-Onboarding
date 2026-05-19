@@ -74,36 +74,22 @@
     font-size: 14px; opacity: 0.62; max-width: 48ch; line-height: 1.5;
   }
 
-  /* === Climbing scene =================================================== */
+  /* === Climbing scene — open, no card enclosure ========================= */
   .scene {
     position: relative;
     width: 100%;
-    aspect-ratio: 1.8 / 1;
-    margin: 20px 0 12px;
-    border-radius: 24px;
-    background:
-      radial-gradient(120% 90% at 18% 100%, #efe4ff 0%, #f4ecff 45%, var(--cream) 100%);
-    overflow: hidden;
-    border: 1px solid var(--lavender-3);
-    box-shadow: inset 0 -36px 70px rgba(120, 80, 200, 0.05), 0 10px 28px var(--shadow);
-  }
-  .scene-tape {
-    position: absolute; top: 14px; left: 18px;
-    font-family: 'SF Mono', 'JetBrains Mono', Menlo, monospace;
-    font-size: 10px; letter-spacing: 2.5px;
-    color: var(--violet-2); opacity: 0.7;
-    text-transform: uppercase; z-index: 3;
-  }
-  .scene-dot {
-    position: absolute; top: 17px; right: 18px;
-    width: 9px; height: 9px; border-radius: 50%;
-    background: var(--pink); z-index: 3;
+    aspect-ratio: 1.45 / 1;
+    margin: 14px 0 8px;
+    overflow: visible;
   }
   .scene-trail {
     position: absolute; inset: 0; width: 100%; height: 100%;
     pointer-events: none; z-index: 1;
   }
-  .scene-rocks { position: absolute; inset: 0; z-index: 2; }
+  /* Rocks render ABOVE the character so head/shoulders peek over a rock the
+     climber is gripping (z 3 vs character z 2). During a leap the character
+     bumps to z 6 to fly past intermediate rocks. */
+  .scene-rocks { position: absolute; inset: 0; z-index: 3; }
   .rock {
     position: absolute;
     width: clamp(62px, 12vw, 96px);
@@ -118,7 +104,7 @@
   .rock .rock-label {
     position: absolute; top: 100%; left: 50%;
     transform: translateX(-50%);
-    margin-top: 6px;
+    margin-top: 8px;
     font-size: 10px; font-weight: 800; letter-spacing: 2px;
     text-transform: uppercase;
     color: var(--violet); white-space: nowrap;
@@ -131,6 +117,13 @@
     letter-spacing: 1.5px;
   }
   .rock.is-next .rock-label { color: var(--pink); }
+  .rock.is-current::after {
+    content: ''; position: absolute;
+    bottom: -2px; left: 50%; transform: translateX(-50%);
+    width: 70%; height: 10px;
+    background: radial-gradient(ellipse, rgba(40,20,70,0.18), transparent 70%);
+    pointer-events: none;
+  }
   .rock-glow {
     position: absolute; inset: -10px; border-radius: 50%;
     background: radial-gradient(closest-side, rgba(255,96,160,0.42), transparent 70%);
@@ -148,25 +141,19 @@
 
   .scene-character {
     position: absolute;
-    width: clamp(38px, 7vw, 56px);
-    transform: translate(-50%, -118%);
-    transition: left 0.85s cubic-bezier(.45,-0.2,.55,1.4),
-                top 0.85s cubic-bezier(.4,1.4,.5,1);
-    pointer-events: none; z-index: 5;
+    width: clamp(48px, 9vw, 72px);
+    /* Default pose: gripping the rock — head + shoulders peek above peak,
+       lower body hidden behind rock face (rocks z-index above character). */
+    transform: translate(-50%, -88%);
+    pointer-events: none; z-index: 2;
     filter: drop-shadow(0 4px 6px rgba(40, 20, 70, 0.32));
   }
   .scene-character svg { width: 100%; height: auto; display: block; }
-  .scene-character.hopping { animation: charHop 0.85s cubic-bezier(.4,1.4,.5,1); }
-  @keyframes charHop {
-    0%   { transform: translate(-50%, -118%) scale(1); }
-    40%  { transform: translate(-50%, -200%) scale(1.04); }
-    100% { transform: translate(-50%, -118%) scale(1); }
-  }
-  .scene-hint {
-    position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--violet-2); opacity: 0.7;
-    z-index: 3;
+  /* Subtle idle breath when gripping */
+  .scene-character.gripping { animation: gripBreath 3.2s ease-in-out infinite; }
+  @keyframes gripBreath {
+    0%, 100% { transform: translate(-50%, -88%) rotate(-1deg); }
+    50%      { transform: translate(-50%, -90%) rotate( 1deg); }
   }
   .scene-meta {
     display: flex; justify-content: space-between; align-items: center;
@@ -467,16 +454,13 @@
   </section>
 
   <section class="scene" id="climbScene" aria-label="Stage map">
-    <span class="scene-tape">AIGLO / CLIMB · 5 ROCKS</span>
-    <span class="scene-dot"></span>
     <svg class="scene-trail" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
       <path d="M 12,82 Q 22,72 32,66 T 50,52 T 68,36 T 86,20"
-            stroke="rgba(120,80,200,0.32)" stroke-width="0.5"
-            fill="none" stroke-dasharray="1.6,1.6" stroke-linecap="round"/>
+            stroke="rgba(120,80,200,0.38)" stroke-width="0.55"
+            fill="none" stroke-dasharray="1.8,1.6" stroke-linecap="round"/>
     </svg>
     <div class="scene-rocks" id="sceneRocks"></div>
     <div class="scene-character" id="sceneCharacter" aria-hidden="true"></div>
-    <p class="scene-hint" id="sceneHint">Tap the glowing rock to climb</p>
   </section>
 
   <div class="scene-meta">
@@ -671,6 +655,12 @@ function currentOutfit() {
   return (typeof OUTFITS !== 'undefined' && OUTFITS.find(o => o.id === id)) || (typeof OUTFITS !== 'undefined' && OUTFITS[0]) || null;
 }
 
+function markCurrentRock(idx) {
+  document.querySelectorAll('.rock').forEach(r => r.classList.remove('is-current'));
+  const cur = document.querySelector(`.rock[data-idx="${idx}"]`);
+  if (cur) cur.classList.add('is-current');
+}
+
 function renderScene() {
   const rocks = document.getElementById('sceneRocks');
   if (!rocks) return;
@@ -684,6 +674,7 @@ function renderScene() {
     const el = document.createElement('button');
     el.type = 'button';
     el.className = 'rock' + (isDone ? ' is-done' : '') + (isNext ? ' is-next' : '');
+    el.dataset.idx = i;
     el.style.left = p.left + '%';
     el.style.top  = p.top  + '%';
     el.setAttribute('aria-label', `${b.kicker} — ${b.sub}`);
@@ -692,34 +683,120 @@ function renderScene() {
       ${rockSvg()}
       <span class="rock-label">${b.kicker}<span class="rock-sub">${b.sub}</span></span>
     `;
-    el.addEventListener('click', () => openStage(i));
+    el.addEventListener('click', () => {
+      leapTo(i, () => openStage(i));
+    });
     rocks.appendChild(el);
   }
 }
 
-function positionCharacterAt(idx, opts) {
+function ensureCharacter() {
   const c = document.getElementById('sceneCharacter');
-  if (!c) return;
+  if (!c) return null;
   const o = currentOutfit();
-  if (o && typeof buildCharSvg === 'function' && !c.dataset.outfit) {
-    c.innerHTML = buildCharSvg(o);
-    c.dataset.outfit = o.id;
-  } else if (o && c.dataset.outfit !== o.id && typeof buildCharSvg === 'function') {
+  if (o && typeof buildCharSvg === 'function' && c.dataset.outfit !== o.id) {
     c.innerHTML = buildCharSvg(o);
     c.dataset.outfit = o.id;
   }
-  const p = ROCK_POSITIONS[idx];
-  c.style.left = p.left + '%';
-  c.style.top  = p.top  + '%';
-  if (opts && opts.hop) {
-    c.classList.remove('hopping');
-    void c.offsetWidth;
-    c.classList.add('hopping');
-  }
+  return c;
 }
 
-function placeCharacter() {
-  positionCharacterAt(characterNextRock(), { hop: false });
+function snapCharacterTo(idx) {
+  const c = ensureCharacter();
+  if (!c) return;
+  const p = ROCK_POSITIONS[idx];
+  // Cancel any in-flight leap so inline transform doesn't override.
+  if (c._anim) { try { c._anim.cancel(); } catch (e) {} c._anim = null; }
+  c.style.transform = '';
+  c.classList.remove('gripping');
+  void c.offsetWidth;
+  c.style.left = p.left + '%';
+  c.style.top  = p.top  + '%';
+  c.dataset.atRock = String(idx);
+  c.classList.add('gripping');
+  markCurrentRock(idx);
+}
+
+function placeCharacter() { snapCharacterTo(characterNextRock()); }
+
+// Climber leap: windup → arc apex → reach → grip. Uses Web Animations API
+// with intermediate keyframes so the path is a real arc, not a straight tween.
+function leapTo(targetIdx, onArrive) {
+  const c = ensureCharacter();
+  if (!c) { onArrive && onArrive(); return; }
+  const fromIdx = parseInt(c.dataset.atRock || String(characterNextRock()), 10);
+  if (fromIdx === targetIdx) { onArrive && onArrive(); return; }
+
+  if (c._anim) { try { c._anim.cancel(); } catch (e) {} c._anim = null; }
+  c.classList.remove('gripping');
+
+  const from = ROCK_POSITIONS[fromIdx];
+  const to   = ROCK_POSITIONS[targetIdx];
+  const dir  = targetIdx > fromIdx ? 1 : -1;
+  // Arc height scales with how far we're jumping. We clamp the apex's
+  // anchor-top so the climber stays in the scene area — the constant
+  // translate(-50%,-88%) on the character already lifts it ~95px above the
+  // anchor for the grip pose, so a too-small mid.top would fling him off
+  // the top of the section.
+  const dx = Math.abs(to.left - from.left);
+  const arcH = Math.min(14, 4 + dx * 0.11);
+  const mid  = { left: (from.left + to.left) / 2,
+                 top:  Math.max(20, Math.min(from.top, to.top) - arcH) };
+  const reach = { left: to.left - dir * 4,
+                  top:  to.top  - 4 };
+  const base = (rot, s) => `translate(-50%, -88%) rotate(${rot}deg) scale(${s})`;
+
+  // Set z above rocks for the flight.
+  c.style.left = from.left + '%';
+  c.style.top  = from.top  + '%';
+  c.style.zIndex = '6';
+
+  const anim = c.animate([
+    // 0% — gripping the start rock
+    { left: from.left + '%', top: from.top + '%',
+      transform: base(-2 * dir, 1),
+      offset: 0, easing: 'cubic-bezier(.4,.0,.6,1)' },
+    // 14% — wind-up: lean back, compress (the swing wind)
+    { left: from.left + '%', top: (from.top + 2) + '%',
+      transform: base(-22 * dir, 0.93),
+      offset: 0.14, easing: 'cubic-bezier(.7,.0,.7,1)' },
+    // 30% — explosive push off the start rock
+    { left: (from.left + dir * 5) + '%', top: (from.top - 4) + '%',
+      transform: base(14 * dir, 1.05),
+      offset: 0.30, easing: 'cubic-bezier(.3,.6,.5,1)' },
+    // 55% — airborne apex, arms extended into the swing
+    { left: mid.left + '%', top: mid.top + '%',
+      transform: base(34 * dir, 1.06),
+      offset: 0.55, easing: 'cubic-bezier(.4,.0,.6,1)' },
+    // 78% — reach forward to the next hold (hands lead)
+    { left: reach.left + '%', top: reach.top + '%',
+      transform: base(40 * dir, 1.02),
+      offset: 0.78, easing: 'cubic-bezier(.4,.0,.3,1)' },
+    // 92% — catch hold, body absorbs impact (slight overshoot down)
+    { left: (to.left + dir * 1) + '%', top: (to.top + 2) + '%',
+      transform: base(8 * dir, 0.96),
+      offset: 0.92, easing: 'cubic-bezier(.2,.7,.4,1)' },
+    // 100% — settle into grip
+    { left: to.left + '%', top: to.top + '%',
+      transform: base(0, 1),
+      offset: 1 }
+  ], { duration: 1150, fill: 'forwards' });
+
+  c._anim = anim;
+  const settle = () => {
+    try { anim.commitStyles(); anim.cancel(); } catch (e) {}
+    c._anim = null;
+    c.style.zIndex = '';
+    c.style.transform = '';   // hand control back to .gripping animation
+    c.style.left = to.left + '%';
+    c.style.top  = to.top  + '%';
+    c.dataset.atRock = String(targetIdx);
+    c.classList.add('gripping');
+    markCurrentRock(targetIdx);
+    if (onArrive) onArrive();
+  };
+  anim.onfinish = settle;
+  anim.oncancel = () => { c.style.zIndex = ''; };
 }
 
 // =====================================================================
@@ -1038,6 +1115,8 @@ function renderStage4(sheet) {
   link.target = '_blank'; link.rel = 'noopener';
   link.innerHTML = `<span class="arrow">↗</span><h3>${t.ctaLabel}</h3><p>${t.body}</p>`;
   link.addEventListener('click', () => { state.attempted[4] = true; saveState(); renderScene(); placeCharacter(); });
+  // Make sure the climber visually moves to rock 4 when this stage was clicked
+  // (renderScene re-builds rocks; markCurrentRock keeps the active-rock state).
   sheet.appendChild(link);
 }
 
@@ -1329,18 +1408,12 @@ async function boot() {
   }
   renderHello();
   renderScene();
-  // Place character. If the next-rock index moved forward, snap to the old
-  // rock first then animate obliquely up to the new one.
+  // Place character. If the next-rock index moved forward (just returned
+  // from a winning climb), snap to the old rock first then leap to the new.
   const afterIdx = characterNextRock();
   if (afterIdx > beforeIdx) {
-    const c = document.getElementById('sceneCharacter');
-    const old = c.style.transition;
-    c.style.transition = 'none';
-    positionCharacterAt(beforeIdx, { hop: false });
-    setTimeout(() => {
-      c.style.transition = old || '';
-      positionCharacterAt(afterIdx, { hop: true });
-    }, 120);
+    snapCharacterTo(beforeIdx);
+    setTimeout(() => leapTo(afterIdx), 350);
   } else {
     placeCharacter();
   }
