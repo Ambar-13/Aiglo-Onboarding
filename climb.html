@@ -1969,20 +1969,16 @@ function drawBaseCamp() {
   // Tree stump (small, between the two signs)
   drawTreeStump(w2sX(245), groundSy + 1);
 
-  // CLIMB! sign on the right of start; WORLD RECORDS plaque to its right
+  // Welcome board sits at the centre of the base camp.
   drawClimbSign(w2sX(150), groundSy - 4);
-  drawWorldRecordsPlaque(w2sX(310), groundSy - 4);
-  // RECORD yellow plate on a post, to the left of start
+  // RECORD plate on a post, to the left of start
   drawRecordSign(w2sX(-180), groundSy - 4, bestMeters);
   // Operating-principle wooden boards spread along the purple ground.
-  // Five small "X over Y" plaques plus a central italic motto. They reward
-  // the player who walks the base camp.
-  drawValueBoard(w2sX(-560), groundSy - 4, 'Practical',     'Performative');
-  drawValueBoard(w2sX(-440), groundSy - 4, 'Systems',       'Noise');
-  drawValueBoard(w2sX(-320), groundSy - 4, 'Proof',         'Claims');
-  drawValueBoard(w2sX( 460), groundSy - 4, 'Open Learning', 'Gatekeeping');
-  drawValueBoard(w2sX( 580), groundSy - 4, 'Humans in the Loop', 'Black-Box');
-  drawMottoBoard(w2sX( 720), groundSy - 4, 'Learn it. Build it. Ship it.');
+  drawValueBoard(w2sX(-520), groundSy - 4, 'Practical',          'Performative');
+  drawValueBoard(w2sX(-400), groundSy - 4, 'Systems',            'Noise');
+  drawValueBoard(w2sX(-280), groundSy - 4, 'Proof',              'Claims');
+  drawValueBoard(w2sX( 360), groundSy - 4, 'Open Learning',      'Gatekeeping');
+  drawValueBoard(w2sX( 480), groundSy - 4, 'Humans in the Loop', 'Black-Box');
 }
 
 function drawBush(sx, sy) {
@@ -2173,15 +2169,12 @@ function drawValueBoard(sx, baseY, first, second) {
   ctx.strokeStyle = '#4a2a8a';
   ctx.lineWidth = 1.2;
   ctx.strokeRect(left, top, W, H);
-  // Top line: bold sans
+  // Single white line — the value reads as the headline, no italic pink
+  // counterpoint.
   ctx.textAlign = 'center';
   ctx.fillStyle = '#fff5fb';
-  ctx.font = 'bold 8.5px Inter, -apple-system, sans-serif';
-  ctx.fillText(first, sx, top + 13);
-  // Bottom line: italic pink "over X"
-  ctx.fillStyle = '#ffb0d8';
-  ctx.font = 'italic 7px Georgia, "Times New Roman", serif';
-  ctx.fillText('over ' + second, sx, top + 24);
+  ctx.font = 'bold 9.5px Inter, -apple-system, sans-serif';
+  ctx.fillText(first + ' › ' + second, sx, top + 18);
   ctx.textAlign = 'start';
   ctx.restore();
 }
