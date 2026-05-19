@@ -2038,69 +2038,31 @@ function drawGrassTuft(sx, sy) {
 
 function drawClimbSign(sx, baseY) {
   ctx.save();
-  // Board geometry — wider than before so the italic-serif greeting and
-  // four stat tiles read comfortably.
-  const W = 172, H = 96;
+  // Minimal welcome board — greeting + Hope you have fun :) line. The
+  // founder stats live in the menu now, so the sign reads cleanly at a
+  // glance instead of crowding tiny tile numbers.
+  const W = 156, H = 44;
   const left = sx - W / 2, top = baseY - 30 - H;
   // Two posts
   ctx.fillStyle = '#6a4ec0';
-  ctx.fillRect(sx - 64, baseY - 30, 4, 30);
-  ctx.fillRect(sx + 60, baseY - 30, 4, 30);
+  ctx.fillRect(sx - 58, baseY - 30, 4, 30);
+  ctx.fillRect(sx + 54, baseY - 30, 4, 30);
   // Main board
   ctx.fillStyle = '#9c7fd4';
   ctx.fillRect(left, top, W, H);
   ctx.strokeStyle = '#4a2a8a';
   ctx.lineWidth = 1.6;
   ctx.strokeRect(left, top, W, H);
-  // Header strip — deeper violet band hosting the "CLIMB!" title
-  ctx.fillStyle = '#7a5cbc';
-  ctx.fillRect(left, top, W, 22);
-  ctx.strokeStyle = 'rgba(60,30,120,0.35)';
-  ctx.lineWidth = 0.8;
-  ctx.beginPath(); ctx.moveTo(left, top + 22); ctx.lineTo(left + W, top + 22); ctx.stroke();
 
   ctx.textAlign = 'center';
-  // Warm hand-painted title — italic serif so the sign reads like a
-  // welcome carving, not a label.
+  // Warm hand-painted greeting
   ctx.fillStyle = '#fff5fb';
   ctx.font = 'italic bold 15px Georgia, "Times New Roman", serif';
-  ctx.fillText('Welcome, Aiglo-ian.', sx, top + 16);
-
-  // "BY THE NUMBERS" small kicker, friendly sans
-  ctx.fillStyle = '#3a1f6a';
-  ctx.font = 'bold 6px Inter, -apple-system, "Helvetica Neue", sans-serif';
-  ctx.fillText('BY THE NUMBERS', sx, top + 32);
-
-  // Six stat tiles (3x2). Inter sans — founder-deck numbers verbatim.
-  const stats = [
-    { v: '1K+',    l: 'TAUGHT' },
-    { v: '150K+',  l: 'VIEWERS' },
-    { v: '30+',    l: 'AGENTS' },
-    { v: '4,725',  l: 'WORKSHOP' },
-    { v: '45K+',   l: 'VIDEOGEN' },
-    { v: '100+',   l: 'PIPELINE' }
-  ];
-  const COLS = 3;
-  const colW = W / COLS;
-  const rowH = 16;
-  const gridTop = top + 38;
-  ctx.textAlign = 'center';
-  for (let i = 0; i < 6; i++) {
-    const cx = left + (i % COLS) * colW + colW / 2;
-    const cy = gridTop + Math.floor(i / COLS) * rowH;
-    ctx.fillStyle = '#f5edff';
-    ctx.font = 'bold 9px Inter, -apple-system, "Helvetica Neue", sans-serif';
-    ctx.fillText(stats[i].v, cx, cy + 7);
-    ctx.fillStyle = 'rgba(255,255,255,0.7)';
-    ctx.font = 'bold 5px Inter, sans-serif';
-    ctx.fillText(stats[i].l, cx, cy + 14);
-  }
-
-  // "Hope you have fun :)" — italic serif so it reads like a handwritten
-  // greeting at the bottom of the sign.
+  ctx.fillText('Welcome, Aiglo-ian.', sx, top + 19);
+  // "Hope you have fun :)" — smaller pink italic underneath
   ctx.fillStyle = '#ffb0d8';
-  ctx.font = 'italic bold 8px Georgia, "Times New Roman", serif';
-  ctx.fillText('Hope you have fun :)', sx, top + H - 4);
+  ctx.font = 'italic bold 10px Georgia, "Times New Roman", serif';
+  ctx.fillText('Hope you have fun :)', sx, top + 36);
 
   ctx.textAlign = 'start';
   ctx.restore();
