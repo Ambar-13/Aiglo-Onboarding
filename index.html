@@ -1044,6 +1044,19 @@ function renderStage3(sheet) {
       <p style="margin-top:10px;font-style:italic;color:var(--pink);font-weight:800;">Start with one lane. Ship proof.</p>
     `;
     sheet.appendChild(paths);
+    // Composite copy panel — grab the intro AND the buddy post in one
+    // click so the player can land on Discord ready to paste both.
+    const introLine = state.stage2.custom || renderIntroLine(state.stage2.intro) || `Hi everyone, I'm ${state.name || 'an Aiglo-ian'}.`;
+    const combinedText = `${introLine}\n\n— — —\n\n${buddyMsg}`;
+    const combo = document.createElement('div');
+    combo.className = 'panel tinted';
+    combo.innerHTML = `
+      <h3>Copy both, then post on Discord</h3>
+      <p style="font-size:13px;opacity:0.85;">One click copies your <strong>intro line</strong> and your <strong>find-a-buddy post</strong> together — paste the intro in <strong>#introduce-yourself</strong>, then paste the buddy block in <strong>#find-a-buddy</strong>.</p>
+      <button class="cta" data-act="copyboth" style="margin-top:14px;">📋 Copy intro + buddy post</button>
+    `;
+    combo.querySelector('[data-act="copyboth"]').addEventListener('click', e => copy(combinedText, e.currentTarget));
+    sheet.appendChild(combo);
     sheet.appendChild(makePosterPanel({
       panelId: 'poster3',
       name: state.name,
@@ -1051,10 +1064,10 @@ function renderStage3(sheet) {
       won: false,
       mainText: buddyMsg,
       lovedText: state.stage3.loved,
-      copyLabel: 'Copy for #find-a-buddy',
+      copyLabel: 'Copy buddy post only',
       copyText:  buddyMsg,
-      copyLabel2: 'Copy intro line',
-      copyText2: state.stage2.custom || renderIntroLine(state.stage2.intro) || `Hi everyone, I'm ${state.name || 'an Aiglo-ian'}.`,
+      copyLabel2: 'Copy intro only',
+      copyText2: introLine,
       discordLabel: 'Open #find-a-buddy',
       discordUrl: CONTENT.brand.deepLinks.findABuddy,
       discordLabel2: 'Open #introduce-yourself',
