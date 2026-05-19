@@ -168,6 +168,9 @@ canvas { display: block; cursor: pointer; }
 }
 .go:active { transform: translateY(3px); box-shadow: 0 2px 0 #6a3ec8; }
 .best { margin-top: 16px; font-size: 15px; opacity: .85; letter-spacing: 2px; }
+.ov .stats { margin: 22px auto 0; font-size: 13px; line-height: 1.5; max-width: 60ch; padding: 0 22px; opacity: 0.78; color: #d4baff; }
+.ov .stats b { color: #fff; font-weight: 900; }
+.ov .cycle-line { margin-top: 8px; font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #ff60a0; }
 .score-big { font-size: 22px; font-weight: 900; letter-spacing: 2px; margin-bottom: 6px; }
 .score-big b { color: #b890ff; }
 </style>
@@ -202,6 +205,8 @@ canvas { display: block; cursor: pointer; }
   </div>
   <button class="go" id="play">CLIMB</button>
   <div class="best" id="best"></div>
+  <p class="stats">By the numbers: <b>11K+</b> taught &middot; <b>200+</b> upskilled &middot; <b>1K+</b> members in 4 weeks &middot; <b>80%+</b> weekly active. The energy is real.</p>
+  <p class="cycle-line">See you when the cycle rolls.</p>
 </div>
 
 <script>

@@ -117,8 +117,23 @@
   .external-tile p { font-size: 14px; opacity: 0.85; }
   .external-tile .arrow { float: right; font-size: 24px; opacity: 0.6; }
 
+  /* By-the-numbers + cycle-rolls lines that sit above the footer credit. */
+  .stats {
+    margin-top: 48px; text-align: center;
+    font-size: 13px; line-height: 1.5;
+    color: var(--violet-2); opacity: 0.78;
+    max-width: 52ch; margin-left: auto; margin-right: auto;
+  }
+  .stats strong { color: var(--violet); font-weight: 900; }
+  .cycle-line {
+    margin-top: 10px; text-align: center;
+    font-size: 13px; font-weight: 800;
+    color: var(--pink);
+    letter-spacing: 1px;
+  }
+
   /* Footer */
-  .footer { margin-top: 56px; font-size: 12px; opacity: 0.5; text-align: center; letter-spacing: 1px; }
+  .footer { margin-top: 18px; font-size: 12px; opacity: 0.5; text-align: center; letter-spacing: 1px; }
 
   /* Tiny utility */
   .hidden { display: none !important; }
@@ -333,6 +348,8 @@
 
   <ol class="tiles" id="tilesGrid"></ol>
 
+  <p class="stats">By the numbers: <strong>11K+</strong> taught · <strong>200+</strong> upskilled · <strong>1K+</strong> members in 4 weeks · <strong>80%+</strong> weekly active. The energy is real.</p>
+  <p class="cycle-line">See you when the cycle rolls.</p>
   <p class="footer" id="footer">Made with <span class="heart">❤️</span> by the <span class="team">AIGLO team</span> <span class="smiley">:)</span></p>
 </main>
 
