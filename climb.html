@@ -2149,12 +2149,13 @@ function drawWorldRecordsPlaque(sx, baseY) {
   ctx.textAlign = 'left';
   ctx.fillText('WORLD', sx - 8, baseY - 47);
   ctx.fillText('RECORDS', sx - 8, baseY - 39);
-  // Stat lines
+  // Current top entry — seed value until a real leaderboard backend lands.
   ctx.fillStyle = '#5a3a8c';
-  ctx.font = 'bold 5px Inter, -apple-system, sans-serif';
-  ctx.fillText('summits: 0', sx - 28, baseY - 30);
-  ctx.fillText('best time: -', sx - 28, baseY - 25);
-  ctx.fillText('fewer falls: -', sx - 28, baseY - 20);
+  ctx.font = 'bold 6px Inter, -apple-system, sans-serif';
+  ctx.fillText('TOP CLIMBER', sx - 28, baseY - 30);
+  ctx.fillStyle = '#2a1454';
+  ctx.font = 'italic bold 11px Georgia, "Times New Roman", serif';
+  ctx.fillText('Ambar · 5,731m', sx - 28, baseY - 20);
   ctx.textAlign = 'start';
   ctx.restore();
 }
