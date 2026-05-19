@@ -962,11 +962,32 @@ function renderStage3(sheet) {
 
   const m = makeMantra(t.mantra);
   if (m) sheet.appendChild(m);
-  sheet.appendChild(makeStageCta({
-    stageId: 3, nextStage: 4,
-    climbLabel: t.ctaLabel, climbHint: t.ctaHint, nextLabel: t.nextLabel,
-    onClimb: () => launchClimb({ endless: true }),
-  }));
+  // Stage 3's "next" is NOT the Neural Nets game — it's the player
+  // actually showing up on Discord. After they've drafted the buddy post
+  // here, the highest-value next click sends them into the community.
+  if (state.attempted[3]) {
+    const ctaWrap = document.createElement('div');
+    const advance = document.createElement('a');
+    advance.className = 'cta pulse';
+    advance.textContent = 'Start a conversation!';
+    advance.href = (CONTENT.brand && CONTENT.brand.discordInvite) || 'https://discord.gg/Cs3PZrtf';
+    advance.target = '_blank'; advance.rel = 'noopener';
+    advance.style.cssText = 'text-decoration:none;text-align:center;display:block;';
+    ctaWrap.appendChild(advance);
+    const again = document.createElement('button');
+    again.type = 'button';
+    again.className = 'climb-again';
+    again.textContent = '↻ Climb again';
+    again.addEventListener('click', () => launchClimb({ endless: true }));
+    ctaWrap.appendChild(again);
+    sheet.appendChild(ctaWrap);
+  } else {
+    sheet.appendChild(makeStageCta({
+      stageId: 3, nextStage: 4,
+      climbLabel: t.ctaLabel, climbHint: t.ctaHint, nextLabel: t.nextLabel,
+      onClimb: () => launchClimb({ endless: true }),
+    }));
+  }
 }
 
 function composeBuddyMessage() {
