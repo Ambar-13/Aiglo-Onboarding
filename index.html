@@ -148,20 +148,36 @@
     100% { transform: scale(1) rotate(0); opacity: 1; }
   }
 
-  /* Toast (post-climb celebratory line at top of menu). */
+  /* Toast (post-climb status line at top of menu). Two-line card with
+     an icon + title + subtitle so the player knows what just happened
+     AND what's ready next. */
   .toast {
-    position: fixed; top: 18px; left: 50%; transform: translateX(-50%) translateY(-30px);
-    background: var(--lavender); color: var(--violet-deep);
-    padding: 10px 22px; border-radius: 999px;
-    font-weight: 800; font-size: 14px; letter-spacing: 1px; text-transform: uppercase;
-    box-shadow: 0 8px 24px rgba(80,40,140,0.30);
+    position: fixed; top: 22px; left: 50%; transform: translateX(-50%) translateY(-40px);
+    background: white; color: var(--violet-deep);
+    padding: 14px 20px 14px 18px;
+    border-radius: 14px;
+    border-left: 5px solid var(--pink);
+    box-shadow: 0 18px 40px rgba(80,40,140,0.30), 0 2px 6px rgba(60,30,120,0.08);
+    display: flex; align-items: center; gap: 14px;
     opacity: 0; pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.4s cubic-bezier(.2,.9,.3,1.4);
+    transition: opacity 0.25s ease, transform 0.45s cubic-bezier(.2,.9,.3,1.4);
     z-index: 200;
-    white-space: nowrap;
+    max-width: 92vw;
+    min-width: 240px;
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-  .toast .em { color: var(--pink); }
+  .toast .icon { font-size: 26px; line-height: 1; flex-shrink: 0; }
+  .toast .body { display: flex; flex-direction: column; gap: 2px; }
+  .toast .title {
+    font-weight: 900; font-size: 14px;
+    color: var(--violet-deep);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+  .toast .sub {
+    font-size: 13px; color: var(--violet-2); opacity: 0.85;
+    letter-spacing: 0.1px;
+  }
 
   /* Footer with animated heart + wiggling team. */
   .footer { user-select: none; }
@@ -237,6 +253,18 @@
     max-width: 52ch;
     line-height: 1.5;
   }
+
+  /* "Climb again" tiny link shown next to the advance CTA. */
+  .climb-again {
+    display: block; text-align: center;
+    margin-top: 8px;
+    font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--violet-2); font-weight: 700;
+    background: none; border: none; cursor: pointer;
+    padding: 4px 8px; font-family: inherit;
+    transition: color 0.15s;
+  }
+  .climb-again:hover { color: var(--pink); }
 
   /* === Stage mantra box (the "Say: X" takeaway) ========================= */
   .mantra {
@@ -374,6 +402,48 @@ function renderHello(opts) {
   }
 }
 
+// Wraps a stage's primary CTA. If the stage has been attempted AND there's
+// a next stage, the primary CTA flips to "Next → <Stage N+1>" so the player
+// is pushed forward instead of repeating. A tiny "climb again" link sits
+// beneath. If not attempted, behaves like a normal CTA.
+function makeStageCta(opts) {
+  // opts: { stageId, nextStage, climbLabel, climbHint, nextLabel, onClimb }
+  const wrap = document.createElement('div');
+  const attempted = !!state.attempted[opts.stageId];
+  const hasNext = opts.nextStage != null && opts.nextStage <= 5;
+  if (attempted && hasNext && opts.nextLabel) {
+    const advance = document.createElement('button');
+    advance.className = 'cta pulse';
+    advance.textContent = opts.nextLabel;
+    advance.addEventListener('click', () => {
+      closeStage();
+      setTimeout(() => openStage(opts.nextStage), 280);
+    });
+    wrap.appendChild(advance);
+    const again = document.createElement('button');
+    again.type = 'button';
+    again.className = 'climb-again';
+    again.textContent = '↻ Climb again';
+    again.addEventListener('click', () => opts.onClimb && opts.onClimb());
+    wrap.appendChild(again);
+  } else {
+    const cta = document.createElement('button');
+    cta.className = 'cta pulse';
+    cta.textContent = opts.climbLabel;
+    cta.addEventListener('click', () => opts.onClimb && opts.onClimb());
+    wrap.appendChild(cta);
+    if (opts.climbHint) {
+      const hint = document.createElement('p');
+      hint.className = 'hint';
+      hint.style.textAlign = 'center';
+      hint.style.marginTop = '8px';
+      hint.textContent = opts.climbHint;
+      wrap.appendChild(hint);
+    }
+  }
+  return wrap;
+}
+
 // Mantra box: tiny "Say: X" takeaway that ends every stage modal.
 // Inspired by Aiglo's Neural Nets game where each lesson card ends with
 // a one-line mantra (e.g. "Say: numbers in → guess out.").
@@ -396,13 +466,22 @@ function makeFallCard(fallObj) {
   return d;
 }
 
-function showToast(text) {
-  if (!text) return;
+// Toast accepts a {icon, title, sub} object so it can show "what just
+// happened" AND "what's ready now" — instead of a single cryptic line.
+// String input is treated as the title for backwards compat.
+function showToast(payload) {
+  if (!payload) return;
   const t = document.getElementById('toast');
-  t.innerHTML = text;
+  const obj = typeof payload === 'string' ? { title: payload } : payload;
+  t.innerHTML = `
+    ${obj.icon ? `<span class="icon">${escapeText(obj.icon)}</span>` : ''}
+    <div class="body">
+      ${obj.title ? `<div class="title">${escapeText(obj.title)}</div>` : ''}
+      ${obj.sub   ? `<div class="sub">${escapeText(obj.sub)}</div>`     : ''}
+    </div>`;
   t.classList.add('show');
   clearTimeout(showToast._timer);
-  showToast._timer = setTimeout(() => t.classList.remove('show'), 4200);
+  showToast._timer = setTimeout(() => t.classList.remove('show'), 5200);
 }
 
 function renderTiles() {
@@ -504,17 +583,15 @@ function renderStage1(sheet) {
   const m = makeMantra(t.mantra);
   if (m) sheet.appendChild(m);
 
-  const cta = document.createElement('button');
-  cta.className = 'cta pulse';
-  cta.textContent = t.ctaLabel;
-  cta.addEventListener('click', () => {
-    if (!state.name) { input.focus(); return; }
-    saveState();
-    launchClimb({ guided: true, target: 100 });
-  });
-  sheet.appendChild(cta);
-  const hint = document.createElement('p'); hint.className = 'hint'; hint.style.textAlign = 'center'; hint.textContent = t.ctaHint;
-  sheet.appendChild(hint);
+  sheet.appendChild(makeStageCta({
+    stageId: 1, nextStage: 2,
+    climbLabel: t.ctaLabel, climbHint: t.ctaHint, nextLabel: t.nextLabel,
+    onClimb: () => {
+      if (!state.name) { input.focus(); return; }
+      saveState();
+      launchClimb({ guided: true, target: 100 });
+    },
+  }));
 }
 
 // =====================================================================
@@ -620,22 +697,20 @@ function renderStage2(sheet) {
     }));
   }
 
-  const cta = document.createElement('button');
-  cta.className = 'cta pulse';
-  cta.textContent = t.ctaLabel;
-  cta.addEventListener('click', () => {
-    if (!state.stage2.category && !state.stage2.custom) {
-      lineBox.classList.add('empty');
-      lineBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-    launchClimb({ target: 150 });
-  });
   const m = makeMantra(t.mantra);
   if (m) sheet.appendChild(m);
-  sheet.appendChild(cta);
-  const hint = document.createElement('p'); hint.className = 'hint'; hint.style.textAlign = 'center'; hint.textContent = t.ctaHint;
-  sheet.appendChild(hint);
+  sheet.appendChild(makeStageCta({
+    stageId: 2, nextStage: 3,
+    climbLabel: t.ctaLabel, climbHint: t.ctaHint, nextLabel: t.nextLabel,
+    onClimb: () => {
+      if (!state.stage2.category && !state.stage2.custom) {
+        lineBox.classList.add('empty');
+        lineBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      launchClimb({ target: 150 });
+    },
+  }));
 }
 
 // =====================================================================
@@ -714,15 +789,13 @@ function renderStage3(sheet) {
     }));
   }
 
-  const cta = document.createElement('button');
-  cta.className = 'cta pulse';
-  cta.textContent = t.ctaLabel;
-  cta.addEventListener('click', () => launchClimb({ endless: true }));
   const m = makeMantra(t.mantra);
   if (m) sheet.appendChild(m);
-  sheet.appendChild(cta);
-  const hint = document.createElement('p'); hint.className = 'hint'; hint.style.textAlign = 'center'; hint.textContent = t.ctaHint;
-  sheet.appendChild(hint);
+  sheet.appendChild(makeStageCta({
+    stageId: 3, nextStage: 4,
+    climbLabel: t.ctaLabel, climbHint: t.ctaHint, nextLabel: t.nextLabel,
+    onClimb: () => launchClimb({ endless: true }),
+  }));
 }
 
 function composeBuddyMessage() {
@@ -1062,8 +1135,14 @@ async function boot() {
     setTimeout(() => openStage(2), 1100);
   } else if (returningFrom === 3) {
     const meters = (state.lastRun && state.lastRun.meters) || 0;
-    const tpl = (CONTENT.toasts && CONTENT.toasts.stage3) || 'Reached {meters} m.';
-    setTimeout(() => showToast(tpl.replace('{meters}', meters)), 200);
+    const tpl = (CONTENT.toasts && CONTENT.toasts.stage3) || { title: `Reached ${meters} m` };
+    // Interpolate {meters} into either string or object form.
+    const filled = typeof tpl === 'string'
+      ? tpl.replace('{meters}', meters)
+      : { ...tpl,
+          title: (tpl.title || '').replace('{meters}', meters),
+          sub:   (tpl.sub   || '').replace('{meters}', meters) };
+    setTimeout(() => showToast(filled), 200);
     setTimeout(() => openStage(3), 1100);
   }
   document.getElementById('scrim').addEventListener('click', e => {

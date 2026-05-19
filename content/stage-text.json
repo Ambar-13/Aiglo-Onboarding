@@ -25,13 +25,13 @@
   ],
   "stage1": {
     "title": "Hello there.",
-    "subtitle": "Tell us your name. We'll tell you the AI Global story while you climb.",
+    "subtitle": "Your name, then a short climb.",
     "nameLabel": "What should we call you?",
     "namePlaceholder": "Your first name",
     "namePersist": "Stays on your device.",
     "pre": {
       "title": "Meet AI Global",
-      "body": "A community of senior people who treat AI as a craft, not a horoscope. Built with MIT Professional Education. Mission: <em>open systems, practical AI, clear stewardship.</em><br><br>Every quarter the whole community picks <strong>one domain</strong> and ships real work together. Q1 2026 is marketing — <strong>GloLabs Vol 1</strong> just dropped, six peer-reviewed case studies covering workshop pipelines, multimedia, community growth, content systems and ambassador loops.<br><br><strong>Four programs you'll meet:</strong><br>• <strong>GloLabs</strong> — peer-reviewed case-study library, quarterly<br>• <strong>GloGames</strong> — interactive AI lessons (try one in Stage 4)<br>• <strong>SPC</strong> — four hands-on governance courses<br>• <strong>Projects</strong> — VideoGlo · Ambassador · AI.MRKT (teaching AI in underserved communities) · AI 2027 (frontier-AI risk → enforceable law)<br><br>Volunteer in any of them. <strong>11K+ taught</strong> · <strong>200+ upskilled</strong> · <strong>1K+ members in 4 weeks</strong> · <strong>80%+ weekly active</strong>. The energy is real.<br><br>Now — 100 m to feel the climb. Falling is fine; it's just a feel."
+      "body": "<strong>AI Global @ MIT.</strong> A community of senior people treating AI as a craft, not a horoscope. Built with MIT Professional Education.<br><br>Mission: <em>open systems, practical AI, clear stewardship.</em><br><br>The community moves on a <strong>quarterly cycle</strong>. Q1 2026 is marketing.<br><br>Now — 100 m climb. Falling is fine."
     },
     "ctaLabel": "Start the climb",
     "ctaHint": "100 m. We'll hint the first few holds.",
@@ -39,15 +39,17 @@
     "fall": {
       "title": "Fall card · The loop catches you",
       "body": "AI Global runs on cycles. A miss is part of the run — pick up, climb again. The lesson stays."
-    }
+    },
+    "nextLabel": "Next → Your first intro"
   },
   "stage2": {
     "title": "Your first intro",
     "subtitle": "One line you'd actually post in Discord.",
     "pre": {
       "title": "The Discord, briefly",
-      "body": "The community lives on a Discord server called <strong>AI Global</strong>. First stop is <strong>#👋introduce-yourself</strong> — light format: name, country, role, what you're here for. Pick a lane below and we'll draft a starter line in your name. Shuffle for variety, or write your own."
+      "body": "The community lives on a Discord server called <strong>AI Global</strong>. First stop is <strong>#👋introduce-yourself</strong> — name, country, role, why you're here.<br><br>Pick a lane below; we'll draft a line. Shuffle or write your own.<br><br><em>Right now:</em> <strong>GloLabs Vol 1</strong> just dropped — six peer-reviewed marketing case studies."
     },
+    "nextLabel": "Next → Find your buddy",
     "categoryPrompt": "Your lane:",
     "shuffleLabel": "🔄 shuffle",
     "ownLabel": "✏️ write my own",
@@ -69,8 +71,9 @@
     "subtitle": "The longer post. We'll format it for you.",
     "pre": {
       "title": "How buddies work",
-      "body": "<strong>#🤝find-a-buddy</strong> has a specific format — location, role, what you'd teach, what you want to learn. Fill the form below and we'll produce a copy-paste-ready post. Then climb as high as you can."
+      "body": "<strong>#🤝find-a-buddy</strong> uses a structured format. Fill the form below; we'll produce a copy-paste-ready post.<br><br><em>Two more programs to know:</em> <strong>SPC</strong> (four hands-on governance courses) · <strong>Projects</strong> (Ambassador, AI.MRKT, AI 2027). Volunteer in any."
     },
+    "nextLabel": "Next → Neural Nets game",
     "ctaLabel": "Climb endlessly",
     "ctaHint": "No target. Just go as high as you can.",
     "mantra": "Say: I'd teach X · I'd learn Y.",
@@ -86,15 +89,16 @@
   "stage4": {
     "title": "One more game",
     "subtitle": "How a neural net actually learns.",
-    "body": "GloGames' first release. Six floors covering Inputs → Weights → Neurons → Activation → Loss → the learning loop. Quietly excellent. About ten minutes if you're curious.",
+    "body": "GloGames' first release. Six floors: Inputs → Weights → Neurons → Activation → Loss → the loop. ~10 minutes.<br><br><em>GloGames</em> is one of three publication streams alongside <strong>GloLabs</strong> (case studies) and <strong>SPC</strong> (courses).",
     "ctaLabel": "Open Neural Nets ↗",
     "ctaUrl": "https://osangen.github.io/ai-power-users-codex53-demo/",
-    "mantra": "Say: inputs · weights · neurons · gates · guess."
+    "mantra": "Say: inputs · weights · neurons · gates · guess.",
+    "nextLabel": "Next → What's coming"
   },
   "stage5": {
-    "title": "Coming soon",
-    "subtitle": "Something else lives here.",
-    "body": "Reserved for Q2. New game, new domain, new ways to contribute. Check back when the cycle rolls.",
+    "title": "What's next",
+    "subtitle": "When the cycle rolls.",
+    "body": "Reserved for Q2. New game, new domain, new ways to contribute.<br><br><em>By the numbers:</em> <strong>11K+</strong> taught · <strong>200+</strong> upskilled · <strong>1K+</strong> members in 4 weeks · <strong>80%+</strong> weekly active. The energy is real.<br><br>See you when the cycle rolls.",
     "mantra": "Say: see you next quarter."
   },
   "menu": {
@@ -107,10 +111,10 @@
     "disclosure": "AI-assisted onboarding by the AIGLO team."
   },
   "toasts": {
-    "stage1Win":  "100 m. Nice climb.",
-    "stage1Fail": "Off the wall — feel of the climb, captured.",
-    "stage2Win":  "150 m. Crisp.",
-    "stage2Fail": "Caught the wall. Your intro is still ready.",
-    "stage3":     "Reached {meters} m. Worth a poster."
+    "stage1Win":  { "icon": "🎉", "title": "100 m climbed",      "sub": "Stage 2 is ready — your first intro." },
+    "stage1Fail": { "icon": "↻",  "title": "Caught the wall",    "sub": "Stage 2 is ready anyway. The lesson stays." },
+    "stage2Win":  { "icon": "🎉", "title": "150 m climbed",      "sub": "Your intro is ready below." },
+    "stage2Fail": { "icon": "↻",  "title": "Caught the wall",    "sub": "Your intro is still ready below." },
+    "stage3":     { "icon": "🏔️", "title": "Reached {meters} m", "sub": "Your buddy post is ready below." }
   }
 }
