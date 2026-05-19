@@ -141,13 +141,22 @@ canvas { display: block; cursor: pointer; }
 }
 .ov.hide { opacity: 0; pointer-events: none; }
 .title {
-  font-size: clamp(48px, 12vw, 84px);
-  font-weight: 900; letter-spacing: 8px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: clamp(36px, 8vw, 56px);
+  font-weight: 900; letter-spacing: -1px;
   margin-bottom: 6px;
-  text-shadow: 0 6px 0 #2a1450, 0 14px 24px rgba(40,20,70,.55);
+  text-shadow: 0 4px 0 #2a1450, 0 10px 20px rgba(40,20,70,.55);
 }
-.title span { color: #b890ff; }
-.tag { font-size: 12px; letter-spacing: 5px; opacity: .65; margin-bottom: 28px; }
+.title span { color: #ff60a0; }
+.tag { font-size: 12px; letter-spacing: 4px; opacity: .65; margin-bottom: 28px; text-transform: uppercase; }
+.hope-line {
+  margin-top: 18px;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+  font-size: 15px; color: #ffb0d8; opacity: 0.95;
+  letter-spacing: 0.4px;
+}
 .help {
   max-width: 380px; font-size: 14px; line-height: 1.6;
   opacity: 0.92; margin-bottom: 24px;
@@ -194,14 +203,15 @@ canvas { display: block; cursor: pointer; }
 </div>
 
 <div class="ov" id="ov">
-  <div class="title" id="title">CLI<span>M</span>B!</div>
-  <div class="tag" id="tag">A MOUNTAIN IN YOUR POCKET</div>
+  <div class="title" id="title">Welcome<span>,</span> Aiglo-ian.</div>
+  <div class="tag" id="tag">an onboarding mountain</div>
   <div class="help" id="help">
     <p><b>HOLD</b> <kbd>A</kbd> / tap <b>LEFT</b> &nbsp;|&nbsp; <b>HOLD</b> <kbd>L</kbd> / tap <b>RIGHT</b></p>
     <p style="margin-top:10px;opacity:.85;">A held hand grips any rock it touches. Release a hand to let it swing free &mdash; that's how you swing. Release the second hand at the top of your swing to fly up and grab the next rock.</p>
   </div>
-  <button class="go" id="play">CLIMB</button>
+  <button class="go" id="play">Start the climb</button>
   <div class="best" id="best"></div>
+  <p class="hope-line" id="hopeLine">Hope you have fun :)</p>
 </div>
 
 <script>
@@ -1762,17 +1772,17 @@ function gameOver() {
 
 function showGameOver() {
   const won = ONBOARD_TARGET > 0 && meters >= ONBOARD_TARGET;
-  titleEl.innerHTML = won ? 'SUMMIT<br>REACHED' : 'HEIGHT<br>REACHED';
-  tagEl.textContent = won ? 'WELL CLIMBED' : 'TOUCH TO GET UP';
+  titleEl.innerHTML = won ? 'Summit<span>,</span> reached.' : 'Caught the wall.';
+  tagEl.textContent = won ? 'well climbed' : 'pick up · climb again';
   helpEl.innerHTML = '<div class="score-big"><b>' + meters + ' METERS</b></div>'
     + '<p style="opacity:.7;font-size:13px;letter-spacing:2px;">' + (bestMeters > meters ? 'RECORD ' + bestMeters + 'm' : 'NEW RECORD!') + '</p>';
   // Onboarding mode: replace TRY AGAIN with a "back to onboarding" CTA so
   // the player lands on the menu page (where the poster + intro UI lives).
   if (ONBOARD_RETURN) {
-    playBtn.textContent = won ? 'CONTINUE' : 'BACK';
+    playBtn.textContent = won ? 'Continue' : 'Back to onboarding';
     playBtn.dataset.onboard = '1';
   } else {
-    playBtn.textContent = 'TRY AGAIN';
+    playBtn.textContent = 'Try again';
     delete playBtn.dataset.onboard;
   }
   bestEl.textContent = '';
@@ -1993,17 +2003,19 @@ function drawClimbSign(sx, baseY) {
   ctx.beginPath(); ctx.moveTo(left, top + 22); ctx.lineTo(left + W, top + 22); ctx.stroke();
 
   ctx.textAlign = 'center';
-  // "CLIMB!" big title
-  ctx.fillStyle = '#f5edff';
-  ctx.font = 'bold 16px ui-monospace, "SF Mono", monospace';
-  ctx.fillText('CLIMB!', sx, top + 16);
+  // Warm hand-painted title — italic serif so the sign reads like a
+  // welcome carving, not a label.
+  ctx.fillStyle = '#fff5fb';
+  ctx.font = 'italic bold 13px Georgia, "Times New Roman", serif';
+  ctx.fillText('Welcome, Aiglo-ian.', sx, top + 15);
 
-  // "BY THE NUMBERS" mono kicker
+  // "BY THE NUMBERS" small kicker, friendly sans
   ctx.fillStyle = '#3a1f6a';
-  ctx.font = 'bold 6px ui-monospace, monospace';
+  ctx.font = 'bold 6px Inter, -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillText('BY THE NUMBERS', sx, top + 32);
 
-  // Four stat tiles (2x2). Each tile is value (bold) over label (mini caps).
+  // Four stat tiles (2x2). Inter sans for the values + labels — easier
+  // to read at small sizes than monospace.
   const stats = [
     { v: '11K+', l: 'TAUGHT' },
     { v: '200+', l: 'UPSKILLED' },
@@ -2018,17 +2030,18 @@ function drawClimbSign(sx, baseY) {
     const cx = left + (i % 2) * colW + colW / 2;
     const cy = gridTop + Math.floor(i / 2) * rowH;
     ctx.fillStyle = '#f5edff';
-    ctx.font = 'bold 10px ui-monospace, "SF Mono", monospace';
+    ctx.font = 'bold 11px Inter, -apple-system, "Helvetica Neue", sans-serif';
     ctx.fillText(stats[i].v, cx, cy + 9);
-    ctx.fillStyle = 'rgba(255,255,255,0.65)';
-    ctx.font = 'bold 5px ui-monospace, monospace';
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.font = 'bold 5px Inter, sans-serif';
     ctx.fillText(stats[i].l, cx, cy + 16);
   }
 
-  // "Hope you have fun." — pink ribbon line at the bottom of the board
-  ctx.fillStyle = '#ff60a0';
-  ctx.font = 'bold 6px ui-monospace, monospace';
-  ctx.fillText('HOPE YOU HAVE FUN', sx, top + H - 4);
+  // "Hope you have fun :)" — italic serif so it reads like a handwritten
+  // greeting at the bottom of the sign.
+  ctx.fillStyle = '#ffb0d8';
+  ctx.font = 'italic bold 8px Georgia, "Times New Roman", serif';
+  ctx.fillText('Hope you have fun :)', sx, top + H - 4);
 
   ctx.textAlign = 'start';
   ctx.restore();
@@ -2063,13 +2076,13 @@ function drawWorldRecordsPlaque(sx, baseY) {
   ctx.closePath(); ctx.fill();
   // "WORLD RECORDS" title
   ctx.fillStyle = '#4a2a8a';
-  ctx.font = 'bold 7px ui-monospace, monospace';
+  ctx.font = 'bold 7px Inter, -apple-system, sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText('WORLD', sx - 8, baseY - 47);
   ctx.fillText('RECORDS', sx - 8, baseY - 39);
   // Stat lines
   ctx.fillStyle = '#5a3a8c';
-  ctx.font = 'bold 5px ui-monospace, monospace';
+  ctx.font = 'bold 5px Inter, -apple-system, sans-serif';
   ctx.fillText('summits: 0', sx - 28, baseY - 30);
   ctx.fillText('best time: -', sx - 28, baseY - 25);
   ctx.fillText('fewer falls: -', sx - 28, baseY - 20);
@@ -2090,10 +2103,10 @@ function drawRecordSign(sx, baseY, meters) {
   ctx.strokeRect(sx - 28, baseY - 52, 56, 24);
   // "record:" small + meters big
   ctx.fillStyle = '#4a2a8a';
-  ctx.font = 'bold 7px ui-monospace, monospace';
+  ctx.font = 'bold 7px Inter, -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText('record:', sx, baseY - 41);
-  ctx.font = 'bold 13px ui-monospace, monospace';
+  ctx.font = 'italic bold 14px Georgia, "Times New Roman", serif';
   ctx.fillText(meters + 'm', sx, baseY - 31);
   ctx.textAlign = 'start';
   // Small directional arrow on a tag at the post
@@ -2602,14 +2615,14 @@ function loop(t) {
 }
 
 function startGame() {
-  titleEl.innerHTML = 'CLI<span>M</span>B!';
-  tagEl.textContent = 'A MOUNTAIN IN YOUR POCKET';
+  titleEl.innerHTML = 'Welcome<span>,</span> Aiglo-ian.';
+  tagEl.textContent = 'an onboarding mountain';
   helpEl.innerHTML =
     '<p><b>HOLD</b> <kbd>A</kbd> / tap <b>LEFT</b> &nbsp;|&nbsp; <b>HOLD</b> <kbd>L</kbd> / tap <b>RIGHT</b></p>'
   + '<p style="margin-top:10px;opacity:.85;">A held hand grips any rock it touches. Release a hand to let it swing free &mdash; that\'s how you swing. '
   + 'Release the <b>second</b> hand at the top of your swing to fly up and grab the next rock.</p>'
   + '<p style="margin-top:8px;opacity:.65;font-size:13px;">Both hands released at the same time while hanging still &mdash; <b>jump straight up</b>.</p>';
-  playBtn.textContent = 'CLIMB';
+  playBtn.textContent = 'Start the climb';
   reset();
   ov.classList.add('hide');
 }
