@@ -254,17 +254,22 @@
     line-height: 1.5;
   }
 
-  /* "Climb again" tiny link shown next to the advance CTA. */
+  /* "Climb again" button shown beneath the advance CTA — a softer pink
+     pill so it reads as a secondary action next to the main lavender CTA. */
   .climb-again {
-    display: block; text-align: center;
-    margin-top: 8px;
-    font-size: 12px; letter-spacing: 1.5px; text-transform: uppercase;
-    color: var(--violet-2); font-weight: 700;
-    background: none; border: none; cursor: pointer;
-    padding: 4px 8px; font-family: inherit;
-    transition: color 0.15s;
+    display: block; width: 100%;
+    margin-top: 10px;
+    padding: 11px 18px;
+    font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase;
+    color: var(--violet-deep); font-weight: 900;
+    background: var(--pink-2);
+    border: none; border-radius: 12px;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 4px 0 var(--pink), 0 8px 18px rgba(255, 96, 160, 0.22);
+    transition: transform 0.08s, box-shadow 0.15s, background 0.15s;
   }
-  .climb-again:hover { color: var(--pink); }
+  .climb-again:hover  { background: var(--pink); color: white; }
+  .climb-again:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--pink); }
 
   /* === Stage mantra box (the "Say: X" takeaway) ========================= */
   .mantra {
