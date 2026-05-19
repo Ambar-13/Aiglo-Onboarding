@@ -117,6 +117,43 @@
   .external-tile p { font-size: 14px; opacity: 0.85; }
   .external-tile .arrow { float: right; font-size: 24px; opacity: 0.6; }
 
+  /* 5 plug-in paths — five lanes the player can pick after onboarding.
+     "Start with one lane. Ship proof." is the operating instruction. */
+  .paths {
+    margin-top: 40px;
+    padding: 22px 24px;
+    background: white;
+    border: 1px solid var(--lavender-3);
+    border-radius: 18px;
+    box-shadow: 0 8px 22px var(--shadow);
+  }
+  .paths-kicker {
+    font-size: 11px; letter-spacing: 2.5px; font-weight: 800;
+    text-transform: uppercase; color: var(--lavender);
+    margin-bottom: 12px;
+  }
+  .paths-list {
+    list-style: none; padding: 0; margin: 0;
+    display: grid; gap: 10px;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 540px) { .paths-list { grid-template-columns: 1fr 1fr; } }
+  .paths-list li {
+    display: flex; flex-direction: column; gap: 2px;
+    padding: 10px 14px;
+    background: var(--lavender-3);
+    border-radius: 12px;
+    border-left: 3px solid var(--pink);
+  }
+  .paths-list li strong { font-size: 14px; color: var(--violet-deep); font-weight: 900; letter-spacing: 0.3px; }
+  .paths-list li span  { font-size: 12px; color: var(--violet-2); opacity: 0.78; }
+  .paths-tag {
+    margin-top: 12px;
+    font-size: 13px; font-weight: 800; font-style: italic;
+    color: var(--pink); text-align: center;
+    letter-spacing: 0.2px;
+  }
+
   /* By-the-numbers + cycle-rolls lines that sit above the footer credit. */
   .stats {
     margin-top: 48px; text-align: center;
@@ -348,7 +385,19 @@
 
   <ol class="tiles" id="tilesGrid"></ol>
 
-  <p class="stats">By the numbers: <strong>11K+</strong> taught · <strong>200+</strong> upskilled · <strong>1K+</strong> members in 4 weeks · <strong>80%+</strong> weekly active. The energy is real.</p>
+  <section class="paths">
+    <p class="paths-kicker">5 ways to plug in</p>
+    <ul class="paths-list">
+      <li><strong>Cases</strong><span>read · synthesise · build insight</span></li>
+      <li><strong>Projects</strong><span>VideoGen · Ambassador · JobGen · AI 2027</span></li>
+      <li><strong>Games</strong><span>make AI education practical</span></li>
+      <li><strong>Course</strong><span>SPC · GenMRKT · donor-course tracks</span></li>
+      <li><strong>Contribute</strong><span>volunteer · builder · ambassador roles</span></li>
+    </ul>
+    <p class="paths-tag">Start with one lane. Ship proof.</p>
+  </section>
+
+  <p class="stats"><strong>By the numbers</strong> · <strong>1K+</strong> professionals taught · <strong>150K+</strong> viewers reached · <strong>30+</strong> lean agents built · <strong>4,725</strong> workshop followers · <strong>45K+</strong> VideoGen views · <strong>100+</strong> students in pipeline.</p>
   <p class="cycle-line">Hope you have fun.</p>
   <p class="footer" id="footer">Made with <span class="heart">❤️</span> by the <span class="team">AIGLO team</span> <span class="smiley">:)</span></p>
 </main>
@@ -603,6 +652,18 @@ function renderStage1(sheet) {
   const m = makeMantra(t.mantra);
   if (m) sheet.appendChild(m);
 
+  // Origin story — only shown AFTER an attempt, so the line lands as
+  // "you've climbed; now here's where the community came from."
+  if (state.attempted[1]) {
+    const origin = document.createElement('div');
+    origin.className = 'panel tinted';
+    origin.innerHTML = `
+      <h3>Origin</h3>
+      <p>From a grassroots WhatsApp group to a real operating organisation.</p>
+    `;
+    sheet.appendChild(origin);
+  }
+
   sheet.appendChild(makeStageCta({
     stageId: 1, nextStage: 2,
     climbLabel: t.ctaLabel, climbHint: t.ctaHint, nextLabel: t.nextLabel,
@@ -801,6 +862,32 @@ function renderStage3(sheet) {
       initial: state.stage3.loved || '',
       onChange: v => { state.stage3.loved = v; saveState(); refreshPosters(); },
     }));
+    // Entry points + path forward + the "ecosystem, not a network" thesis.
+    // Slides 6 + 7 from the founder deck — the moment after the endless
+    // climb is where this lands hardest: the player has just put in time,
+    // and now sees that this is an ecosystem they ship work INSIDE OF.
+    const ecosystem = document.createElement('div');
+    ecosystem.className = 'panel';
+    ecosystem.innerHTML = `
+      <h3>You're entering an ecosystem, not a network</h3>
+      <p><strong>Entry points:</strong> class · workshop · paper or case · course · project · referral.</p>
+      <p><strong>Path forward:</strong> learn → build → contribute → ship → move into deeper roles.</p>
+    `;
+    sheet.appendChild(ecosystem);
+    // 5 plug-in paths — same five-lane card as the menu, repeated here
+    // because this is the post-climb decision point: "OK, which lane?"
+    const paths = document.createElement('div');
+    paths.className = 'panel tinted';
+    paths.innerHTML = `
+      <h3>5 ways to plug in</h3>
+      <p><strong>Cases</strong> · read and synthesise.</p>
+      <p><strong>Projects</strong> · VideoGen · Ambassador · JobGen · AI 2027.</p>
+      <p><strong>Games</strong> · make AI education practical.</p>
+      <p><strong>Course</strong> · SPC · GenMRKT · donor-course tracks.</p>
+      <p><strong>Contribute</strong> · volunteer · builder · ambassador.</p>
+      <p style="margin-top:10px;font-style:italic;color:var(--pink);font-weight:800;">Start with one lane. Ship proof.</p>
+    `;
+    sheet.appendChild(paths);
     sheet.appendChild(makePosterPanel({
       panelId: 'poster3',
       name: state.name,

@@ -1805,9 +1805,9 @@ const AIGLO_FACTS = [
   { k: 'GloLabs Vol 1',      b: 'Six peer-reviewed marketing case studies just dropped — real teams shipping real systems.' },
   { k: 'GloGames',           b: 'The playful side of Aiglo. "Neural Nets" is the first release — six floors of how a network actually learns.' },
   { k: 'SPC',                b: 'Four hands-on governance courses, taught live. The path from curious to credible.' },
-  { k: 'Projects to join',   b: 'Ambassador, AI.MRKT, AI 2027 — three open volunteer tracks. Pick a lane and ship something.' },
-  { k: 'How a quarter works', b: 'Each quarter the community goes deep on one domain — Q1 2026 is marketing. Case studies, courses, papers, live sessions. AI for All runs alongside, all year.' },
-  { k: 'By the numbers',     b: '11K+ taught · 200+ upskilled · 1K+ members in 4 weeks · 80%+ weekly active. The energy is real.' },
+  { k: 'Projects to join',   b: 'VideoGen, Ambassador, JobGen, AI 2027 — four open project tracks. Pick a lane and ship something.' },
+  { k: 'How the loop works', b: 'AI Global runs as a loop — Learn → Build → Contribute → Ship. Case studies, courses, papers, live sessions feed it. AI for All runs alongside.' },
+  { k: 'By the numbers',     b: '1K+ professionals taught · 150K+ viewers reached · 30+ lean agents built · 4,725 workshop followers · 45K+ VideoGen views · 100+ students in pipeline.' },
   { k: 'How buddies work',  b: 'Drop your lane in #find-a-buddy; the Discord routes you to someone in the same domain by morning.' }
 ];
 let __factIdx = Math.floor(Math.random() * AIGLO_FACTS.length);
@@ -1974,6 +1974,15 @@ function drawBaseCamp() {
   drawWorldRecordsPlaque(w2sX(310), groundSy - 4);
   // RECORD yellow plate on a post, to the left of start
   drawRecordSign(w2sX(-180), groundSy - 4, bestMeters);
+  // Operating-principle wooden boards spread along the purple ground.
+  // Five small "X over Y" plaques plus a central italic motto. They reward
+  // the player who walks the base camp.
+  drawValueBoard(w2sX(-560), groundSy - 4, 'Practical',     'Performative');
+  drawValueBoard(w2sX(-440), groundSy - 4, 'Systems',       'Noise');
+  drawValueBoard(w2sX(-320), groundSy - 4, 'Proof',         'Claims');
+  drawValueBoard(w2sX( 460), groundSy - 4, 'Open Learning', 'Gatekeeping');
+  drawValueBoard(w2sX( 580), groundSy - 4, 'Humans in the Loop', 'Black-Box');
+  drawMottoBoard(w2sX( 720), groundSy - 4, 'Learn it. Build it. Ship it.');
 }
 
 function drawBush(sx, sy) {
@@ -2072,27 +2081,29 @@ function drawClimbSign(sx, baseY) {
   ctx.font = 'bold 6px Inter, -apple-system, "Helvetica Neue", sans-serif';
   ctx.fillText('BY THE NUMBERS', sx, top + 32);
 
-  // Four stat tiles (2x2). Inter sans for the values + labels — easier
-  // to read at small sizes than monospace.
+  // Six stat tiles (3x2). Inter sans — founder-deck numbers verbatim.
   const stats = [
-    { v: '11K+', l: 'TAUGHT' },
-    { v: '200+', l: 'UPSKILLED' },
-    { v: '1K+',  l: 'MEMBERS' },
-    { v: '80%+', l: 'WEEKLY' }
+    { v: '1K+',    l: 'TAUGHT' },
+    { v: '150K+',  l: 'VIEWERS' },
+    { v: '30+',    l: 'AGENTS' },
+    { v: '4,725',  l: 'WORKSHOP' },
+    { v: '45K+',   l: 'VIDEOGEN' },
+    { v: '100+',   l: 'PIPELINE' }
   ];
-  const colW = W / 2;
-  const rowH = 18;
+  const COLS = 3;
+  const colW = W / COLS;
+  const rowH = 16;
   const gridTop = top + 38;
   ctx.textAlign = 'center';
-  for (let i = 0; i < 4; i++) {
-    const cx = left + (i % 2) * colW + colW / 2;
-    const cy = gridTop + Math.floor(i / 2) * rowH;
+  for (let i = 0; i < 6; i++) {
+    const cx = left + (i % COLS) * colW + colW / 2;
+    const cy = gridTop + Math.floor(i / COLS) * rowH;
     ctx.fillStyle = '#f5edff';
-    ctx.font = 'bold 11px Inter, -apple-system, "Helvetica Neue", sans-serif';
-    ctx.fillText(stats[i].v, cx, cy + 9);
+    ctx.font = 'bold 9px Inter, -apple-system, "Helvetica Neue", sans-serif';
+    ctx.fillText(stats[i].v, cx, cy + 7);
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.font = 'bold 5px Inter, sans-serif';
-    ctx.fillText(stats[i].l, cx, cy + 16);
+    ctx.fillText(stats[i].l, cx, cy + 14);
   }
 
   // "Hope you have fun :)" — italic serif so it reads like a handwritten
@@ -2144,6 +2155,54 @@ function drawWorldRecordsPlaque(sx, baseY) {
   ctx.fillText('summits: 0', sx - 28, baseY - 30);
   ctx.fillText('best time: -', sx - 28, baseY - 25);
   ctx.fillText('fewer falls: -', sx - 28, baseY - 20);
+  ctx.textAlign = 'start';
+  ctx.restore();
+}
+
+function drawValueBoard(sx, baseY, first, second) {
+  ctx.save();
+  const W = 96, H = 30;
+  const left = sx - W / 2, top = baseY - 16 - H;
+  // Post
+  ctx.fillStyle = '#6a4ec0';
+  ctx.fillRect(sx - 1.5, baseY - 16, 3, 16);
+  // Board face
+  ctx.fillStyle = '#b890ff';
+  ctx.fillRect(left, top, W, H);
+  ctx.strokeStyle = '#4a2a8a';
+  ctx.lineWidth = 1.2;
+  ctx.strokeRect(left, top, W, H);
+  // Top line: bold sans
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff5fb';
+  ctx.font = 'bold 8.5px Inter, -apple-system, sans-serif';
+  ctx.fillText(first, sx, top + 13);
+  // Bottom line: italic pink "over X"
+  ctx.fillStyle = '#ffb0d8';
+  ctx.font = 'italic 7px Georgia, "Times New Roman", serif';
+  ctx.fillText('over ' + second, sx, top + 24);
+  ctx.textAlign = 'start';
+  ctx.restore();
+}
+
+function drawMottoBoard(sx, baseY, line) {
+  ctx.save();
+  const W = 138, H = 30;
+  const left = sx - W / 2, top = baseY - 16 - H;
+  // Post
+  ctx.fillStyle = '#6a4ec0';
+  ctx.fillRect(sx - 1.5, baseY - 16, 3, 16);
+  // Darker violet board — the motto is the headline of the value walk
+  ctx.fillStyle = '#7a5cbc';
+  ctx.fillRect(left, top, W, H);
+  ctx.strokeStyle = '#4a2a8a';
+  ctx.lineWidth = 1.4;
+  ctx.strokeRect(left, top, W, H);
+  // Italic Georgia — the same warm hand-painted feel as the CLIMB greeting
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#fff5fb';
+  ctx.font = 'italic bold 12px Georgia, "Times New Roman", serif';
+  ctx.fillText(line, sx, top + 19);
   ctx.textAlign = 'start';
   ctx.restore();
 }

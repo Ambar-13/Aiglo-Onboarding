@@ -31,7 +31,7 @@
     "namePersist": "Stays on your device.",
     "pre": {
       "title": "Meet AI Global",
-      "body": "<strong>AI Global @ MIT.</strong> Practitioners treating AI as a craft — open to everyone. Backed by MIT Professional Education.<br><br>Mission: <em>open systems, practical AI, clear stewardship.</em><br><br>Each quarter the community goes <strong>deep on one domain</strong> — Q1 2026 is marketing. Case studies (GenMRKT), courses (SPC), peer-reviewed papers, and live sessions drop alongside the always-on <strong>AI for All</strong> work.<br><br>Now — 100 m climb. Falling is fine."
+      "body": "<strong>AI Global @ MIT.</strong> Practitioners treating AI as a craft — open to everyone. Backed by MIT Professional Education.<br><br>Mission: <em>open systems, practical AI, clear stewardship.</em><br><br>The community runs as a <strong>loop</strong> — <em>Learn → Build → Contribute → Ship.</em> Case studies, courses (GenMRKT, SPC), peer-reviewed papers, and live sessions feed the loop alongside the always-on <strong>AI for All</strong> work.<br><br>Now — 100 m climb. Falling is fine."
     },
     "ctaLabel": "Start the climb",
     "ctaHint": "100 m. We'll hint the first few holds.",
@@ -57,7 +57,7 @@
     "ctaLabel": "Climb to 150 m",
     "ctaHint": "Same wall, no hints this time. You've got this.",
     "mantra": "Name · country · one specific thing.",
-    "shareLine": "AI Global goes deep on one domain each quarter. Q1 2026: marketing.",
+    "shareLine": "AI Global runs as a loop — Learn → Build → Contribute → Ship.",
     "outcome": {
       "winTitle": "150 m. Crisp climb.",
       "winBody": "Your intro is ready to post. Drop it into #👋introduce-yourself — people there are quick to ❤️ and reply.",
@@ -71,7 +71,7 @@
     "subtitle": "The longer post. We'll format it for you.",
     "pre": {
       "title": "How buddies work",
-      "body": "<strong>#🤝find-a-buddy</strong> uses a structured format. Fill the form below; we'll produce a copy-paste-ready post.<br><br><em>Two more programs to know:</em> <strong>SPC</strong> (four hands-on governance courses) · <strong>Projects</strong> (Ambassador, AI.MRKT, AI 2027). Volunteer in any."
+      "body": "<strong>#🤝find-a-buddy</strong> uses a structured format. Fill the form below; we'll produce a copy-paste-ready post.<br><br><em>Two more programs to know:</em> <strong>SPC</strong> (four hands-on governance courses) · <strong>Projects</strong> (VideoGen, Ambassador, JobGen, AI 2027). Volunteer in any."
     },
     "nextLabel": "Next → Neural Nets game",
     "ctaLabel": "Climb endlessly",
@@ -98,7 +98,7 @@
   "stage5": {
     "title": "What's next",
     "subtitle": "When the cycle rolls.",
-    "body": "Reserved for Q2. New game, new domain, new ways to contribute.<br><br><em>By the numbers:</em> <strong>11K+</strong> taught · <strong>200+</strong> upskilled · <strong>1K+</strong> members in 4 weeks · <strong>80%+</strong> weekly active. The energy is real.<br><br>See you when the cycle rolls.",
+    "body": "Reserved for the next turn of the loop.<br><br><em>By the numbers:</em> <strong>1K+</strong> professionals taught · <strong>150K+</strong> viewers reached · <strong>30+</strong> lean agents built · <strong>4,725</strong> workshop followers · <strong>45K+</strong> VideoGen views · <strong>100+</strong> students in pipeline.<br><br>Hope you have fun.",
     "mantra": "See you next quarter."
   },
   "menu": {
