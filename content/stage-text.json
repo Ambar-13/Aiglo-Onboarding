@@ -34,7 +34,12 @@
       "body": "A community of senior people who treat AI as a craft, not a horoscope. Built with MIT Professional Education. Mission: <em>open systems, practical AI, clear stewardship.</em><br><br>Every quarter the whole community picks <strong>one domain</strong> and ships real work together. Q1 2026 is marketing — <strong>GloLabs Vol 1</strong> just dropped, six peer-reviewed case studies covering workshop pipelines, multimedia, community growth, content systems and ambassador loops.<br><br><strong>Four programs you'll meet:</strong><br>• <strong>GloLabs</strong> — peer-reviewed case-study library, quarterly<br>• <strong>GloGames</strong> — interactive AI lessons (try one in Stage 4)<br>• <strong>SPC</strong> — four hands-on governance courses<br>• <strong>Projects</strong> — VideoGlo · Ambassador · AI.MRKT (teaching AI in underserved communities) · AI 2027 (frontier-AI risk → enforceable law)<br><br>Volunteer in any of them. <strong>11K+ taught</strong> · <strong>200+ upskilled</strong> · <strong>1K+ members in 4 weeks</strong> · <strong>80%+ weekly active</strong>. The energy is real.<br><br>Now — 100 m to feel the climb. Falling is fine; it's just a feel."
     },
     "ctaLabel": "Start the climb",
-    "ctaHint": "100 m. We'll hint the first few holds."
+    "ctaHint": "100 m. We'll hint the first few holds.",
+    "mantra": "Say: one quarter · one domain · real systems.",
+    "fall": {
+      "title": "Fall card · The loop catches you",
+      "body": "AI Global runs on cycles. A miss is part of the run — pick up, climb again. The lesson stays."
+    }
   },
   "stage2": {
     "title": "Your first intro",
@@ -49,6 +54,8 @@
     "ownPlaceholder": "Hi, I'm {name}. ",
     "ctaLabel": "Climb to 150 m",
     "ctaHint": "Same wall, no hints this time. You've got this.",
+    "mantra": "Try: name · country · one specific thing.",
+    "shareLine": "AI Global runs in quarterly cycles. Q1 2026: marketing.",
     "outcome": {
       "winTitle": "150 m. Crisp climb.",
       "winBody": "Your intro is ready to post. Drop it into #👋introduce-yourself — people there are quick to ❤️ and reply.",
@@ -66,6 +73,8 @@
     },
     "ctaLabel": "Climb endlessly",
     "ctaHint": "No target. Just go as high as you can.",
+    "mantra": "Say: I'd teach X · I'd learn Y.",
+    "shareLine": "The Discord routes you to a buddy in your lane.",
     "outcome": {
       "posterTitle": "Reached {meters} m.",
       "posterBody": "Your buddy post is ready. Drop it in #find-a-buddy — you'll have replies by morning.",
@@ -79,19 +88,23 @@
     "subtitle": "How a neural net actually learns.",
     "body": "GloGames' first release. Six floors covering Inputs → Weights → Neurons → Activation → Loss → the learning loop. Quietly excellent. About ten minutes if you're curious.",
     "ctaLabel": "Open Neural Nets ↗",
-    "ctaUrl": "https://osangen.github.io/ai-power-users-codex53-demo/"
+    "ctaUrl": "https://osangen.github.io/ai-power-users-codex53-demo/",
+    "mantra": "Say: inputs · weights · neurons · gates · guess."
   },
   "stage5": {
     "title": "Coming soon",
     "subtitle": "Something else lives here.",
-    "body": "Reserved for Q2. New game, new domain, new ways to contribute. Check back when the cycle rolls."
+    "body": "Reserved for Q2. New game, new domain, new ways to contribute. Check back when the cycle rolls.",
+    "mantra": "Say: see you next quarter."
   },
   "menu": {
     "title": "AI Global",
     "kicker": "Onboarding",
     "heroLead": "Welcome",
-    "heroSub": "Glad you're here. AI Global is global, curious, and busy in the middle of a quarter — let's get you in the door.",
-    "footer": "Made with <span class=\"heart\">❤️</span> by the <span class=\"team\">AIGLO team</span> <span class=\"smiley\">:)</span>"
+    "heroSub": "Climb in. Meet your people. Catch this quarter.",
+    "heroSubLong": "AI Global is global, curious, and busy in the middle of a quarter — let's get you in the door.",
+    "footer": "Made with <span class=\"heart\">❤️</span> by the <span class=\"team\">AIGLO team</span> <span class=\"smiley\">:)</span>",
+    "disclosure": "AI-assisted onboarding by the AIGLO team."
   },
   "toasts": {
     "stage1Win":  "100 m. Nice climb.",

@@ -216,6 +216,70 @@
   .cat-grid button { transition: transform 0.12s, border-color 0.15s, background 0.15s; }
   .cat-grid button:hover { transform: translateY(-2px); }
 
+  /* === Hero typography hierarchy ======================================= */
+  .hello .promise {
+    font-size: clamp(18px, 2.8vw, 22px);
+    font-weight: 800;
+    letter-spacing: -0.2px;
+    color: var(--violet);
+    margin-top: 4px;
+    margin-bottom: 8px;
+    line-height: 1.25;
+  }
+  .hello .promise::before {
+    content: '→ ';
+    color: var(--pink);
+    font-weight: 900;
+  }
+  .hello .ambient {
+    font-size: 15px;
+    opacity: 0.68;
+    max-width: 52ch;
+    line-height: 1.5;
+  }
+
+  /* === Stage mantra box (the "Say: X" takeaway) ========================= */
+  .mantra {
+    background: linear-gradient(135deg, var(--lavender-3), #fff);
+    border-left: 4px solid var(--pink);
+    padding: 14px 18px;
+    margin-top: 14px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 15px;
+    color: var(--violet-deep);
+    letter-spacing: 0.1px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    box-shadow: 0 4px 14px rgba(80,40,140,0.10);
+  }
+  .mantra .glyph {
+    color: var(--pink);
+    font-size: 18px;
+    font-weight: 900;
+    flex-shrink: 0;
+  }
+  .mantra .text { flex: 1; }
+
+  /* === Stage fall card (failure is content) ============================ */
+  .fall-card {
+    background: white;
+    border: 1.5px dashed var(--lavender-2);
+    border-radius: 12px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+  }
+  .fall-card h3 {
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--pink);
+    font-weight: 900;
+    margin-bottom: 6px;
+  }
+  .fall-card p { font-size: 14px; opacity: 0.85; }
+
   /* Respect reduced-motion users. */
   @media (prefers-reduced-motion: reduce) {
     .tile, .tile:hover { transition: none; }
@@ -236,7 +300,8 @@
 
   <section class="hello">
     <h1 id="welcomeH1">Welcome<span id="welcomeComma"></span> <span id="welcomeName" class="accent">in</span>.</h1>
-    <p id="welcomeBlurb">Glad you're here. AI Global is global, curious, and busy in the middle of a quarter — let's get you in the door.</p>
+    <p class="promise" id="welcomePromise">Climb in. Meet your people. Catch this quarter.</p>
+    <p class="ambient" id="welcomeBlurb">AI Global is global, curious, and busy in the middle of a quarter — let's get you in the door.</p>
   </section>
 
   <ol class="tiles" id="tilesGrid"></ol>
@@ -294,15 +359,41 @@ async function loadContent() {
 function renderHello(opts) {
   const nameEl = document.getElementById('welcomeName');
   const commaEl = document.getElementById('welcomeComma');
+  const promiseEl = document.getElementById('welcomePromise');
   const blurbEl = document.getElementById('welcomeBlurb');
   if (state.name) { nameEl.textContent = state.name; commaEl.textContent = ','; }
   else            { nameEl.textContent = 'in';      commaEl.textContent = ''; }
-  if (CONTENT && CONTENT.menu && blurbEl) blurbEl.textContent = CONTENT.menu.heroSub;
+  if (CONTENT && CONTENT.menu) {
+    if (promiseEl && CONTENT.menu.heroSub)     promiseEl.textContent = CONTENT.menu.heroSub;
+    if (blurbEl   && CONTENT.menu.heroSubLong) blurbEl.textContent   = CONTENT.menu.heroSubLong;
+  }
   if (opts && opts.fresh) {
     nameEl.classList.remove('fresh');
     void nameEl.offsetWidth;   // restart animation
     nameEl.classList.add('fresh');
   }
+}
+
+// Mantra box: tiny "Say: X" takeaway that ends every stage modal.
+// Inspired by Aiglo's Neural Nets game where each lesson card ends with
+// a one-line mantra (e.g. "Say: numbers in → guess out.").
+function makeMantra(text) {
+  if (!text) return null;
+  const d = document.createElement('div');
+  d.className = 'mantra';
+  d.innerHTML = `<span class="glyph">→</span><span class="text">${escapeText(text)}</span>`;
+  return d;
+}
+
+// Fall card: when the climber misses the stage's target, show a tiny
+// concept card instead of just a tossed-off failure line. "The lesson
+// stays" — falling is part of the run.
+function makeFallCard(fallObj) {
+  if (!fallObj) return null;
+  const d = document.createElement('div');
+  d.className = 'fall-card';
+  d.innerHTML = `<h3>${escapeText(fallObj.title)}</h3><p>${escapeText(fallObj.body)}</p>`;
+  return d;
 }
 
 function showToast(text) {
@@ -396,13 +487,22 @@ function renderStage1(sheet) {
     if (state.name) priorName = state.name;
   });
 
-  // Single AI Global explainer panel. No outcome panel here — the
-  // post-climb celebratory line lives in the menu toast, not in this
-  // modal, so we never repeat the same copy twice.
+  // Fall card — shown if the climber attempted Stage 1 and didn't reach
+  // 100 m. "The lesson stays." (Pattern from Aiglo's Neural Nets game.)
+  if (state.lastRun && state.lastRun.mode === 'guided' && state.lastRun.won === false && t.fall) {
+    const fc = makeFallCard(t.fall);
+    if (fc) sheet.appendChild(fc);
+  }
+
+  // Single AI Global explainer panel.
   const pre = document.createElement('div');
   pre.className = 'panel';
   pre.innerHTML = `<h3>${t.pre.title}</h3><p>${t.pre.body}</p>`;
   sheet.appendChild(pre);
+
+  // Mantra — tiny "Say: X" takeaway line, the lesson compressed.
+  const m = makeMantra(t.mantra);
+  if (m) sheet.appendChild(m);
 
   const cta = document.createElement('button');
   cta.className = 'cta pulse';
@@ -515,6 +615,8 @@ function renderStage2(sheet) {
       copyText: finalLine,
       discordLabel: 'Open #introduce-yourself',
       discordUrl: CONTENT.brand.deepLinks.introduceYourself,
+      shareLine: t.shareLine,
+      disclosure: CONTENT.menu && CONTENT.menu.disclosure,
     }));
   }
 
@@ -529,6 +631,8 @@ function renderStage2(sheet) {
     }
     launchClimb({ target: 150 });
   });
+  const m = makeMantra(t.mantra);
+  if (m) sheet.appendChild(m);
   sheet.appendChild(cta);
   const hint = document.createElement('p'); hint.className = 'hint'; hint.style.textAlign = 'center'; hint.textContent = t.ctaHint;
   sheet.appendChild(hint);
@@ -605,6 +709,8 @@ function renderStage3(sheet) {
       discordUrl: CONTENT.brand.deepLinks.findABuddy,
       discordLabel2: 'Open #introduce-yourself',
       discordUrl2: CONTENT.brand.deepLinks.introduceYourself,
+      shareLine: t.shareLine,
+      disclosure: CONTENT.menu && CONTENT.menu.disclosure,
     }));
   }
 
@@ -612,6 +718,8 @@ function renderStage3(sheet) {
   cta.className = 'cta pulse';
   cta.textContent = t.ctaLabel;
   cta.addEventListener('click', () => launchClimb({ endless: true }));
+  const m = makeMantra(t.mantra);
+  if (m) sheet.appendChild(m);
   sheet.appendChild(cta);
   const hint = document.createElement('p'); hint.className = 'hint'; hint.style.textAlign = 'center'; hint.textContent = t.ctaHint;
   sheet.appendChild(hint);
@@ -636,6 +744,8 @@ function renderStage4(sheet) {
   const body = document.createElement('div'); body.className = 'panel';
   body.innerHTML = `<p>${t.body}</p>`;
   sheet.appendChild(body);
+  const m = makeMantra(t.mantra);
+  if (m) sheet.appendChild(m);
   const link = document.createElement('a');
   link.className = 'external-tile';
   link.href = t.ctaUrl;
@@ -653,6 +763,8 @@ function renderStage5(sheet) {
   const p = document.createElement('div'); p.className = 'panel'; p.style.textAlign = 'center';
   p.innerHTML = `<h3>${t.title}</h3><p>${t.body}</p>`;
   sheet.appendChild(p);
+  const m = makeMantra(t.mantra);
+  if (m) sheet.appendChild(m);
 }
 
 // =====================================================================
@@ -726,6 +838,7 @@ function makePosterPanel(opts) {
   wrap.dataset.posterOpts = JSON.stringify({
     name: opts.name, meters: opts.meters, won: opts.won,
     mainText: opts.mainText, lovedText: opts.lovedText,
+    shareLine: opts.shareLine, disclosure: opts.disclosure,
   });
   wrap.innerHTML = `
     <h3>Your share card</h3>
@@ -770,7 +883,7 @@ function refreshPosters() {
   });
 }
 
-function drawPoster({ name, meters, won, mainText, lovedText }) {
+function drawPoster({ name, meters, won, mainText, lovedText, shareLine, disclosure }) {
   const SZ = 1080;
   const cvs = document.createElement('canvas');
   cvs.width = SZ; cvs.height = SZ;
@@ -835,7 +948,25 @@ function drawPoster({ name, meters, won, mainText, lovedText }) {
     yPtr += 14;
   }
 
-  // Footer band: aiglo.org + tagline
+  // Share line: per-stage "what I learned" pinned to the poster as a
+  // tinted band, lifted from Aiglo's Neural Nets game share template.
+  if (shareLine && shareLine.trim()) {
+    const bandH = 100;
+    const bandY = SZ - PAD - 56 - bandH - 16;
+    ctx.fillStyle = '#f0e6ff';
+    ctx.fillRect(PAD, bandY, SZ - PAD * 2, bandH);
+    ctx.fillStyle = '#ff60a0';
+    ctx.fillRect(PAD, bandY, 5, bandH);
+    ctx.fillStyle = '#6a4ec0';
+    ctx.font = '700 14px Inter, sans-serif';
+    ctx.fillText('WHAT YOU LEARNED', PAD + 24, bandY + 32);
+    ctx.fillStyle = '#2a1454';
+    ctx.font = '500 22px Inter, sans-serif';
+    wrapText(ctx, shareLine.trim(), PAD + 24, bandY + 64, SZ - PAD * 2 - 48, 28, 2);
+  }
+
+  // Footer band: aiglo.org + tagline + AI-disclosure line (per Aiglo
+  // pattern — every share artifact carries an explicit AI-assist note).
   ctx.fillStyle = '#b890ff';
   ctx.fillRect(PAD, SZ - PAD - 56, SZ - PAD * 2, 3);
   ctx.fillStyle = '#4a2a7a';
@@ -846,6 +977,11 @@ function drawPoster({ name, meters, won, mainText, lovedText }) {
   ctx.font = '500 14px Inter, sans-serif';
   ctx.fillText('One quarter · one domain · real AI systems.', SZ - PAD, SZ - PAD - 18);
   ctx.textAlign = 'start';
+  if (disclosure && disclosure.trim()) {
+    ctx.fillStyle = '#9c80c4';
+    ctx.font = '500 12px Inter, sans-serif';
+    ctx.fillText(disclosure, PAD, SZ - 22);
+  }
 
   return cvs;
 }
