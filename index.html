@@ -32,8 +32,12 @@
   .brand   { font-weight: 900; letter-spacing: 3px; font-size: 14px; color: var(--violet); }
   .brand span { color: var(--pink); }
   .kicker  { font-size: 12px; letter-spacing: 4px; text-transform: uppercase; opacity: 0.55; }
-  .brand-mark { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-  .brand-mark .logo { width: 36px; height: auto; display: block; }
+  .hello-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; }
+  .hello-row .hello-logo {
+    width: clamp(64px, 12vw, 96px);
+    height: auto; display: block;
+    flex-shrink: 0;
+  }
 
   /* === Hello header ===================================================== */
   .hello { margin-bottom: 28px; }
@@ -493,14 +497,14 @@
 
   <div class="topbar">
     <div class="brand">AI <span>GLOBAL</span></div>
-    <div class="brand-mark">
-      <div class="kicker">Onboarding</div>
-      <img src="aiglo-logo.png" alt="Aiglo" class="logo">
-    </div>
+    <div class="kicker">Onboarding</div>
   </div>
 
   <section class="hello">
-    <h1 id="welcomeH1">Welcome<span id="welcomeComma">,</span> <span id="welcomeName" class="accent">Aiglo-ian</span>.</h1>
+    <div class="hello-row">
+      <h1 id="welcomeH1">Welcome<span id="welcomeComma">,</span> <span id="welcomeName" class="accent">Aiglo-ian</span>.</h1>
+      <img src="aiglo-logo.png" alt="Aiglo" class="hello-logo">
+    </div>
     <p class="promise" id="welcomePromise">Climb in. Meet your people. Catch this quarter.</p>
     <p class="ambient" id="welcomeBlurb">AI Global is global, curious, and busy in the middle of a quarter — let's get you in the door.</p>
     <p class="mission-line"><span class="mission-kicker">Mission</span><em>open systems · practical AI · clear stewardship.</em></p>
