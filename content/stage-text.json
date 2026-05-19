@@ -1,0 +1,95 @@
+{
+  "brand": {
+    "name": "AI Global",
+    "longName": "AI Global @ MIT",
+    "tagline": "One quarter. One domain. Real AI systems.",
+    "mission": "Open systems, practical AI, clear stewardship.",
+    "homepage": "https://aiglo.org",
+    "discordServer": "AI Global",
+    "discordInvite": "",
+    "deepLinks": {
+      "introduceYourself": "https://discord.com/channels/1353058864810950737/1353442520717066320",
+      "findABuddy": "https://discord.com/channels/1353058864810950737/1414278139885912195",
+      "onboardingBot": "https://chatgpt.com/g/g-69b4820bd9bc8191a00cb9346a69417b-genonboard-mit"
+    }
+  },
+  "categories": [
+    {"id": "healthcare",  "label": "Healthcare",  "emoji": "🧬"},
+    {"id": "finance",     "label": "Finance",     "emoji": "💵"},
+    {"id": "marketing",   "label": "Marketing",   "emoji": "📣"},
+    {"id": "engineering", "label": "Engineering", "emoji": "🛠"},
+    {"id": "education",   "label": "Education",   "emoji": "📚"},
+    {"id": "research",    "label": "Research",    "emoji": "🔬"},
+    {"id": "operations",  "label": "Operations",  "emoji": "📦"},
+    {"id": "other",       "label": "Other",       "emoji": "✨"}
+  ],
+  "stage1": {
+    "title": "Welcome",
+    "subtitle": "Two minutes to find your way in.",
+    "nameLabel": "First, what should we call you?",
+    "namePlaceholder": "Your first name",
+    "namePersist": "We'll only keep this on your device.",
+    "panels": [
+      {
+        "title": "What this is",
+        "body": "AI Global is built with MIT Professional Education. The mission, in their words: open systems, practical AI, clear stewardship. The tagline: one quarter, one domain, real systems."
+      },
+      {
+        "title": "How a quarter works",
+        "body": "Each quarter the community focuses on one domain. Q1 2026 is Marketing. GloLabs Vol 1 (Apr 2026) shipped six peer-reviewed case studies — workshop pipelines, multimedia, community growth, content, ambassadors."
+      },
+      {
+        "title": "Why volunteers matter",
+        "body": "Ambassadors, AI.MRKT teachers, GloLabs authors, contributors — the open-source side of AI Global is people-powered. You're not signing up for anything. You're just looking around."
+      }
+    ],
+    "ctaLabel": "Try a 100 m climb",
+    "ctaHint": "It's the warm-up. We'll show you which rock to grab next.",
+    "outcomeWin": "100 m reached. Nice climb. The flow's about to make more sense.",
+    "outcomeFall": "Fell off. No score-keeping here — just a feel for the controls."
+  },
+  "stage2": {
+    "title": "Your first intro",
+    "subtitle": "One line that won't make you cringe.",
+    "aboutDiscord": {
+      "title": "About the server",
+      "body": "AI Global runs on Discord. The first stop is #👋introduce-yourself — name, role, country, what you're here for. There's a #🤝onboarding bot that walks you through what's where, and channels for healthcare, finance, ethics, news, and a buddy-finding board."
+    },
+    "categoryPrompt": "Pick the lane that feels closest to you. Doesn't have to be perfect.",
+    "shuffleLabel": "🔄 shuffle",
+    "ownLabel": "✏️ write my own",
+    "ownPlaceholder": "Hi, I'm {name}. ",
+    "ctaLabel": "Climb to 150 m",
+    "ctaHint": "Same wall, no training rocks this time.",
+    "outcomeWinTitle": "Summit at 150 m",
+    "outcomeWinBody": "That's the climb. Now the intro — copy, head to Discord, paste, and you're in.",
+    "outcomeFallTitle": "Reached {meters} m",
+    "outcomeFallBody": "Wall got you. The intro's still ready to go though — copy it, post it, then come back for round two."
+  },
+  "stage3": {
+    "title": "The buddy post",
+    "subtitle": "There's a #🤝find-a-buddy channel. It expects a specific format. Fill it in.",
+    "introBlurb": "Two minutes of forms. The output is one copy-paste-ready Discord post.",
+    "ctaLabel": "Climb as high as you can",
+    "ctaHint": "No target. Just see how far you get.",
+    "outcomePosterTitle": "Reached {meters} m",
+    "outcomePosterBody": "That's the run. Your buddy post is ready — pick a channel to drop it in."
+  },
+  "stage4": {
+    "title": "One more game",
+    "subtitle": "AI Global also made a tiny one that teaches how a neural net learns.",
+    "body": "Six floors: Inputs → Weights → Neurons → Activation → Loss → the learning loop. About ten minutes if you're curious.",
+    "ctaLabel": "Open Neural Nets",
+    "ctaUrl": "https://osangen.github.io/ai-power-users-codex53-demo/"
+  },
+  "stage5": {
+    "title": "Coming soon",
+    "subtitle": "Something else lives here. Watch this space.",
+    "body": "We're leaving the fifth tile open — a future cohort, a project drop, your own contribution. Check back when the next quarter starts."
+  },
+  "menu": {
+    "title": "AI Global",
+    "kicker": "Onboarding",
+    "footer": "aiglo.org · MIT Professional Education"
+  }
+}

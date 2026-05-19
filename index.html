@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AI Global · Onboarding</title>
+<style>
+  /* === Palette (matches climb.html) ===================================== */
+  :root {
+    --cream:        #faf6ff;
+    --cream-2:      #f0e6ff;
+    --lavender:     #b890ff;
+    --lavender-2:   #d4baff;
+    --lavender-3:   #e8defa;
+    --pink:         #ff60a0;
+    --pink-2:       #ffb0d8;
+    --violet:       #4a2a7a;
+    --violet-2:     #6a4ec0;
+    --violet-deep:  #2a1454;
+    --teal:         #3aa890;
+    --shadow:       rgba(60, 30, 120, 0.18);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { min-height: 100%; background: var(--cream); color: var(--violet-deep); font-family: -apple-system, "Segoe UI", Inter, Roboto, sans-serif; line-height: 1.5; }
+  a { color: var(--violet-2); }
+
+  /* === Page chrome ====================================================== */
+  .page { max-width: 720px; margin: 0 auto; padding: 32px 22px 80px; }
+  @media (min-width: 900px) { .page { max-width: 960px; padding: 56px 32px 120px; } }
+
+  .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom: 28px; }
+  .brand   { font-weight: 900; letter-spacing: 3px; font-size: 14px; color: var(--violet); }
+  .brand span { color: var(--pink); }
+  .kicker  { font-size: 12px; letter-spacing: 4px; text-transform: uppercase; opacity: 0.55; }
+
+  /* === Hello header ===================================================== */
+  .hello { margin-bottom: 28px; }
+  .hello h1 { font-size: clamp(34px, 7vw, 52px); line-height: 1.05; font-weight: 900; letter-spacing: -0.5px; margin-bottom: 8px; }
+  .hello h1 .accent { color: var(--lavender); }
+  .hello p { font-size: 17px; opacity: 0.78; max-width: 50ch; }
+
+  /* === Tile grid ======================================================== */
+  .tiles { display: grid; gap: 14px; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .tiles { grid-template-columns: 1fr 1fr; } }
+  .tile { background: white; border-radius: 18px; padding: 22px 22px; box-shadow: 0 6px 20px var(--shadow); border: 1px solid var(--lavender-3); position: relative; transition: transform 0.12s ease, box-shadow 0.12s ease; cursor: pointer; }
+  .tile:hover { transform: translateY(-2px); box-shadow: 0 10px 28px var(--shadow); }
+  .tile.locked { opacity: 0.55; cursor: not-allowed; }
+  .tile.locked:hover { transform: none; box-shadow: 0 6px 20px var(--shadow); }
+  .tile .step { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--lavender); font-weight: 800; }
+  .tile h2 { font-size: 22px; font-weight: 900; margin-top: 4px; margin-bottom: 6px; letter-spacing: -0.2px; }
+  .tile p  { font-size: 14px; opacity: 0.75; }
+  .tile .badge { position: absolute; top: 18px; right: 18px; font-size: 11px; font-weight: 800; letter-spacing: 2px; padding: 4px 9px; border-radius: 999px; }
+  .tile .badge.done  { background: var(--teal); color: white; }
+  .tile .badge.lock  { background: var(--lavender-3); color: var(--violet-2); }
+  .tile .badge.next  { background: var(--pink); color: white; }
+
+  /* === Stage screens (modal-style overlays) ============================= */
+  .scrim { position: fixed; inset: 0; background: rgba(40, 20, 70, 0.55); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: none; align-items: flex-start; justify-content: center; z-index: 50; padding: 24px 16px; overflow-y: auto; }
+  .scrim.on { display: flex; }
+  .sheet { background: var(--cream); border-radius: 22px; padding: 28px 24px 32px; max-width: 560px; width: 100%; box-shadow: 0 30px 80px rgba(40, 20, 70, 0.35); margin: 8px 0 32px; }
+  @media (min-width: 720px) { .sheet { padding: 36px 36px 40px; } }
+  .sheet .topline { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+  .sheet .step { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--lavender); font-weight: 800; }
+  .sheet .close-x { background: none; border: none; color: var(--violet); font-size: 24px; cursor: pointer; line-height: 1; padding: 4px 8px; opacity: 0.5; }
+  .sheet .close-x:hover { opacity: 1; }
+  .sheet h2 { font-size: 28px; font-weight: 900; letter-spacing: -0.2px; margin-bottom: 4px; }
+  .sheet .subtitle { font-size: 14px; opacity: 0.7; margin-bottom: 22px; }
+  .sheet .panel { background: white; border: 1px solid var(--lavender-3); border-radius: 14px; padding: 18px 18px; margin-bottom: 14px; }
+  .sheet .panel h3 { font-size: 14px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--violet-2); margin-bottom: 8px; }
+  .sheet .panel p { font-size: 15px; opacity: 0.85; }
+  .sheet label { display: block; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--violet); margin-bottom: 6px; margin-top: 14px; }
+  .sheet input, .sheet textarea, .sheet select { width: 100%; background: white; border: 1.5px solid var(--lavender-3); border-radius: 10px; padding: 12px 14px; font-size: 16px; color: var(--violet-deep); font-family: inherit; }
+  .sheet input:focus, .sheet textarea:focus { outline: none; border-color: var(--lavender); }
+  .sheet textarea { min-height: 70px; resize: vertical; line-height: 1.45; }
+  .sheet .hint { font-size: 12px; opacity: 0.55; margin-top: 4px; }
+  .sheet .examples { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .sheet .examples button { background: var(--lavender-3); color: var(--violet); border: none; border-radius: 999px; padding: 4px 11px; font-size: 12px; cursor: pointer; font-family: inherit; }
+  .sheet .examples button:hover { background: var(--lavender-2); }
+
+  .cta { width: 100%; background: var(--lavender); color: var(--violet-deep); border: none; border-radius: 12px; padding: 14px 22px; font-size: 17px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer; box-shadow: 0 6px 0 var(--violet-2), 0 10px 22px rgba(80, 40, 140, 0.28); margin-top: 18px; transition: transform 0.08s; font-family: inherit; }
+  .cta:active { transform: translateY(3px); box-shadow: 0 3px 0 var(--violet-2); }
+  .cta.secondary { background: white; color: var(--violet); box-shadow: 0 4px 0 var(--lavender-3); }
+  .cta.secondary:active { box-shadow: 0 2px 0 var(--lavender-3); }
+  .cta.ghost { background: transparent; color: var(--violet); box-shadow: none; border: 2px solid var(--lavender); }
+  .cta-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+  .cta-row .cta { flex: 1 1 200px; margin-top: 0; }
+
+  /* Category picker grid */
+  .cat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+  @media (min-width: 480px) { .cat-grid { grid-template-columns: repeat(4, 1fr); } }
+  .cat-grid button { background: white; border: 1.5px solid var(--lavender-3); border-radius: 12px; padding: 12px 8px; font-size: 13px; font-weight: 800; color: var(--violet); cursor: pointer; font-family: inherit; transition: transform 0.06s; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .cat-grid button .emoji { font-size: 22px; }
+  .cat-grid button:hover { border-color: var(--lavender); }
+  .cat-grid button.selected { background: var(--lavender); color: var(--violet-deep); border-color: var(--lavender); transform: scale(0.96); }
+
+  /* Intro-line display */
+  .intro-line { background: white; border: 1.5px solid var(--lavender); border-radius: 14px; padding: 16px 18px; margin-top: 14px; font-size: 16px; line-height: 1.5; color: var(--violet-deep); min-height: 80px; }
+  .intro-line.empty { color: var(--violet-2); opacity: 0.6; font-style: italic; }
+
+  /* Madlib form */
+  .madlib { background: white; border: 1px solid var(--lavender-3); border-radius: 14px; padding: 4px 4px; margin-top: 12px; }
+  .madlib-row { border-bottom: 1px dashed var(--lavender-3); padding: 12px 14px; }
+  .madlib-row:last-child { border-bottom: none; }
+  .madlib-row label { margin-top: 0; margin-bottom: 4px; }
+  .madlib-row input { border: none; padding: 0; font-size: 15px; background: transparent; }
+  .madlib-row input:focus { border: none; }
+
+  /* Page-1 panels carousel */
+  .panel-dots { display: flex; gap: 6px; justify-content: center; margin: 12px 0 4px; }
+  .panel-dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--lavender-3); }
+  .panel-dots span.on { background: var(--lavender); }
+
+  /* Result poster */
+  .poster-wrap { display: flex; justify-content: center; margin: 16px 0 8px; }
+  .poster-wrap canvas { max-width: 100%; height: auto; border-radius: 14px; box-shadow: 0 12px 32px var(--shadow); }
+
+  /* Stage 4 link tile */
+  .external-tile { background: linear-gradient(135deg, var(--lavender-2), var(--pink-2)); border-radius: 16px; padding: 22px; color: var(--violet-deep); text-decoration: none; display: block; }
+  .external-tile h3 { font-size: 22px; margin-bottom: 6px; font-weight: 900; }
+  .external-tile p { font-size: 14px; opacity: 0.85; }
+  .external-tile .arrow { float: right; font-size: 24px; opacity: 0.6; }
+
+  /* Footer */
+  .footer { margin-top: 56px; font-size: 12px; opacity: 0.5; text-align: center; letter-spacing: 1px; }
+
+  /* Tiny utility */
+  .hidden { display: none !important; }
+  .row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .row > * { flex: 1; }
+</style>
+</head>
+<body>
+
+<main class="page" id="app">
+
+  <div class="topbar">
+    <div class="brand">AI <span>GLOBAL</span></div>
+    <div class="kicker">Onboarding</div>
+  </div>
+
+  <section class="hello">
+    <h1>Welcome<span class="accent" id="welcomeComma">,</span> <span id="welcomeName" class="accent">friend</span>.</h1>
+    <p id="welcomeBlurb">A two-minute walk-through of what AI Global is, how to introduce yourself, and how to find a buddy. Each step ends with a tiny game.</p>
+  </section>
+
+  <ol class="tiles" id="tilesGrid">
+    <!-- Tiles injected by JS -->
+  </ol>
+
+  <p class="footer" id="footer">aiglo.org · MIT Professional Education</p>
+</main>
+
+<!-- ================================================================== -->
+<!-- Stage overlays ===================================================== -->
+<!-- ================================================================== -->
+<div class="scrim" id="scrim">
+  <div class="sheet" id="sheet">
+    <!-- Stage body injected here -->
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// State + content loader
+// =====================================================================
+const STATE_KEY = 'aiglo.state';
+const NAME_KEY  = 'aiglo.name';
+const RUN_KEY   = 'aiglo.lastRun';
+
+let CONTENT = null;        // stage-text.json
+let INTROS  = null;        // intros.json
+let MADLIB  = null;        // madlib-examples.json
+
+const state = {
+  name: '',
+  attempted: { 1: false, 2: false, 3: false, 4: false, 5: false },
+  stage1Panel: 0,
+  stage2: { category: null, intro: '', custom: '' },
+  stage3: {},
+  lastRun: null,
+};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STATE_KEY);
+    if (raw) Object.assign(state, JSON.parse(raw));
+  } catch (e) {}
+  try {
+    const n = localStorage.getItem(NAME_KEY);
+    if (n) state.name = n;
+  } catch (e) {}
+  try {
+    const r = localStorage.getItem(RUN_KEY);
+    if (r) state.lastRun = JSON.parse(r);
+  } catch (e) {}
+}
+function saveState() {
+  try { localStorage.setItem(STATE_KEY, JSON.stringify({
+    name: state.name, attempted: state.attempted, stage2: state.stage2, stage3: state.stage3,
+  })); } catch (e) {}
+  if (state.name) {
+    try { localStorage.setItem(NAME_KEY, state.name); } catch (e) {}
+  }
+}
+
+async function loadContent() {
+  const [s, i, m] = await Promise.all([
+    fetch('content/stage-text.json').then(r => r.json()),
+    fetch('content/intros.json').then(r => r.json()),
+    fetch('content/madlib-examples.json').then(r => r.json()),
+  ]);
+  CONTENT = s; INTROS = i; MADLIB = m;
+}
+
+// =====================================================================
+// Tile renderer
+// =====================================================================
+function renderHello() {
+  const nameEl = document.getElementById('welcomeName');
+  const commaEl = document.getElementById('welcomeComma');
+  if (state.name) {
+    nameEl.textContent = state.name;
+    commaEl.textContent = ',';
+  } else {
+    nameEl.textContent = 'in';
+    commaEl.textContent = '';
+  }
+}
+
+function renderTiles() {
+  const g = document.getElementById('tilesGrid');
+  const t = CONTENT;
+  const stages = [
+    { id: 1, title: t.stage1.title, sub: t.stage1.subtitle },
+    { id: 2, title: t.stage2.title, sub: t.stage2.subtitle },
+    { id: 3, title: t.stage3.title, sub: t.stage3.subtitle },
+    { id: 4, title: t.stage4.title, sub: t.stage4.subtitle },
+    { id: 5, title: t.stage5.title, sub: t.stage5.subtitle },
+  ];
+  g.innerHTML = '';
+  for (const s of stages) {
+    const unlocked = (s.id === 1) ||
+                     (s.id === 2 && state.attempted[1]) ||
+                     (s.id === 3 && state.attempted[2]) ||
+                     (s.id === 4 && state.attempted[3]) ||
+                     (s.id === 5 && state.attempted[4]);
+    const done = !!state.attempted[s.id];
+    const next = unlocked && !done;
+    const li = document.createElement('li');
+    li.className = 'tile' + (unlocked ? '' : ' locked');
+    li.innerHTML = `
+      <span class="step">Stage ${s.id}</span>
+      <h2>${s.title}</h2>
+      <p>${s.sub}</p>
+      ${done ? '<span class="badge done">DONE</span>' :
+        unlocked ? (next ? '<span class="badge next">NEXT</span>' : '')
+        : '<span class="badge lock">LOCKED</span>'}
+    `;
+    if (unlocked) li.addEventListener('click', () => openStage(s.id));
+    g.appendChild(li);
+  }
+}
+
+// =====================================================================
+// Stage routing
+// =====================================================================
+function openStage(n) {
+  const sheet = document.getElementById('sheet');
+  sheet.innerHTML = '';
+  sheet.appendChild(makeStageHeader(n));
+  if (n === 1) renderStage1(sheet);
+  if (n === 2) renderStage2(sheet);
+  if (n === 3) renderStage3(sheet);
+  if (n === 4) renderStage4(sheet);
+  if (n === 5) renderStage5(sheet);
+  document.getElementById('scrim').classList.add('on');
+  sheet.scrollTop = 0;
+}
+function closeStage() {
+  document.getElementById('scrim').classList.remove('on');
+}
+function makeStageHeader(n) {
+  const t = CONTENT['stage' + n];
+  const d = document.createElement('div');
+  d.innerHTML = `
+    <div class="topline">
+      <span class="step">Stage ${n}</span>
+      <button class="close-x" type="button" aria-label="Close">×</button>
+    </div>
+    <h2>${t.title}</h2>
+    <p class="subtitle">${t.subtitle}</p>
+  `;
+  d.querySelector('.close-x').addEventListener('click', closeStage);
+  return d;
+}
+
+// =====================================================================
+// Stage 1 — Welcome + 100m guided climb
+// =====================================================================
+function renderStage1(sheet) {
+  const t = CONTENT.stage1;
+
+  // (a) Name input panel
+  const name = document.createElement('div');
+  name.className = 'panel';
+  name.innerHTML = `
+    <h3>${t.nameLabel}</h3>
+    <input id="nameInput" type="text" placeholder="${t.namePlaceholder}" value="${escapeAttr(state.name)}" maxlength="40" autocomplete="given-name">
+    <p class="hint">${t.namePersist}</p>
+  `;
+  sheet.appendChild(name);
+  const input = name.querySelector('#nameInput');
+  input.addEventListener('input', () => {
+    state.name = input.value.trim();
+    saveState();
+    renderHello();
+  });
+
+  // (b) Tour panels (carousel)
+  const tour = document.createElement('div');
+  tour.className = 'panel';
+  tour.innerHTML = `
+    <h3 id="tourTitle">${t.panels[0].title}</h3>
+    <p id="tourBody">${t.panels[0].body}</p>
+    <div class="panel-dots" id="tourDots">
+      ${t.panels.map((_, i) => `<span${i===0?' class="on"':''}></span>`).join('')}
+    </div>
+    <div class="cta-row" style="margin-top:10px;">
+      <button class="cta ghost" id="tourPrev" style="flex:0 0 auto; padding:8px 14px; font-size:13px;">←</button>
+      <button class="cta ghost" id="tourNext" style="flex:0 0 auto; padding:8px 14px; font-size:13px;">→</button>
+    </div>
+  `;
+  sheet.appendChild(tour);
+  let panelIdx = 0;
+  const goPanel = (i) => {
+    panelIdx = Math.max(0, Math.min(t.panels.length - 1, i));
+    tour.querySelector('#tourTitle').textContent = t.panels[panelIdx].title;
+    tour.querySelector('#tourBody').textContent = t.panels[panelIdx].body;
+    tour.querySelectorAll('.panel-dots span').forEach((d, i) => d.classList.toggle('on', i === panelIdx));
+  };
+  tour.querySelector('#tourPrev').addEventListener('click', () => goPanel(panelIdx - 1));
+  tour.querySelector('#tourNext').addEventListener('click', () => goPanel(panelIdx + 1));
+
+  // (c) Outcome panel (if a run just finished)
+  if (state.lastRun && state.lastRun.mode === 'guided') {
+    const outBox = document.createElement('div');
+    outBox.className = 'panel';
+    outBox.style.background = 'var(--lavender-3)';
+    outBox.innerHTML = `
+      <h3>Run complete</h3>
+      <p>${state.lastRun.won ? t.outcomeWin : t.outcomeFall} <strong>(${state.lastRun.meters} m)</strong></p>
+    `;
+    sheet.appendChild(outBox);
+  }
+
+  // (d) CTA
+  const cta = document.createElement('button');
+  cta.className = 'cta';
+  cta.textContent = t.ctaLabel;
+  cta.addEventListener('click', () => {
+    if (!state.name) {
+      input.focus();
+      return;
+    }
+    saveState();
+    launchClimb({ guided: true, target: 100 });
+  });
+  const hint = document.createElement('p');
+  hint.className = 'hint';
+  hint.style.textAlign = 'center';
+  hint.textContent = t.ctaHint;
+  sheet.appendChild(cta);
+  sheet.appendChild(hint);
+}
+
+// =====================================================================
+// Stage 2 — Discord intro picker + 150m climb + poster
+// =====================================================================
+function renderStage2(sheet) {
+  const t = CONTENT.stage2;
+
+  // About-the-server panel
+  const about = document.createElement('div');
+  about.className = 'panel';
+  about.innerHTML = `
+    <h3>${t.aboutDiscord.title}</h3>
+    <p>${t.aboutDiscord.body}</p>
+  `;
+  sheet.appendChild(about);
+
+  // Category picker
+  const picker = document.createElement('div');
+  picker.className = 'panel';
+  picker.innerHTML = `
+    <h3>Your lane</h3>
+    <p>${t.categoryPrompt}</p>
+    <div class="cat-grid" id="catGrid"></div>
+  `;
+  sheet.appendChild(picker);
+  const grid = picker.querySelector('#catGrid');
+  for (const c of CONTENT.categories) {
+    const b = document.createElement('button');
+    b.innerHTML = `<span class="emoji">${c.emoji}</span><span>${c.label}</span>`;
+    b.dataset.cat = c.id;
+    if (state.stage2.category === c.id) b.classList.add('selected');
+    b.addEventListener('click', () => {
+      grid.querySelectorAll('button').forEach(x => x.classList.remove('selected'));
+      b.classList.add('selected');
+      state.stage2.category = c.id;
+      state.stage2.intro = pickIntro(state.name, c.id, /*shuffleSeed*/ 0);
+      lineBox.textContent = renderIntroLine(state.stage2.intro);
+      lineBox.classList.remove('empty');
+      saveState();
+    });
+    grid.appendChild(b);
+  }
+
+  // Intro line display + shuffle / write-own
+  const lineBox = document.createElement('div');
+  lineBox.className = 'intro-line ' + (state.stage2.intro ? '' : 'empty');
+  lineBox.textContent = state.stage2.intro ? renderIntroLine(state.stage2.intro) : 'Pick a lane above to see a draft you can paste.';
+  sheet.appendChild(lineBox);
+
+  let shuffleCount = 0;
+  const btnRow = document.createElement('div');
+  btnRow.className = 'cta-row';
+  btnRow.innerHTML = `
+    <button class="cta secondary" id="shuffleBtn">${t.shuffleLabel}</button>
+    <button class="cta secondary" id="ownBtn">${t.ownLabel}</button>
+  `;
+  sheet.appendChild(btnRow);
+  btnRow.querySelector('#shuffleBtn').addEventListener('click', () => {
+    if (!state.stage2.category) return;
+    shuffleCount++;
+    state.stage2.intro = pickIntro(state.name, state.stage2.category, shuffleCount);
+    lineBox.textContent = renderIntroLine(state.stage2.intro);
+    lineBox.classList.remove('empty');
+    saveState();
+  });
+  btnRow.querySelector('#ownBtn').addEventListener('click', () => {
+    state.stage2.intro = '';
+    state.stage2.custom = state.stage2.custom || t.ownPlaceholder.replace('{name}', state.name || '');
+    lineBox.contentEditable = 'true';
+    lineBox.textContent = state.stage2.custom;
+    lineBox.focus();
+    lineBox.addEventListener('input', () => {
+      state.stage2.custom = lineBox.textContent;
+      saveState();
+    });
+  });
+
+  // Outcome (after a run completes)
+  if (state.lastRun && state.lastRun.mode === 'target' && state.lastRun.target === 150) {
+    sheet.appendChild(makePosterPanel({
+      name: state.name,
+      meters: state.lastRun.meters,
+      won: state.lastRun.won,
+      intro: state.stage2.custom || renderIntroLine(state.stage2.intro),
+      titleWin: t.outcomeWinTitle.replace('{meters}', state.lastRun.meters),
+      bodyWin:  t.outcomeWinBody,
+      titleFail: t.outcomeFallTitle.replace('{meters}', state.lastRun.meters),
+      bodyFail:  t.outcomeFallBody,
+      copyLabel: 'Copy intro',
+      copyText: state.stage2.custom || renderIntroLine(state.stage2.intro),
+      discordLabel: 'Open #introduce-yourself',
+      discordUrl: CONTENT.brand.deepLinks.introduceYourself,
+    }));
+  }
+
+  // CTA
+  const cta = document.createElement('button');
+  cta.className = 'cta';
+  cta.textContent = t.ctaLabel;
+  cta.addEventListener('click', () => {
+    if (!state.stage2.category) { lineBox.scrollIntoView({ behavior: 'smooth' }); lineBox.classList.add('empty'); return; }
+    launchClimb({ target: 150 });
+  });
+  const hint = document.createElement('p');
+  hint.className = 'hint';
+  hint.style.textAlign = 'center';
+  hint.textContent = t.ctaHint;
+  sheet.appendChild(cta);
+  sheet.appendChild(hint);
+}
+
+// =====================================================================
+// Stage 3 — Find-a-buddy madlib + endless climb + poster
+// =====================================================================
+function renderStage3(sheet) {
+  const t = CONTENT.stage3;
+  const blurb = document.createElement('p');
+  blurb.style.opacity = '0.8';
+  blurb.style.fontSize = '15px';
+  blurb.style.marginBottom = '10px';
+  blurb.textContent = t.introBlurb;
+  sheet.appendChild(blurb);
+
+  // Madlib form
+  const form = document.createElement('div');
+  form.className = 'madlib';
+  state.stage3 = state.stage3 || {};
+  for (const f of MADLIB.fields) {
+    const row = document.createElement('div');
+    row.className = 'madlib-row';
+    const init = state.stage3[f.key] || (f.key === 'displayName' ? state.name : '');
+    row.innerHTML = `
+      <label>${f.emoji} ${f.label}</label>
+      <input data-key="${f.key}" placeholder="${escapeAttr(f.placeholder)}" value="${escapeAttr(init)}">
+      <div class="examples">
+        ${f.examples.map(ex => `<button type="button" data-ex="${escapeAttr(ex)}">${escapeText(ex)}</button>`).join('')}
+      </div>
+    `;
+    form.appendChild(row);
+    const inp = row.querySelector('input');
+    inp.addEventListener('input', () => {
+      state.stage3[f.key] = inp.value;
+      saveState();
+    });
+    row.querySelectorAll('.examples button').forEach(b => {
+      b.addEventListener('click', () => {
+        inp.value = b.dataset.ex;
+        state.stage3[f.key] = inp.value;
+        saveState();
+      });
+    });
+  }
+  sheet.appendChild(form);
+
+  // Outcome
+  if (state.lastRun && state.lastRun.mode === 'endless') {
+    const buddyMsg = composeBuddyMessage();
+    sheet.appendChild(makePosterPanel({
+      name: state.name,
+      meters: state.lastRun.meters,
+      won: false,
+      intro: buddyMsg,
+      titleFail: t.outcomePosterTitle.replace('{meters}', state.lastRun.meters),
+      bodyFail:  t.outcomePosterBody,
+      copyLabel: 'Copy for #find-a-buddy',
+      copyText:  buddyMsg,
+      copyLabel2: 'Copy for #introduce-yourself',
+      copyText2: state.stage2.custom || renderIntroLine(state.stage2.intro) || `Hi everyone, I'm ${state.name}.`,
+      discordLabel: 'Open #find-a-buddy',
+      discordUrl: CONTENT.brand.deepLinks.findABuddy,
+      discordLabel2: 'Open #introduce-yourself',
+      discordUrl2: CONTENT.brand.deepLinks.introduceYourself,
+    }));
+  }
+
+  // CTA
+  const cta = document.createElement('button');
+  cta.className = 'cta';
+  cta.textContent = t.ctaLabel;
+  cta.addEventListener('click', () => launchClimb({ endless: true }));
+  const hint = document.createElement('p');
+  hint.className = 'hint';
+  hint.style.textAlign = 'center';
+  hint.textContent = t.ctaHint;
+  sheet.appendChild(cta);
+  sheet.appendChild(hint);
+}
+
+function composeBuddyMessage() {
+  // Builds the verbatim find-a-buddy template using state.stage3 fields.
+  const m = MADLIB;
+  let out = m.header + '\n';
+  for (const f of m.fields) {
+    const v = (state.stage3[f.key] || '').trim();
+    if (!v && f.key === 'displayName') continue;
+    out += `${f.emoji} ${f.label}: ${v}\n`;
+  }
+  return out.trim();
+}
+
+// =====================================================================
+// Stage 4 — Neural Nets link tile
+// =====================================================================
+function renderStage4(sheet) {
+  const t = CONTENT.stage4;
+  const body = document.createElement('div');
+  body.className = 'panel';
+  body.innerHTML = `<p>${t.body}</p>`;
+  sheet.appendChild(body);
+  const link = document.createElement('a');
+  link.className = 'external-tile';
+  link.href = t.ctaUrl;
+  link.target = '_blank';
+  link.rel = 'noopener';
+  link.innerHTML = `<span class="arrow">↗</span><h3>${t.ctaLabel}</h3><p>${t.body}</p>`;
+  link.addEventListener('click', () => {
+    state.attempted[4] = true; saveState(); renderTiles();
+  });
+  sheet.appendChild(link);
+}
+
+// =====================================================================
+// Stage 5 — Placeholder
+// =====================================================================
+function renderStage5(sheet) {
+  const t = CONTENT.stage5;
+  const p = document.createElement('div');
+  p.className = 'panel';
+  p.style.textAlign = 'center';
+  p.innerHTML = `<h3>${t.title}</h3><p>${t.body}</p>`;
+  sheet.appendChild(p);
+}
+
+// =====================================================================
+// Intro line generator (deterministic by name+category+day)
+// =====================================================================
+function hashStr(s) {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+function dayOfYear() {
+  const d = new Date();
+  const start = new Date(d.getFullYear(), 0, 0);
+  return Math.floor((d - start) / 86400000);
+}
+function pickIntro(name, category, shuffleSeed) {
+  const pool = (INTROS[category] || []);
+  if (!pool.length) return '';
+  const day = dayOfYear();
+  const key = `${name}|${category}|${day}|${shuffleSeed}`;
+  const idx = hashStr(key) % pool.length;
+  return pool[idx];
+}
+function renderIntroLine(line) {
+  if (!line) return '';
+  return line.replace(/<NAME>/g, state.name || 'there');
+}
+
+// =====================================================================
+// Climb game hand-off
+// =====================================================================
+function launchClimb(opts) {
+  const p = new URLSearchParams();
+  if (opts.guided)  p.set('guided', '1');
+  if (opts.target)  p.set('target', String(opts.target));
+  if (opts.endless) p.set('endless', '1');
+  if (opts.seed)    p.set('seed', String(opts.seed));
+  const here = location.pathname.replace(/index\.html$/, '');
+  p.set('return', here || './');
+  location.href = 'climb.html?' + p.toString();
+}
+
+// =====================================================================
+// Poster generator (canvas, 1:1, lavender + cream)
+// =====================================================================
+function makePosterPanel(opts) {
+  const wrap = document.createElement('div');
+  wrap.className = 'panel';
+  wrap.innerHTML = `
+    <h3>${opts.won ? opts.titleWin : opts.titleFail}</h3>
+    <p>${opts.won ? opts.bodyWin : opts.bodyFail}</p>
+    <div class="poster-wrap" id="posterWrap"></div>
+  `;
+  const wr = wrap.querySelector('#posterWrap');
+  const c = drawPoster({
+    name: opts.name,
+    meters: opts.meters,
+    won: opts.won,
+    text: opts.intro,
+  });
+  wr.appendChild(c);
+
+  const row1 = document.createElement('div');
+  row1.className = 'cta-row';
+  row1.innerHTML = `
+    <button class="cta secondary" id="copyBtn">${opts.copyLabel}</button>
+    ${opts.copyLabel2 ? `<button class="cta secondary" id="copyBtn2">${opts.copyLabel2}</button>` : ''}
+  `;
+  wrap.appendChild(row1);
+
+  const row2 = document.createElement('div');
+  row2.className = 'cta-row';
+  row2.innerHTML = `
+    <button class="cta secondary" id="dlBtn">Download poster</button>
+    <a class="cta" href="${opts.discordUrl}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;display:block;">${opts.discordLabel}</a>
+    ${opts.discordUrl2 ? `<a class="cta secondary" href="${opts.discordUrl2}" target="_blank" rel="noopener" style="text-align:center;text-decoration:none;display:block;">${opts.discordLabel2}</a>` : ''}
+  `;
+  wrap.appendChild(row2);
+
+  row1.querySelector('#copyBtn').addEventListener('click', () => copy(opts.copyText, row1.querySelector('#copyBtn')));
+  const cb2 = row1.querySelector('#copyBtn2');
+  if (cb2) cb2.addEventListener('click', () => copy(opts.copyText2, cb2));
+  row2.querySelector('#dlBtn').addEventListener('click', () => downloadCanvas(c, `aiglo-${opts.name || 'climber'}.png`));
+
+  return wrap;
+}
+
+function drawPoster({ name, meters, won, text }) {
+  const SZ = 1080;
+  const cvs = document.createElement('canvas');
+  cvs.width = SZ; cvs.height = SZ;
+  cvs.style.width = '300px';
+  const ctx = cvs.getContext('2d');
+  // Background gradient: cream → lavender wash
+  const g = ctx.createLinearGradient(0, 0, 0, SZ);
+  g.addColorStop(0, '#faf6ff');
+  g.addColorStop(1, '#e8defa');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, SZ, SZ);
+  // Top-left wordmark
+  ctx.fillStyle = '#4a2a7a';
+  ctx.font = '900 38px Inter, -apple-system, sans-serif';
+  ctx.textBaseline = 'top';
+  ctx.fillText('AI GLOBAL', 64, 64);
+  ctx.font = '12px Inter, sans-serif';
+  ctx.fillStyle = '#6a4ec0';
+  ctx.fillText('ONBOARDING · MIT PROFESSIONAL EDUCATION', 64, 110);
+  // Pink decorative bar
+  ctx.fillStyle = '#ff60a0';
+  ctx.fillRect(64, 142, 72, 6);
+  // Big stat
+  ctx.fillStyle = '#4a2a7a';
+  ctx.font = '900 240px Inter, sans-serif';
+  ctx.fillText(String(meters), 64, 200);
+  ctx.font = '900 56px Inter, sans-serif';
+  ctx.fillText('m', 64 + ctx.measureText(String(meters)).width + 12, 360);
+  // Subtitle line
+  ctx.fillStyle = '#6a4ec0';
+  ctx.font = '24px Inter, sans-serif';
+  ctx.fillText(won ? 'SUMMIT REACHED' : 'HEIGHT REACHED', 64, 480);
+  ctx.font = '900 44px Inter, sans-serif';
+  ctx.fillStyle = '#4a2a7a';
+  ctx.fillText(name || 'climber', 64, 520);
+  // Intro text wrap
+  ctx.fillStyle = '#2a1454';
+  ctx.font = '24px Inter, sans-serif';
+  if (text) {
+    const cleaned = text.replace(/<NAME>/g, name || 'there');
+    wrapText(ctx, cleaned, 64, 620, SZ - 128, 32);
+  }
+  // Footer
+  ctx.fillStyle = '#b890ff';
+  ctx.font = '700 18px Inter, sans-serif';
+  ctx.fillText('aiglo.org', 64, SZ - 80);
+  return cvs;
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(/\s+/);
+  let line = '';
+  let yy = y;
+  for (let i = 0; i < words.length; i++) {
+    const test = line ? (line + ' ' + words[i]) : words[i];
+    if (ctx.measureText(test).width > maxWidth && line) {
+      ctx.fillText(line, x, yy);
+      yy += lineHeight;
+      line = words[i];
+      if (yy > 1010) { ctx.fillText(line + '…', x, yy); return; }
+    } else {
+      line = test;
+    }
+  }
+  if (line) ctx.fillText(line, x, yy);
+}
+
+// =====================================================================
+// Helpers
+// =====================================================================
+function copy(s, btn) {
+  navigator.clipboard.writeText(s).then(() => {
+    if (btn) { const old = btn.textContent; btn.textContent = 'COPIED ✓'; setTimeout(() => btn.textContent = old, 1500); }
+  }).catch(() => {});
+}
+function downloadCanvas(cvs, filename) {
+  cvs.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+}
+function escapeAttr(s) { return String(s || '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+function escapeText(s) { return String(s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+// =====================================================================
+// Boot
+// =====================================================================
+async function boot() {
+  loadState();
+  await loadContent();
+  // Pick up a finished climb run on return
+  if (state.lastRun && !state.lastRun._consumed) {
+    if (state.lastRun.mode === 'guided') state.attempted[1] = true;
+    if (state.lastRun.mode === 'target' && state.lastRun.target === 150) state.attempted[2] = true;
+    if (state.lastRun.mode === 'endless') state.attempted[3] = true;
+    state.lastRun._consumed = true;
+    saveState();
+    try {
+      const r = JSON.parse(localStorage.getItem(RUN_KEY) || '{}');
+      r._consumed = true;
+      localStorage.setItem(RUN_KEY, JSON.stringify(r));
+    } catch (e) {}
+  }
+  document.getElementById('footer').textContent = CONTENT.menu.footer;
+  renderHello();
+  renderTiles();
+  // If a run was just completed, auto-open the matching stage so the
+  // player lands on their poster / outcome panel without an extra tap.
+  if (state.lastRun && state.lastRun.mode) {
+    const m = state.lastRun.mode;
+    setTimeout(() => {
+      if (m === 'guided') openStage(1);
+      else if (m === 'target' && state.lastRun.target === 150) openStage(2);
+      else if (m === 'endless') openStage(3);
+    }, 250);
+  }
+  // Close on backdrop click
+  document.getElementById('scrim').addEventListener('click', e => {
+    if (e.target.id === 'scrim') closeStage();
+  });
+}
+boot();
+</script>
+</body>
+</html>

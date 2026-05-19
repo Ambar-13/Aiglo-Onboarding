@@ -1,0 +1,89 @@
+{
+  "fields": [
+    {
+      "key": "location",
+      "emoji": "🌎",
+      "label": "Location / Time Zone",
+      "placeholder": "City, country, UTC offset",
+      "examples": ["Lagos, Nigeria · UTC+1", "São Paulo · UTC-3", "Berlin · UTC+1", "Singapore · UTC+8", "Mumbai · UTC+5:30"]
+    },
+    {
+      "key": "displayName",
+      "emoji": "📝",
+      "label": "Preferred Display Name",
+      "placeholder": "What members should call you",
+      "examples": ["Maya (she/her)", "Devin", "Dr. Priya Rao", "Marco S."]
+    },
+    {
+      "key": "goal",
+      "emoji": "🎯",
+      "label": "Main Goal for the Server",
+      "placeholder": "Why you're here, in one line",
+      "examples": [
+        "Learn how teams actually ship governed AI",
+        "Find a buddy to debug agent workflows with",
+        "Lurk wisely until I'm ready to teach",
+        "Author a case study for GloLabs Vol 2"
+      ]
+    },
+    {
+      "key": "industry",
+      "emoji": "🏭",
+      "label": "Industry / Sector",
+      "placeholder": "Where you spend your days",
+      "examples": ["Healthcare", "Financial services", "EdTech", "Public sector", "Industrial / manufacturing"]
+    },
+    {
+      "key": "expertise",
+      "emoji": "💡",
+      "label": "Areas of Expertise",
+      "placeholder": "What you'd help others with",
+      "examples": [
+        "Agentic workflows, RAG, eval harnesses",
+        "Compliance for ML systems in finance",
+        "Translating model output into clinical workflow",
+        "Prompt engineering for non-English corpora"
+      ]
+    },
+    {
+      "key": "learning",
+      "emoji": "📘",
+      "label": "Desired Learning Topics",
+      "placeholder": "What you'd love a buddy to teach you",
+      "examples": [
+        "Multi-agent orchestration in production",
+        "How to evaluate RAG systems honestly",
+        "Operational tool use beyond demos",
+        "Real transformation use cases, not slide decks"
+      ]
+    },
+    {
+      "key": "buddy",
+      "emoji": "🤝",
+      "label": "What I'm Looking for in a Buddy",
+      "placeholder": "Style, vibe, frequency",
+      "examples": [
+        "Someone who ships ugly v1s and laughs about it",
+        "An accountability partner — 30 mins weekly",
+        "Bonus if you've shepherded something through compliance",
+        "Curious peer, not a mentor or mentee"
+      ]
+    },
+    {
+      "key": "comms",
+      "emoji": "📡",
+      "label": "Communication Preferences",
+      "placeholder": "Pick one or two",
+      "examples": ["Async chat (Discord DMs)", "Weekly Zoom", "Voice notes", "LinkedIn for context, Discord for chat"]
+    },
+    {
+      "key": "linkedin",
+      "emoji": "🔗",
+      "label": "LinkedIn",
+      "placeholder": "Optional — but the channel asks for it",
+      "examples": ["https://www.linkedin.com/in/your-handle/"]
+    }
+  ],
+  "header": "👋 Hi everyone, very excited to join the community!",
+  "joiner": "\n"
+}

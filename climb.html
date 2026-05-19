@@ -601,8 +601,23 @@ let __savedOutfit = 'climber';
 try { __savedOutfit = localStorage.getItem('ascent_outfit') || 'climber'; } catch (e) {}
 setOutfit(__savedOutfit);
 
+// === URL-driven onboarding modes ====================================
+// The Aiglo onboarding flow (index.html) hands the player into the game
+// with query-string flags. Parsed once at boot.
+//   ?guided=1  → highlight the next recommended hold for the first ~5 grabs (Stage 1)
+//   ?target=N  → win-state at altitude N metres (Stage 2)
+//   ?endless=1 → default behaviour (Stage 3); explicit for clarity
+//   ?seed=X    → seed the PRNG so a run is reproducible / shareable
+//   ?return=URL → button shown on end screen to bounce back to the menu
+const __params = new URLSearchParams(location.search);
+const ONBOARD_GUIDED  = __params.get('guided')  === '1';
+const ONBOARD_TARGET  = (() => { const v = parseInt(__params.get('target') || '', 10); return isNaN(v) ? 0 : v; })();
+const ONBOARD_ENDLESS = __params.get('endless') === '1';
+const ONBOARD_SEED    = (() => { const v = parseInt(__params.get('seed') || '', 10); return isNaN(v) ? 0 : v; })();
+const ONBOARD_RETURN  = __params.get('return') || '';
+
 // PRNG
-let seed = 1;
+let seed = ONBOARD_SEED || 1;
 function srand() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
 function rnd(a, b) { return a + srand() * (b - a); }
 function rint(a, b) { return Math.floor(rnd(a, b)); }
@@ -653,6 +668,12 @@ const COMBO_FOR_X2 = 3;        // grabs needed to trigger x2
 // ---- State ----
 let body, hands, rocks, particles;
 let camX, camY, highestY, meters, bestMeters, running, started;
+// Onboarding-mode state. guidedGrabsSinceStart drives the pulsing
+// next-hold highlight in Stage 1 (it fades after a few independent grabs).
+// onboardEnded gates the target-met / fall outcome so we trigger gameOver
+// exactly once.
+let guidedGrabsSinceStart = 0;
+let onboardEnded = false;
 let lastReleaseAt = { L: -9999, R: -9999 };
 let lastPressAt   = { L: -9999, R: -9999 };
 // Used to soften the active-swing force right after any grip change.
@@ -1003,7 +1024,12 @@ function climberScreenShare() {
 }
 
 function reset() {
-  seed = (Date.now() & 0x7fffffff) || 1;
+  // Onboarding seeds give a deterministic world (so a player can share a
+  // run / replay it). Otherwise reseed from clock for variety.
+  seed = ONBOARD_SEED || (Date.now() & 0x7fffffff) || 1;
+  // Reset the guided-highlight grab counter at the start of each run.
+  guidedGrabsSinceStart = 0;
+  onboardEnded = false;
   // Body starts STANDING on the ground at base camp — feet on the floor,
   // hands at sides. The player walks left/right with L/R and presses L/R
   // when under a rock to start climbing.
@@ -1325,6 +1351,8 @@ function tryGrab(side) {
     if (now - lastGrabAt < COMBO_WIN) combo++;
     else combo = 1;
     lastGrabAt = now;
+    // Guided-mode: count each successful grab so the highlight pulse fades.
+    guidedGrabsSinceStart++;
     // Stamina refill on a fresh grab
     stamina = Math.min(STAM_MAX, stamina + STAM_REFILL_GRAB);
     for (let i = 0; i < 9; i++) particles.push({
@@ -1618,6 +1646,12 @@ function update(dt) {
   if (body.y < highestY) highestY = body.y;
   const STAND_Y = GROUND_Y - FOOT_Y_OFFSET;  // body.y when standing on ground
   meters = Math.max(0, Math.floor((STAND_Y - highestY) / META_SCALE));
+  // Onboarding target — Stage 2 ends the run when the climber hits the
+  // target altitude (a win, as opposed to falling).
+  if (running && !onboardEnded && ONBOARD_TARGET > 0 && meters >= ONBOARD_TARGET) {
+    onboardEnded = true;
+    gameOver();
+  }
   const yShare = climberScreenShare();
   // Camera always tracks the body — previously it pinned at `highestY` so a
   // fall from peak left the climber sliding off the bottom of the screen.
@@ -1709,15 +1743,38 @@ function gameOver() {
     bestMeters = meters;
     try { localStorage.setItem('ascent_best', String(bestMeters)); } catch (e) {}
   }
+  // Onboarding hand-off: write the result so index.html can pick it up
+  // on return. won = target reached (Stage 2); reachedM = altitude.
+  try {
+    const won = ONBOARD_TARGET > 0 && meters >= ONBOARD_TARGET;
+    localStorage.setItem('aiglo.lastRun', JSON.stringify({
+      meters,
+      bestMeters,
+      won,
+      mode: ONBOARD_GUIDED ? 'guided' : (ONBOARD_TARGET > 0 ? 'target' : 'endless'),
+      target: ONBOARD_TARGET || null,
+      seed: ONBOARD_SEED || null,
+      finishedAt: Date.now(),
+    }));
+  } catch (e) {}
   setTimeout(showGameOver, 700);
 }
 
 function showGameOver() {
-  titleEl.innerHTML = 'HEIGHT<br>REACHED';
-  tagEl.textContent = 'TOUCH TO GET UP';
+  const won = ONBOARD_TARGET > 0 && meters >= ONBOARD_TARGET;
+  titleEl.innerHTML = won ? 'SUMMIT<br>REACHED' : 'HEIGHT<br>REACHED';
+  tagEl.textContent = won ? 'WELL CLIMBED' : 'TOUCH TO GET UP';
   helpEl.innerHTML = '<div class="score-big"><b>' + meters + ' METERS</b></div>'
     + '<p style="opacity:.7;font-size:13px;letter-spacing:2px;">' + (bestMeters > meters ? 'RECORD ' + bestMeters + 'm' : 'NEW RECORD!') + '</p>';
-  playBtn.textContent = 'TRY AGAIN';
+  // Onboarding mode: replace TRY AGAIN with a "back to onboarding" CTA so
+  // the player lands on the menu page (where the poster + intro UI lives).
+  if (ONBOARD_RETURN) {
+    playBtn.textContent = won ? 'CONTINUE' : 'BACK';
+    playBtn.dataset.onboard = '1';
+  } else {
+    playBtn.textContent = 'TRY AGAIN';
+    delete playBtn.dataset.onboard;
+  }
   bestEl.textContent = '';
   ov.classList.remove('hide');
 }
@@ -2472,10 +2529,56 @@ function render() {
   drawBg();
   drawHeightTicks();
   for (const r of rocks) if (!r.crumbled) drawRock(r);
+  // Onboarding Stage-1 guided highlight: a soft pulsing halo on the next
+  // recommended hold. Fades after a handful of independent grabs so the
+  // training wheels come off naturally.
+  if (ONBOARD_GUIDED && started && running && guidedGrabsSinceStart < 6) {
+    drawGuidedHighlight();
+  }
   drawBaseCamp();
   if (started) drawClimber();
   drawParticles();
   updateButtonUI();
+}
+
+// Pick the most "obvious next rock" for the climber and draw a pulsing
+// halo around it. Heuristic: among rocks reachable from the body (or
+// from a currently-gripped rock), the one ABOVE the climber with the
+// smallest vertical step. Falls back to nearest reachable rock if
+// nothing's above.
+function drawGuidedHighlight() {
+  const gripRefY = (hands.L.gripped && hands.L.gripped.y) || (hands.R.gripped && hands.R.gripped.y) || body.y;
+  const gripRefX = (hands.L.gripped && hands.L.gripped.x) || (hands.R.gripped && hands.R.gripped.x) || body.x;
+  let best = null, bestScore = Infinity;
+  for (const r of rocks) {
+    if (r.crumbled) continue;
+    // Reachable: within ARM of the reference point
+    const dx = r.x - gripRefX, dy = r.y - gripRefY;
+    const d = Math.hypot(dx, dy);
+    if (d < 20 || d > ARM + 4) continue;        // skip same/too-far
+    if (dy >= 0) continue;                       // only rocks above the reference
+    // Lower y (= higher in world) preferred; closer x preferred
+    const score = (-dy) * -1 + Math.abs(dx) * 0.2;  // smaller score = better
+    if (score < bestScore) { bestScore = score; best = r; }
+  }
+  if (!best) return;
+  // Fade out as grabs accumulate (full at 0, fully transparent at 6).
+  const fade = Math.max(0, 1 - guidedGrabsSinceStart / 6);
+  const pulse = 0.55 + 0.45 * Math.sin(performance.now() / 280);
+  const sx = w2sX(best.x), sy = w2sY(best.y);
+  ctx.save();
+  ctx.globalAlpha = fade * pulse * 0.55;
+  ctx.fillStyle = '#ff60a0';
+  ctx.beginPath();
+  ctx.arc(sx, sy, best.R + 18, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.globalAlpha = fade * pulse * 0.85;
+  ctx.strokeStyle = '#ffb0d8';
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(sx, sy, best.R + 10, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.restore();
 }
 
 // ---- Main loop ----
@@ -2500,8 +2603,17 @@ function startGame() {
   reset();
   ov.classList.add('hide');
 }
-playBtn.addEventListener('click', startGame);
-playBtn.addEventListener('touchend', e => { e.preventDefault(); startGame(); });
+function playBtnHandler() {
+  // If we're inside the onboarding flow, the button is a "Back / Continue"
+  // CTA that returns to the menu page rather than restarting the game.
+  if (ONBOARD_RETURN && playBtn.dataset.onboard === '1') {
+    location.href = ONBOARD_RETURN;
+    return;
+  }
+  startGame();
+}
+playBtn.addEventListener('click', playBtnHandler);
+playBtn.addEventListener('touchend', e => { e.preventDefault(); playBtnHandler(); });
 
 // ---- WARDROBE UI ----
 const wardrobeBtn = document.getElementById('wardrobeBtn');
