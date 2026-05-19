@@ -678,12 +678,24 @@ function renderStage2(sheet) {
     saveState();
   });
   btnRow.querySelector('#ownBtn').addEventListener('click', () => {
+    // Seed the editable box with whatever line was already showing — the
+    // AI-drafted intro the player is staring at — so they can tweak or add
+    // to it instead of starting from a blank "Hi, I'm ..." stub.
+    const current = lineBox.textContent.trim();
+    const renderedIntro = state.stage2.intro ? renderIntroLine(state.stage2.intro) : '';
+    const placeholder = current && !lineBox.classList.contains('empty') ? current : renderedIntro;
+    state.stage2.custom = state.stage2.custom || placeholder || t.ownPlaceholder.replace('{name}', state.name || '');
     state.stage2.intro = '';
-    state.stage2.custom = state.stage2.custom || t.ownPlaceholder.replace('{name}', state.name || '');
     lineBox.contentEditable = 'true';
     lineBox.textContent = state.stage2.custom;
     lineBox.classList.remove('empty');
     lineBox.focus();
+    // Place the caret at the end so the player can immediately add to it.
+    const range = document.createRange();
+    range.selectNodeContents(lineBox);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges(); sel.addRange(range);
   });
   lineBox.addEventListener('input', () => {
     if (lineBox.contentEditable === 'true') { state.stage2.custom = lineBox.textContent; saveState(); }
