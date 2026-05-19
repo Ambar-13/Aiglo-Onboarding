@@ -31,7 +31,7 @@
     "namePersist": "Stays on your device.",
     "pre": {
       "title": "What AI Global is",
-      "body": "Built with MIT Professional Education. One quarter, one domain, real AI systems. Q1 2026 is Marketing. The climb is your warm-up — we'll fill in the rest as you go."
+      "body": "MIT Professional Education-backed. One quarter, one domain, real AI systems. Q1 2026 is Marketing. The climb is your warm-up — we'll fill in the rest as you go."
     },
     "ctaLabel": "Start the climb",
     "ctaHint": "100 m. Soft hint shown for the first few holds.",
@@ -102,6 +102,6 @@
   "menu": {
     "title": "AI Global",
     "kicker": "Onboarding",
-    "footer": "aiglo.org · MIT Professional Education"
+    "footer": "aiglo.org · MIT Professional Education-backed"
   }
 }
