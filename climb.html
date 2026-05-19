@@ -168,9 +168,6 @@ canvas { display: block; cursor: pointer; }
 }
 .go:active { transform: translateY(3px); box-shadow: 0 2px 0 #6a3ec8; }
 .best { margin-top: 16px; font-size: 15px; opacity: .85; letter-spacing: 2px; }
-.ov .stats { margin: 22px auto 0; font-size: 13px; line-height: 1.5; max-width: 60ch; padding: 0 22px; opacity: 0.78; color: #d4baff; }
-.ov .stats b { color: #fff; font-weight: 900; }
-.ov .cycle-line { margin-top: 8px; font-size: 13px; font-weight: 800; letter-spacing: 1px; color: #ff60a0; }
 .score-big { font-size: 22px; font-weight: 900; letter-spacing: 2px; margin-bottom: 6px; }
 .score-big b { color: #b890ff; }
 </style>
@@ -205,8 +202,6 @@ canvas { display: block; cursor: pointer; }
   </div>
   <button class="go" id="play">CLIMB</button>
   <div class="best" id="best"></div>
-  <p class="stats">By the numbers: <b>11K+</b> taught &middot; <b>200+</b> upskilled &middot; <b>1K+</b> members in 4 weeks &middot; <b>80%+</b> weekly active. The energy is real.</p>
-  <p class="cycle-line">Hope you have fun.</p>
 </div>
 
 <script>
@@ -1976,55 +1971,65 @@ function drawGrassTuft(sx, sy) {
 
 function drawClimbSign(sx, baseY) {
   ctx.save();
-  // Two posts (deep amethyst)
+  // Board geometry — bigger than the original 96x44 so the by-the-numbers
+  // stats and the "Hope you have fun." line have room.
+  const W = 132, H = 92;
+  const left = sx - W / 2, top = baseY - 30 - H;
+  // Two posts
   ctx.fillStyle = '#6a4ec0';
-  ctx.fillRect(sx - 36, baseY - 32, 4, 32);
-  ctx.fillRect(sx + 32, baseY - 32, 4, 32);
-  // Main board — light violet board, mid-violet border
+  ctx.fillRect(sx - 48, baseY - 30, 4, 30);
+  ctx.fillRect(sx + 44, baseY - 30, 4, 30);
+  // Main board
   ctx.fillStyle = '#9c7fd4';
-  ctx.fillRect(sx - 48, baseY - 74, 96, 44);
+  ctx.fillRect(left, top, W, H);
   ctx.strokeStyle = '#4a2a8a';
   ctx.lineWidth = 1.6;
-  ctx.strokeRect(sx - 48, baseY - 74, 96, 44);
-  // Plank grain lines
-  ctx.strokeStyle = 'rgba(60,30,120,0.45)';
+  ctx.strokeRect(left, top, W, H);
+  // Header strip — deeper violet band hosting the "CLIMB!" title
+  ctx.fillStyle = '#7a5cbc';
+  ctx.fillRect(left, top, W, 22);
+  ctx.strokeStyle = 'rgba(60,30,120,0.35)';
   ctx.lineWidth = 0.8;
-  for (let i = 1; i <= 3; i++) {
-    ctx.beginPath();
-    ctx.moveTo(sx - 46, baseY - 74 + i * 11);
-    ctx.lineTo(sx + 46, baseY - 74 + i * 11);
-    ctx.stroke();
-  }
-  // Big "CLIMB!" text
-  ctx.fillStyle = '#f5edff';
-  ctx.font = 'bold 22px ui-monospace, "SF Mono", monospace';
+  ctx.beginPath(); ctx.moveTo(left, top + 22); ctx.lineTo(left + W, top + 22); ctx.stroke();
+
   ctx.textAlign = 'center';
-  ctx.fillText('CLIMB!', sx, baseY - 53);
-  // Tiny "A MOUNTAIN  IN YOUR POCKET" flanking a mountain logo
-  ctx.font = 'bold 6px ui-monospace, monospace';
-  ctx.fillText('A MOUNTAIN', sx - 26, baseY - 40);
-  ctx.fillText('IN YOUR POCKET', sx + 26, baseY - 40);
-  // Mountain-peak logo in the middle, with a snow cap line under it
-  ctx.fillStyle = '#4a2a8a';
-  ctx.beginPath();
-  ctx.moveTo(sx - 9, baseY - 35);
-  ctx.lineTo(sx - 3, baseY - 46);
-  ctx.lineTo(sx + 1, baseY - 39);
-  ctx.lineTo(sx + 4, baseY - 44);
-  ctx.lineTo(sx + 9, baseY - 35);
-  ctx.closePath(); ctx.fill();
+  // "CLIMB!" big title
   ctx.fillStyle = '#f5edff';
-  ctx.beginPath();
-  ctx.moveTo(sx - 5, baseY - 41);
-  ctx.lineTo(sx - 3, baseY - 44);
-  ctx.lineTo(sx - 1, baseY - 41);
-  ctx.closePath(); ctx.fill();
-  // Small "records" tag attached at the bottom-right of the sign (like a brass plate)
-  ctx.fillStyle = '#4a2a8a';
-  ctx.fillRect(sx + 18, baseY - 32, 28, 8);
-  ctx.fillStyle = '#f5edff';
+  ctx.font = 'bold 16px ui-monospace, "SF Mono", monospace';
+  ctx.fillText('CLIMB!', sx, top + 16);
+
+  // "BY THE NUMBERS" mono kicker
+  ctx.fillStyle = '#3a1f6a';
   ctx.font = 'bold 6px ui-monospace, monospace';
-  ctx.fillText('records', sx + 32, baseY - 26);
+  ctx.fillText('BY THE NUMBERS', sx, top + 32);
+
+  // Four stat tiles (2x2). Each tile is value (bold) over label (mini caps).
+  const stats = [
+    { v: '11K+', l: 'TAUGHT' },
+    { v: '200+', l: 'UPSKILLED' },
+    { v: '1K+',  l: 'MEMBERS' },
+    { v: '80%+', l: 'WEEKLY' }
+  ];
+  const colW = W / 2;
+  const rowH = 18;
+  const gridTop = top + 38;
+  ctx.textAlign = 'center';
+  for (let i = 0; i < 4; i++) {
+    const cx = left + (i % 2) * colW + colW / 2;
+    const cy = gridTop + Math.floor(i / 2) * rowH;
+    ctx.fillStyle = '#f5edff';
+    ctx.font = 'bold 10px ui-monospace, "SF Mono", monospace';
+    ctx.fillText(stats[i].v, cx, cy + 9);
+    ctx.fillStyle = 'rgba(255,255,255,0.65)';
+    ctx.font = 'bold 5px ui-monospace, monospace';
+    ctx.fillText(stats[i].l, cx, cy + 16);
+  }
+
+  // "Hope you have fun." — pink ribbon line at the bottom of the board
+  ctx.fillStyle = '#ff60a0';
+  ctx.font = 'bold 6px ui-monospace, monospace';
+  ctx.fillText('HOPE YOU HAVE FUN', sx, top + H - 4);
+
   ctx.textAlign = 'start';
   ctx.restore();
 }
