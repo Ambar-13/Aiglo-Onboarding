@@ -919,30 +919,17 @@ function renderStage3(sheet) {
   pre.innerHTML = `<h3>${t.pre.title}</h3><p>${t.pre.body}</p>`;
   sheet.appendChild(pre);
 
-  // Madlib form — paginated as a 3-step wizard with a progress bar.
-  // Each step shows ~3 related fields. Saves on every keystroke so a
-  // back-button trip never loses input.
+  // Madlib form — single scrollable list. Pagination hid fields behind a
+  // wizard, which meant players who didn't notice the Next button thought
+  // the form was 3 fields long. Keep everything visible.
   state.stage3.fields = state.stage3.fields || {};
-  const STEPS = [
-    { title: 'Who you are',  keys: ['location', 'displayName', 'linkedin'] },
-    { title: 'Your work',    keys: ['industry', 'expertise', 'goal'] },
-    { title: 'Buddy fit',    keys: ['learning', 'buddy', 'comms'] },
-  ];
   const form = document.createElement('div');
   form.className = 'madlib';
-
-  // Progress header
-  const progress = document.createElement('div');
-  progress.className = 'madlib-progress';
-  progress.innerHTML = `
-    <p class="label"><span class="step-n">1</span> / ${STEPS.length} · <span class="step-title">${STEPS[0].title}</span></p>
-    <div class="bar"><div class="fill" style="width: ${100 / STEPS.length}%"></div></div>
-    <p class="hint">Type your answer in each box · or tap a suggestion to fill it.</p>
-  `;
-  form.appendChild(progress);
-
-  // Build each step container
-  function buildField(f) {
+  const hint = document.createElement('p');
+  hint.className = 'madlib-hint';
+  hint.innerHTML = '<strong>Type your answer in each box</strong> &middot; or tap a suggestion to fill it.';
+  form.appendChild(hint);
+  for (const f of MADLIB.fields) {
     const row = document.createElement('div');
     row.className = 'madlib-row';
     const init = state.stage3.fields[f.key] || (f.key === 'displayName' ? state.name : '');
@@ -953,6 +940,7 @@ function renderStage3(sheet) {
         ${f.examples.map(ex => `<button type="button" data-ex="${escapeAttr(ex)}">${escapeText(ex)}</button>`).join('')}
       </div>
     `;
+    form.appendChild(row);
     const inp = row.querySelector('input');
     inp.addEventListener('input', () => { state.stage3.fields[f.key] = inp.value; saveState(); });
     row.querySelectorAll('.examples button').forEach(b => {
@@ -960,77 +948,7 @@ function renderStage3(sheet) {
         inp.value = b.dataset.ex; state.stage3.fields[f.key] = inp.value; saveState();
       });
     });
-    return row;
   }
-  const stepEls = STEPS.map((step, idx) => {
-    const el = document.createElement('div');
-    el.className = 'madlib-step';
-    if (idx !== 0) el.hidden = true;
-    for (const key of step.keys) {
-      const f = MADLIB.fields.find(x => x.key === key);
-      if (f) el.appendChild(buildField(f));
-    }
-    return el;
-  });
-  stepEls.forEach(el => form.appendChild(el));
-
-  // Step navigation
-  let curStep = 0;
-  const nav = document.createElement('div');
-  nav.className = 'madlib-nav';
-  nav.innerHTML = `
-    <button type="button" data-act="back">← Back</button>
-    <button type="button" data-act="next" class="primary">Next →</button>
-  `;
-  form.appendChild(nav);
-  const backBtn = nav.querySelector('[data-act="back"]');
-  const nextBtn = nav.querySelector('[data-act="next"]');
-  function renderStep() {
-    stepEls.forEach((el, i) => { el.hidden = i !== curStep; });
-    progress.querySelector('.step-n').textContent = curStep + 1;
-    progress.querySelector('.step-title').textContent = STEPS[curStep].title;
-    progress.querySelector('.fill').style.width = ((curStep + 1) / STEPS.length * 100) + '%';
-    backBtn.disabled = curStep === 0;
-    if (curStep === STEPS.length - 1) {
-      nextBtn.textContent = '✓ Looks good — show me my buddy post';
-    } else {
-      nextBtn.textContent = 'Next →';
-    }
-  }
-  backBtn.addEventListener('click', () => { curStep = Math.max(0, curStep - 1); renderStep(); });
-  nextBtn.addEventListener('click', () => {
-    if (curStep < STEPS.length - 1) {
-      curStep++;
-      renderStep();
-      return;
-    }
-    // Last step → scroll the scrim (the actual scrollable container) to
-    // the combined-copy panel. scrollIntoView on the element alone often
-    // stalls because the smooth animation gets interrupted by the modal
-    // layout — explicit scrim.scrollTo() is reliable.
-    const target = sheet.querySelector('[data-act="copyboth"]')
-                || sheet.querySelector('[data-poster]')
-                || sheet.querySelector('.mantra');
-    if (target) {
-      const scrim = document.getElementById('scrim');
-      const sheetTop = sheet.offsetTop;
-      const targetOffset = target.offsetTop;
-      const desired = Math.max(0, sheetTop + targetOffset - (scrim.clientHeight / 2 - target.offsetHeight / 2));
-      // Direct assignment first so the position locks in even if smooth
-      // scroll gets interrupted by re-layout. Then animate from there.
-      scrim.scrollTop = desired;
-      // Belt-and-braces: schedule another nudge after layout settles in
-      // case any re-render reset us back to the top.
-      requestAnimationFrame(() => { scrim.scrollTop = desired; });
-    }
-    // Briefly highlight the next CTA so the player feels the hand-off.
-    const next = sheet.querySelector('[data-act="copyboth"]');
-    if (next) {
-      next.classList.add('pulse');
-      setTimeout(() => next.classList.remove('pulse'), 2200);
-    }
-  });
-  renderStep();
   sheet.appendChild(form);
 
   // Outcome (after endless run)
