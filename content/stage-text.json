@@ -24,84 +24,80 @@
     {"id": "other",       "label": "Other",       "emoji": "✨"}
   ],
   "stage1": {
-    "title": "Hello",
-    "subtitle": "Tell us your name, then take a quick climb.",
+    "title": "Hello there.",
+    "subtitle": "Tell us your name. We'll tell you the AI Global story while you climb.",
     "nameLabel": "What should we call you?",
     "namePlaceholder": "Your first name",
     "namePersist": "Stays on your device.",
     "pre": {
-      "title": "What AI Global is",
-      "body": "MIT Professional Education-backed. One quarter, one domain, real AI systems. Q1 2026 is Marketing. The climb is your warm-up — we'll fill in the rest as you go."
+      "title": "Meet AI Global",
+      "body": "A community of senior people who treat AI as a craft, not a horoscope. Built with MIT Professional Education. Mission: <em>open systems, practical AI, clear stewardship.</em><br><br>Every quarter the whole community picks <strong>one domain</strong> and ships real work together. Q1 2026 is marketing — <strong>GloLabs Vol 1</strong> just dropped, six peer-reviewed case studies covering workshop pipelines, multimedia, community growth, content systems and ambassador loops.<br><br><strong>Four programs you'll meet:</strong><br>• <strong>GloLabs</strong> — peer-reviewed case-study library, quarterly<br>• <strong>GloGames</strong> — interactive AI lessons (try one in Stage 4)<br>• <strong>SPC</strong> — four hands-on governance courses<br>• <strong>Projects</strong> — VideoGlo · Ambassador · AI.MRKT (teaching AI in underserved communities) · AI 2027 (frontier-AI risk → enforceable law)<br><br>Volunteer in any of them. <strong>11K+ taught</strong> · <strong>200+ upskilled</strong> · <strong>1K+ members in 4 weeks</strong> · <strong>80%+ weekly active</strong>. The energy is real.<br><br>Now — 100 m to feel the climb. Falling is fine; it's just a feel."
     },
     "ctaLabel": "Start the climb",
-    "ctaHint": "100 m. Soft hint shown for the first few holds.",
-    "outcome": {
-      "winTitle": "100 m. Nice climb.",
-      "winBody": "While you were climbing — AI Global runs in quarterly cycles around one domain. Each quarter ships GloLabs (peer-reviewed case studies) and GloGames (interactive lessons). You'll meet GloGames in Stage 4.",
-      "failTitle": "Off the wall.",
-      "failBody": "No score-keeping. The climb is just to get a feel. Read on while you catch your breath: AI Global runs in quarterly cycles around one domain. Q1 2026 is Marketing.",
-      "next": "When you're ready, Stage 2 is the first intro you'd post in Discord."
-    }
+    "ctaHint": "100 m. We'll hint the first few holds."
   },
   "stage2": {
     "title": "Your first intro",
-    "subtitle": "One line you'd actually post.",
+    "subtitle": "One line you'd actually post in Discord.",
     "pre": {
       "title": "The Discord, briefly",
-      "body": "First stop is #👋introduce-yourself. The format is light: name, role, country, what you're here for. Pick a lane below and we'll draft a starter line in your name. You can shuffle, or write your own."
+      "body": "The community lives on a Discord server called <strong>AI Global</strong>. First stop is <strong>#👋introduce-yourself</strong> — light format: name, country, role, what you're here for. Pick a lane below and we'll draft a starter line in your name. Shuffle for variety, or write your own."
     },
     "categoryPrompt": "Your lane:",
     "shuffleLabel": "🔄 shuffle",
     "ownLabel": "✏️ write my own",
     "ownPlaceholder": "Hi, I'm {name}. ",
     "ctaLabel": "Climb to 150 m",
-    "ctaHint": "Same wall, no hints this time.",
+    "ctaHint": "Same wall, no hints this time. You've got this.",
     "outcome": {
-      "winTitle": "150 m. Crisp.",
-      "winBody": "Now the intro. Three programs to know before you post: GloLabs (case studies — Vol 1 covered Marketing), GloGames (interactive AI lessons), SPC (paid 4-course governance program). The Discord routes you to all of them.",
+      "winTitle": "150 m. Crisp climb.",
+      "winBody": "Your intro is ready to post. Drop it into #👋introduce-yourself — people there are quick to ❤️ and reply.",
       "failTitle": "Reached {meters} m.",
-      "failBody": "The wall got you. The intro's still ready — copy and post it, then come back for another go. Programs to know: GloLabs (case studies), GloGames (interactive lessons), SPC (governance courses).",
-      "lovedPrompt": "Optional — one line about what you took away from this so far. Goes on the share card.",
-      "lovedPlaceholder": "e.g. The community-first framing is what hooked me.",
-      "next": "Stage 3 is the longer post for #find-a-buddy."
+      "failBody": "The intro is still ready — post it anyway, then come back for another go. Falling is part of the climb.",
+      "next": "Next: a longer post for #find-a-buddy."
     }
   },
   "stage3": {
-    "title": "Find a buddy",
+    "title": "Find your buddy",
     "subtitle": "The longer post. We'll format it for you.",
     "pre": {
       "title": "How buddies work",
-      "body": "#🤝find-a-buddy expects a specific format — location, role, what you'd teach, what you'd learn. Fill the form below and we'll produce a copy-paste-ready post. Then climb as high as you can."
-    },
-    "fullPicture": {
-      "title": "Programs worth knowing",
-      "body": "GloLabs publishes peer-reviewed AI case studies each quarter. GloGames makes the lessons interactive (you'll see one in Stage 4). SPC is the four-course governance program. Volunteer paths: Ambassador, AI.MRKT (learn-then-teach), case-study authoring, contributor pathway. None of this is required to be part of the community — but it's how it grows."
+      "body": "<strong>#🤝find-a-buddy</strong> has a specific format — location, role, what you'd teach, what you want to learn. Fill the form below and we'll produce a copy-paste-ready post. Then climb as high as you can."
     },
     "ctaLabel": "Climb endlessly",
     "ctaHint": "No target. Just go as high as you can.",
     "outcome": {
       "posterTitle": "Reached {meters} m.",
-      "posterBody": "That's the run. Your buddy post is ready — pick a channel and drop it in.",
-      "lovedPrompt": "Optional — what did you actually like about this? One line. Goes on the share card.",
-      "lovedPlaceholder": "e.g. Felt like a community I'd want to lurk in.",
-      "next": "Stage 4 is one more game — about how a neural net actually learns."
+      "posterBody": "Your buddy post is ready. Drop it in #find-a-buddy — you'll have replies by morning.",
+      "lovedPrompt": "Optional — one line about what hooked you. Lives on the poster.",
+      "lovedPlaceholder": "e.g. The community-first framing.",
+      "next": "One more game in Stage 4 — how a neural net actually learns."
     }
   },
   "stage4": {
     "title": "One more game",
     "subtitle": "How a neural net actually learns.",
-    "body": "GloGames' first release: six floors covering Inputs → Weights → Neurons → Activation → Loss → the learning loop. About ten minutes if you're curious.",
-    "ctaLabel": "Open Neural Nets",
+    "body": "GloGames' first release. Six floors covering Inputs → Weights → Neurons → Activation → Loss → the learning loop. Quietly excellent. About ten minutes if you're curious.",
+    "ctaLabel": "Open Neural Nets ↗",
     "ctaUrl": "https://osangen.github.io/ai-power-users-codex53-demo/"
   },
   "stage5": {
     "title": "Coming soon",
     "subtitle": "Something else lives here.",
-    "body": "Reserved for whatever the next quarter brings — a new game, a contribution path, or your own project drop. Check back when Q2 starts."
+    "body": "Reserved for Q2. New game, new domain, new ways to contribute. Check back when the cycle rolls."
   },
   "menu": {
     "title": "AI Global",
     "kicker": "Onboarding",
-    "footer": "aiglo.org · MIT Professional Education-backed"
+    "heroLead": "Welcome",
+    "heroSub": "Glad you're here. AI Global is global, curious, and busy in the middle of a quarter — let's get you in the door.",
+    "footer": "Made with <span class=\"heart\">❤️</span> by the <span class=\"team\">AIGLO team</span> <span class=\"smiley\">:)</span>"
+  },
+  "toasts": {
+    "stage1Win":  "100 m. Nice climb.",
+    "stage1Fail": "Off the wall — feel of the climb, captured.",
+    "stage2Win":  "150 m. Crisp.",
+    "stage2Fail": "Caught the wall. Your intro is still ready.",
+    "stage3":     "Reached {meters} m. Worth a poster."
   }
 }

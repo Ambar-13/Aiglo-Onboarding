@@ -128,6 +128,101 @@
 
   /* Tiny utility */
   .hidden { display: none !important; }
+
+  /* === Warmth & motion ================================================== */
+  /* Tiles: subtle lift + barely-rotation on hover. */
+  .tile { transition: transform 0.22s cubic-bezier(.2,.9,.3,1.4), box-shadow 0.22s ease, border-color 0.2s; }
+  .tile:hover { transform: translateY(-4px) rotate(-0.5deg); box-shadow: 0 14px 32px var(--shadow); border-color: var(--lavender); }
+  .tile .badge.next { animation: nextGlow 2.2s ease-in-out infinite; }
+  @keyframes nextGlow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 96, 160, 0.45); }
+    50%      { box-shadow: 0 0 0 12px rgba(255, 96, 160, 0); }
+  }
+
+  /* Hero name flourish on first appearance. */
+  .hello .accent { display: inline-block; }
+  .hello .accent.fresh { animation: namePop 0.6s cubic-bezier(.2,.9,.3,1.4); }
+  @keyframes namePop {
+    0%   { transform: scale(0.6) rotate(-6deg); opacity: 0; }
+    60%  { transform: scale(1.12) rotate(2deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+
+  /* Toast (post-climb celebratory line at top of menu). */
+  .toast {
+    position: fixed; top: 18px; left: 50%; transform: translateX(-50%) translateY(-30px);
+    background: var(--lavender); color: var(--violet-deep);
+    padding: 10px 22px; border-radius: 999px;
+    font-weight: 800; font-size: 14px; letter-spacing: 1px; text-transform: uppercase;
+    box-shadow: 0 8px 24px rgba(80,40,140,0.30);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.4s cubic-bezier(.2,.9,.3,1.4);
+    z-index: 200;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast .em { color: var(--pink); }
+
+  /* Footer with animated heart + wiggling team. */
+  .footer { user-select: none; }
+  .footer .heart {
+    display: inline-block;
+    transform-origin: center;
+    animation: heartBeat 1.7s ease-in-out infinite;
+  }
+  @keyframes heartBeat {
+    0%, 30%, 100% { transform: scale(1); }
+    10%           { transform: scale(1.22); }
+    18%           { transform: scale(0.94); }
+    24%           { transform: scale(1.12); }
+  }
+  .footer .team {
+    display: inline-block;
+    font-weight: 800;
+    color: var(--violet);
+    transition: color 0.2s;
+  }
+  .footer:hover .team {
+    color: var(--pink);
+    animation: teamWiggle 0.45s ease-in-out;
+  }
+  @keyframes teamWiggle {
+    0%, 100% { transform: rotate(0); }
+    25%      { transform: rotate(-3deg); }
+    50%      { transform: rotate(3deg); }
+    75%      { transform: rotate(-1.5deg); }
+  }
+  .footer .smiley {
+    display: inline-block;
+    transition: transform 0.2s;
+  }
+  .footer:hover .smiley { transform: rotate(20deg); }
+
+  /* Primary CTA gets a gentle attention pulse only when it's the next step. */
+  .cta.pulse { animation: ctaPulse 2.4s ease-in-out infinite; }
+  @keyframes ctaPulse {
+    0%, 100% { box-shadow: 0 6px 0 var(--violet-2), 0 10px 22px rgba(80,40,140,0.28); }
+    50%      { box-shadow: 0 6px 0 var(--violet-2), 0 14px 30px rgba(255,96,160,0.42); }
+  }
+
+  /* Sheet entry: a small whoosh-in. */
+  .scrim.on .sheet { animation: sheetIn 0.35s cubic-bezier(.2,.9,.3,1.4); }
+  @keyframes sheetIn {
+    0%   { opacity: 0; transform: translateY(20px) scale(0.96); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* Category tile delight. */
+  .cat-grid button { transition: transform 0.12s, border-color 0.15s, background 0.15s; }
+  .cat-grid button:hover { transform: translateY(-2px); }
+
+  /* Respect reduced-motion users. */
+  @media (prefers-reduced-motion: reduce) {
+    .tile, .tile:hover { transition: none; }
+    .tile .badge.next, .footer .heart, .hello .accent.fresh,
+    .scrim.on .sheet, .cta.pulse, .toast { animation: none !important; }
+    .toast { transition: opacity 0.2s; }
+  }
 </style>
 </head>
 <body>
@@ -140,15 +235,16 @@
   </div>
 
   <section class="hello">
-    <h1>Welcome<span id="welcomeComma"></span> <span id="welcomeName" class="accent">in</span>.</h1>
-    <p id="welcomeBlurb">Five short stages. Each ends with a tiny climbing game. You'll learn what AI Global is, draft your first intro, and leave with a poster you can share.</p>
+    <h1 id="welcomeH1">Welcome<span id="welcomeComma"></span> <span id="welcomeName" class="accent">in</span>.</h1>
+    <p id="welcomeBlurb">Glad you're here. AI Global is global, curious, and busy in the middle of a quarter — let's get you in the door.</p>
   </section>
 
   <ol class="tiles" id="tilesGrid"></ol>
 
-  <p class="footer" id="footer">aiglo.org · MIT Professional Education-backed</p>
+  <p class="footer" id="footer">Made with <span class="heart">❤️</span> by the <span class="team">AIGLO team</span> <span class="smiley">:)</span></p>
 </main>
 
+<div class="toast" id="toast"></div>
 <div class="scrim" id="scrim">
   <div class="sheet" id="sheet"></div>
 </div>
@@ -195,11 +291,27 @@ async function loadContent() {
 // =====================================================================
 // Tile renderer
 // =====================================================================
-function renderHello() {
+function renderHello(opts) {
   const nameEl = document.getElementById('welcomeName');
   const commaEl = document.getElementById('welcomeComma');
+  const blurbEl = document.getElementById('welcomeBlurb');
   if (state.name) { nameEl.textContent = state.name; commaEl.textContent = ','; }
   else            { nameEl.textContent = 'in';      commaEl.textContent = ''; }
+  if (CONTENT && CONTENT.menu && blurbEl) blurbEl.textContent = CONTENT.menu.heroSub;
+  if (opts && opts.fresh) {
+    nameEl.classList.remove('fresh');
+    void nameEl.offsetWidth;   // restart animation
+    nameEl.classList.add('fresh');
+  }
+}
+
+function showToast(text) {
+  if (!text) return;
+  const t = document.getElementById('toast');
+  t.innerHTML = text;
+  t.classList.add('show');
+  clearTimeout(showToast._timer);
+  showToast._timer = setTimeout(() => t.classList.remove('show'), 4200);
 }
 
 function renderTiles() {
@@ -275,30 +387,25 @@ function renderStage1(sheet) {
   `;
   sheet.appendChild(name);
   const input = name.querySelector('#nameInput');
-  input.addEventListener('input', () => { state.name = input.value.trim(); saveState(); renderHello(); });
+  let priorName = state.name;
+  input.addEventListener('input', () => {
+    const wasEmpty = !priorName;
+    state.name = input.value.trim();
+    saveState();
+    renderHello({ fresh: wasEmpty && !!state.name });
+    if (state.name) priorName = state.name;
+  });
 
-  // Minimal pre-climb panel
+  // Single AI Global explainer panel. No outcome panel here — the
+  // post-climb celebratory line lives in the menu toast, not in this
+  // modal, so we never repeat the same copy twice.
   const pre = document.createElement('div');
   pre.className = 'panel';
   pre.innerHTML = `<h3>${t.pre.title}</h3><p>${t.pre.body}</p>`;
   sheet.appendChild(pre);
 
-  // Outcome panel (only after a guided run)
-  if (state.lastRun && state.lastRun.mode === 'guided' && !state.lastRun._consumedAt1) {
-    const o = t.outcome;
-    const won = !!state.lastRun.won;
-    const out = document.createElement('div');
-    out.className = 'panel tinted';
-    out.innerHTML = `
-      <h3>${won ? o.winTitle : o.failTitle}</h3>
-      <p>${won ? o.winBody : o.failBody}</p>
-      <p><strong>${o.next}</strong></p>
-    `;
-    sheet.appendChild(out);
-  }
-
   const cta = document.createElement('button');
-  cta.className = 'cta';
+  cta.className = 'cta pulse';
   cta.textContent = t.ctaLabel;
   cta.addEventListener('click', () => {
     if (!state.name) { input.focus(); return; }
@@ -397,13 +504,6 @@ function renderStage2(sheet) {
       bodyFail:  t.outcome.failBody,
       nextLine: t.outcome.next,
     }));
-    sheet.appendChild(makeLovedField({
-      stageKey: 'stage2',
-      prompt: t.outcome.lovedPrompt,
-      placeholder: t.outcome.lovedPlaceholder,
-      initial: state.stage2.loved || '',
-      onChange: v => { state.stage2.loved = v; saveState(); refreshPosters(); },
-    }));
     sheet.appendChild(makePosterPanel({
       panelId: 'poster2',
       name: state.name,
@@ -419,7 +519,7 @@ function renderStage2(sheet) {
   }
 
   const cta = document.createElement('button');
-  cta.className = 'cta';
+  cta.className = 'cta pulse';
   cta.textContent = t.ctaLabel;
   cta.addEventListener('click', () => {
     if (!state.stage2.category && !state.stage2.custom) {
@@ -440,17 +540,12 @@ function renderStage2(sheet) {
 function renderStage3(sheet) {
   const t = CONTENT.stage3;
 
-  // How buddies work
+  // How buddies work — single panel. AI Global background was delivered
+  // in Stage 1; we don't restate it here.
   const pre = document.createElement('div');
   pre.className = 'panel';
   pre.innerHTML = `<h3>${t.pre.title}</h3><p>${t.pre.body}</p>`;
   sheet.appendChild(pre);
-
-  // Full picture of the community
-  const full = document.createElement('div');
-  full.className = 'panel';
-  full.innerHTML = `<h3>${t.fullPicture.title}</h3><p>${t.fullPicture.body}</p>`;
-  sheet.appendChild(full);
 
   // Madlib form
   state.stage3.fields = state.stage3.fields || {};
@@ -514,7 +609,7 @@ function renderStage3(sheet) {
   }
 
   const cta = document.createElement('button');
-  cta.className = 'cta';
+  cta.className = 'cta pulse';
   cta.textContent = t.ctaLabel;
   cta.addEventListener('click', () => launchClimb({ endless: true }));
   sheet.appendChild(cta);
@@ -719,10 +814,13 @@ function drawPoster({ name, meters, won, mainText, lovedText }) {
   ctx.font = '900 48px Inter, sans-serif';
   ctx.fillText(name || 'climber', PAD, metricY + 96);
 
-  // "I just onboarded" line
+  // Warmer tagline. The boring "I just onboarded" version is gone.
   ctx.fillStyle = '#2a1454';
   ctx.font = '500 22px Inter, sans-serif';
-  ctx.fillText('I just onboarded into AI Global @ MIT.', PAD, metricY + 138);
+  ctx.fillText('Just climbed into AI Global @ MIT.', PAD, metricY + 138);
+  ctx.fillStyle = '#6a4ec0';
+  ctx.font = '500 16px Inter, sans-serif';
+  ctx.fillText('One quarter. One domain. Real AI systems.', PAD, metricY + 168);
 
   // What stood out (loved)
   let yPtr = metricY + 196;
@@ -790,11 +888,12 @@ function escapeText(s) { return String(s || '').replace(/</g, '&lt;').replace(/>
 async function boot() {
   loadState();
   await loadContent();
-  // Pick up a finished climb run on return
+  // Pick up a finished climb run on return.
+  let returningFrom = null;
   if (state.lastRun && !state.lastRun._consumed) {
-    if (state.lastRun.mode === 'guided') state.attempted[1] = true;
-    if (state.lastRun.mode === 'target' && state.lastRun.target === 150) state.attempted[2] = true;
-    if (state.lastRun.mode === 'endless') state.attempted[3] = true;
+    if (state.lastRun.mode === 'guided')                                          { state.attempted[1] = true; returningFrom = 1; }
+    if (state.lastRun.mode === 'target' && state.lastRun.target === 150)         { state.attempted[2] = true; returningFrom = 2; }
+    if (state.lastRun.mode === 'endless')                                         { state.attempted[3] = true; returningFrom = 3; }
     state.lastRun._consumed = true;
     saveState();
     try {
@@ -802,17 +901,34 @@ async function boot() {
       r._consumed = true; localStorage.setItem(RUN_KEY, JSON.stringify(r));
     } catch (e) {}
   }
-  document.getElementById('footer').textContent = CONTENT.menu.footer;
+  // Footer is HTML (so the heart, team and smiley spans can be animated).
+  if (CONTENT.menu && CONTENT.menu.footer) {
+    document.getElementById('footer').innerHTML = CONTENT.menu.footer;
+  }
   renderHello();
   renderTiles();
-  // Auto-open the matching stage on return so the player lands on the outcome.
-  if (state.lastRun && state.lastRun.mode) {
-    const m = state.lastRun.mode;
-    setTimeout(() => {
-      if (m === 'guided') openStage(1);
-      else if (m === 'target' && state.lastRun.target === 150) openStage(2);
-      else if (m === 'endless') openStage(3);
-    }, 250);
+  // Stage 1: NO modal on return. Just a celebratory toast at the top
+  // of the menu, then the player picks Stage 2 themselves (or we auto-
+  // open it). Stage 2 / 3 DO reopen because they have a deliverable
+  // (poster, intro text) the player needs to see.
+  if (returningFrom === 1) {
+    const won = !!state.lastRun.won;
+    const toastKey = won ? 'stage1Win' : 'stage1Fail';
+    const toastTxt = (CONTENT.toasts && CONTENT.toasts[toastKey]) || (won ? '100 m.' : 'Off the wall.');
+    setTimeout(() => showToast(toastTxt), 200);
+    // Then open Stage 2 so they can keep going without another click.
+    setTimeout(() => openStage(2), 1400);
+  } else if (returningFrom === 2) {
+    const won = !!state.lastRun.won;
+    const toastKey = won ? 'stage2Win' : 'stage2Fail';
+    const toastTxt = (CONTENT.toasts && CONTENT.toasts[toastKey]) || (won ? '150 m.' : 'Caught the wall.');
+    setTimeout(() => showToast(toastTxt), 200);
+    setTimeout(() => openStage(2), 1100);
+  } else if (returningFrom === 3) {
+    const meters = (state.lastRun && state.lastRun.meters) || 0;
+    const tpl = (CONTENT.toasts && CONTENT.toasts.stage3) || 'Reached {meters} m.';
+    setTimeout(() => showToast(tpl.replace('{meters}', meters)), 200);
+    setTimeout(() => openStage(3), 1100);
   }
   document.getElementById('scrim').addEventListener('click', e => {
     if (e.target.id === 'scrim') closeStage();
