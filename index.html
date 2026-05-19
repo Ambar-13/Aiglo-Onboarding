@@ -32,6 +32,8 @@
   .brand   { font-weight: 900; letter-spacing: 3px; font-size: 14px; color: var(--violet); }
   .brand span { color: var(--pink); }
   .kicker  { font-size: 12px; letter-spacing: 4px; text-transform: uppercase; opacity: 0.55; }
+  .brand-mark { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+  .brand-mark .logo { width: 36px; height: auto; display: block; }
 
   /* === Hello header ===================================================== */
   .hello { margin-bottom: 28px; }
@@ -491,7 +493,10 @@
 
   <div class="topbar">
     <div class="brand">AI <span>GLOBAL</span></div>
-    <div class="kicker">Onboarding</div>
+    <div class="brand-mark">
+      <div class="kicker">Onboarding</div>
+      <img src="aiglo-logo.png" alt="Aiglo" class="logo">
+    </div>
   </div>
 
   <section class="hello">
