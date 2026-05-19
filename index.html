@@ -86,10 +86,10 @@
     position: absolute; inset: 0; width: 100%; height: 100%;
     pointer-events: none; z-index: 1;
   }
-  /* Rocks render ABOVE the character so head/shoulders peek over a rock the
-     climber is gripping (z 3 vs character z 2). During a leap the character
-     bumps to z 6 to fly past intermediate rocks. */
-  .scene-rocks { position: absolute; inset: 0; z-index: 3; }
+  /* Character renders ABOVE the rocks (z 4 vs rocks z 2) so the climber is
+     fully visible — hands gripping the peak, body on the face, legs braced.
+     During a leap z bumps to 6 so they fly past intermediate rocks. */
+  .scene-rocks { position: absolute; inset: 0; z-index: 2; }
   .rock {
     position: absolute;
     width: clamp(62px, 12vw, 96px);
@@ -141,19 +141,20 @@
 
   .scene-character {
     position: absolute;
-    width: clamp(48px, 9vw, 72px);
-    /* Default pose: gripping the rock — head + shoulders peek above peak,
-       lower body hidden behind rock face (rocks z-index above character). */
-    transform: translate(-50%, -88%);
-    pointer-events: none; z-index: 2;
-    filter: drop-shadow(0 4px 6px rgba(40, 20, 70, 0.32));
+    width: clamp(56px, 10vw, 84px);
+    /* Climbing pose: HANDS align with the rock peak (~7% from top of the
+       character SVG → translate Y of -34%). Body sits on the rock face
+       below; legs brace below the rock. */
+    transform: translate(-50%, -34%);
+    pointer-events: none; z-index: 4;
+    filter: drop-shadow(0 5px 7px rgba(40, 20, 70, 0.32));
   }
   .scene-character svg { width: 100%; height: auto; display: block; }
-  /* Subtle idle breath when gripping */
-  .scene-character.gripping { animation: gripBreath 3.2s ease-in-out infinite; }
+  /* Subtle idle sway as if the climber is breathing against the rock. */
+  .scene-character.gripping { animation: gripBreath 3.4s ease-in-out infinite; }
   @keyframes gripBreath {
-    0%, 100% { transform: translate(-50%, -88%) rotate(-1deg); }
-    50%      { transform: translate(-50%, -90%) rotate( 1deg); }
+    0%, 100% { transform: translate(-50%, -34%) rotate(-1.2deg); }
+    50%      { transform: translate(-50%, -33%) rotate( 1.2deg); }
   }
   .scene-meta {
     display: flex; justify-content: space-between; align-items: center;
@@ -694,8 +695,11 @@ function ensureCharacter() {
   const c = document.getElementById('sceneCharacter');
   if (!c) return null;
   const o = currentOutfit();
-  if (o && typeof buildCharSvg === 'function' && c.dataset.outfit !== o.id) {
-    c.innerHTML = buildCharSvg(o);
+  // Prefer the hanging-climber pose (visible hands gripping); fall back to the
+  // standing pose only if buildClimberSvg isn't loaded.
+  const draw = (typeof buildClimberSvg === 'function') ? buildClimberSvg : buildCharSvg;
+  if (o && typeof draw === 'function' && c.dataset.outfit !== o.id) {
+    c.innerHTML = draw(o);
     c.dataset.outfit = o.id;
   }
   return c;
@@ -744,7 +748,7 @@ function leapTo(targetIdx, onArrive) {
                  top:  Math.max(20, Math.min(from.top, to.top) - arcH) };
   const reach = { left: to.left - dir * 4,
                   top:  to.top  - 4 };
-  const base = (rot, s) => `translate(-50%, -88%) rotate(${rot}deg) scale(${s})`;
+  const base = (rot, s) => `translate(-50%, -34%) rotate(${rot}deg) scale(${s})`;
 
   // Set z above rocks for the flight.
   c.style.left = from.left + '%';
@@ -1255,93 +1259,93 @@ function drawPoster({ name, meters, won, mainText, lovedText, shareLine, disclos
   cvs.style.width = '320px';
   const ctx = cvs.getContext('2d');
   const PAD = 80;
-
-  // Cream paper.
-  ctx.fillStyle = '#faf6ff'; ctx.fillRect(0, 0, SZ, SZ);
-
-  // --- Top tape ---------------------------------------------------------
   ctx.textBaseline = 'alphabetic';
-  ctx.fillStyle = '#6a4ec0';
-  ctx.font = '700 15px "SF Mono", "JetBrains Mono", Menlo, monospace';
-  ctx.fillText('AIGLO · 01 · 26 — POSTCARD', PAD, PAD + 14);
-  ctx.fillStyle = '#ff60a0';
-  ctx.beginPath(); ctx.arc(SZ - PAD - 4, PAD + 8, 10, 0, Math.PI * 2); ctx.fill();
-  // Hairline
-  ctx.fillStyle = '#e8defa';
-  ctx.fillRect(PAD, PAD + 36, SZ - PAD * 2, 1.5);
 
-  // --- Headline ---------------------------------------------------------
-  // "Climbed / {meters}m / into AI Global." — middle line is the italic
-  // pink accent, just like the postcard reference ("…is marketing.").
-  const HEAD_SIZE = 132;
-  const headY = PAD + 220;
+  // --- Deep violet ticket -------------------------------------------
   ctx.fillStyle = '#2a1454';
+  ctx.fillRect(0, 0, SZ, SZ);
+
+  // Pink moon-stamp in the top-right corner. Drawn as a big circle anchored
+  // partway off-canvas so we see roughly a quarter — the corner accent from
+  // the admit-one ticket reference.
+  ctx.fillStyle = '#ff60a0';
+  ctx.beginPath();
+  ctx.arc(SZ - 30, 30, 320, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Top mono kicker (left)
+  ctx.fillStyle = '#d4baff';
+  ctx.font = '700 16px "SF Mono", "JetBrains Mono", Menlo, monospace';
+  ctx.fillText('AIGLO / 01', PAD, PAD + 14);
+
+  // "ADMIT ONE" on the pink stamp (right). Drawn in deep violet so it reads
+  // against the pink moon.
+  ctx.fillStyle = '#2a1454';
+  ctx.font = '900 16px "SF Mono", monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText('ADMIT ONE', SZ - PAD, PAD + 14);
+  ctx.textAlign = 'start';
+
+  // --- Headline -----------------------------------------------------
+  // "Climbed / {meters}m. / into AI Global." — meters in italic pink
+  const HEAD_SIZE = 124;
+  const headY = PAD + 230;
+  ctx.fillStyle = '#faf6ff';
   ctx.font = `900 ${HEAD_SIZE}px Inter, -apple-system, "Helvetica Neue", sans-serif`;
   ctx.fillText('Climbed', PAD, headY);
-  // Accent line — italic pink serif
-  ctx.fillStyle = '#ff60a0';
+  ctx.fillStyle = '#ffb0d8';
   ctx.font = `italic 900 ${HEAD_SIZE}px Georgia, "Times New Roman", serif`;
   ctx.fillText(`${meters || 0}m.`, PAD, headY + HEAD_SIZE);
-  // Continuation
-  ctx.fillStyle = '#2a1454';
+  ctx.fillStyle = '#faf6ff';
   ctx.font = `900 ${HEAD_SIZE}px Inter, -apple-system, "Helvetica Neue", sans-serif`;
   ctx.fillText('into AI Global.', PAD, headY + HEAD_SIZE * 2);
 
-  // --- Holder block ----------------------------------------------------
-  let yb = headY + HEAD_SIZE * 2 + 72;
-  ctx.fillStyle = '#6a4ec0';
+  // --- Holder block --------------------------------------------------
+  let yb = headY + HEAD_SIZE * 2 + 80;
+  ctx.fillStyle = '#d4baff';
   ctx.font = '700 13px "SF Mono", Menlo, monospace';
   ctx.fillText('HOLDER', PAD, yb);
   yb += 30;
-  ctx.fillStyle = '#2a1454';
-  ctx.font = '900 38px Inter, sans-serif';
+  ctx.fillStyle = '#faf6ff';
+  ctx.font = '900 34px Inter, sans-serif';
   const tag = won ? '· SUMMIT' : '· PROGRESS';
   ctx.fillText(`${name || 'climber'}  ${tag}`, PAD, yb);
+  yb += 24;
+  ctx.fillStyle = 'rgba(212, 186, 255, 0.65)';
+  ctx.font = '500 14px Inter, sans-serif';
+  ctx.fillText('AI-assisted · human-edited', PAD, yb);
 
-  // --- What stood out (optional) ---------------------------------------
+  // --- What stood out (optional) ------------------------------------
   if (lovedText && lovedText.trim()) {
-    yb += 60;
-    ctx.fillStyle = '#6a4ec0';
+    yb += 56;
+    ctx.fillStyle = '#d4baff';
     ctx.font = '700 13px "SF Mono", Menlo, monospace';
     ctx.fillText('WHAT STOOD OUT', PAD, yb);
     yb += 30;
-    ctx.fillStyle = '#2a1454';
-    ctx.font = 'italic 26px Georgia, "Times New Roman", serif';
-    wrapText(ctx, '"' + lovedText.trim() + '"', PAD, yb, SZ - PAD * 2, 34, 3);
+    ctx.fillStyle = '#faf6ff';
+    ctx.font = 'italic 24px Georgia, "Times New Roman", serif';
+    wrapText(ctx, '"' + lovedText.trim() + '"', PAD, yb, SZ - PAD * 2 - 140, 32, 3);
   }
 
-  // --- Bottom band -----------------------------------------------------
-  const bandY = SZ - PAD - 96;
-  ctx.fillStyle = '#e8defa';
-  ctx.fillRect(PAD, bandY, SZ - PAD * 2, 1.5);
-  // QUARTER (left)
-  ctx.fillStyle = '#6a4ec0';
-  ctx.font = '700 13px "SF Mono", Menlo, monospace';
-  ctx.fillText('QUARTER', PAD, bandY + 30);
-  ctx.fillStyle = '#2a1454';
-  ctx.font = '900 28px Inter, sans-serif';
-  ctx.fillText('Q1 · 2026', PAD, bandY + 64);
-  // DOMAIN (right)
-  ctx.textAlign = 'right';
-  ctx.fillStyle = '#6a4ec0';
-  ctx.font = '700 13px "SF Mono", Menlo, monospace';
-  ctx.fillText('DOMAIN', SZ - PAD, bandY + 30);
-  ctx.fillStyle = '#2a1454';
-  ctx.font = '900 28px Inter, sans-serif';
-  ctx.fillText('MARKETING', SZ - PAD, bandY + 64);
-  ctx.textAlign = 'start';
+  // --- Bottom band: thin rule + quarter/domain + barcode -----------
+  const bandY = SZ - PAD - 38;
+  ctx.fillStyle = 'rgba(212, 186, 255, 0.22)';
+  ctx.fillRect(PAD, bandY - 18, SZ - PAD * 2, 1);
 
-  // --- Footer disclosure ----------------------------------------------
-  if (disclosure && disclosure.trim()) {
-    ctx.fillStyle = '#9c80c4';
-    ctx.font = '500 12px Inter, sans-serif';
-    ctx.fillText(disclosure, PAD, SZ - 30);
+  ctx.fillStyle = '#d4baff';
+  ctx.font = '700 12px "SF Mono", Menlo, monospace';
+  ctx.fillText('Q1 · 2026  ·  MARKETING  ·  aiglo.org', PAD, bandY);
+
+  // Barcode in the bottom-right corner — short vertical strokes, varied
+  // widths, decorative only.
+  ctx.fillStyle = '#faf6ff';
+  const bars = [3, 1, 2, 1, 4, 1, 2, 3, 1, 2, 1, 3, 1, 2, 1, 4, 2, 1, 3];
+  let bx = SZ - PAD - 130;
+  const barTop = bandY - 18, barH = 20;
+  for (let i = 0; i < bars.length; i++) {
+    if (i % 2 === 0) ctx.fillRect(bx, barTop, bars[i], barH);
+    bx += bars[i] + 1;
   }
-  ctx.fillStyle = '#9c80c4';
-  ctx.font = '500 12px Inter, sans-serif';
-  ctx.textAlign = 'right';
-  ctx.fillText('aiglo.org', SZ - PAD, SZ - 30);
-  ctx.textAlign = 'start';
 
   return cvs;
 }
