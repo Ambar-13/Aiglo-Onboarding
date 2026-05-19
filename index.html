@@ -155,6 +155,56 @@
     font-size: 12px; color: var(--violet-2); opacity: 0.78;
     text-align: center; padding: 10px 14px 4px;
   }
+  /* 3-step wizard: progress bar + back/next nav. */
+  .madlib-progress { padding: 14px 14px 10px; }
+  .madlib-progress .label {
+    font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase;
+    font-weight: 800; color: var(--violet);
+    margin-bottom: 8px;
+  }
+  .madlib-progress .label .step-title { color: var(--violet-deep); }
+  .madlib-progress .bar {
+    height: 5px; background: var(--lavender-3); border-radius: 999px;
+    overflow: hidden;
+  }
+  .madlib-progress .fill {
+    height: 100%; background: var(--pink);
+    border-radius: 999px;
+    transition: width 0.4s cubic-bezier(.2,.9,.3,1.4);
+  }
+  .madlib-progress .hint {
+    font-size: 12px; color: var(--violet-2); opacity: 0.78;
+    margin-top: 10px;
+  }
+  .madlib-step { padding: 0; }
+  .madlib-step[hidden] { display: none !important; }
+  .madlib-nav {
+    display: flex; gap: 10px;
+    padding: 14px;
+    border-top: 1px dashed var(--lavender-3);
+    margin-top: 4px;
+  }
+  .madlib-nav button {
+    flex: 1;
+    background: white;
+    color: var(--violet);
+    border: 1.5px solid var(--lavender-2);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 13px; font-weight: 900; letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer; font-family: inherit;
+    transition: background 0.12s, border-color 0.12s, opacity 0.12s;
+  }
+  .madlib-nav button:hover:not(:disabled) { border-color: var(--lavender); }
+  .madlib-nav button.primary {
+    background: var(--lavender);
+    color: var(--violet-deep);
+    border-color: var(--lavender);
+    box-shadow: 0 4px 0 var(--violet-2);
+  }
+  .madlib-nav button.primary:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 2px 0 var(--violet-2); }
+  .madlib-nav button:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
   .madlib-row {
     border-bottom: 1px dashed var(--lavender-3);
     padding: 14px 14px 16px;
@@ -866,16 +916,30 @@ function renderStage3(sheet) {
   pre.innerHTML = `<h3>${t.pre.title}</h3><p>${t.pre.body}</p>`;
   sheet.appendChild(pre);
 
-  // Madlib form — labelled hint up top so it reads as "fill the boxes",
-  // not "pick one from the chips".
+  // Madlib form — paginated as a 3-step wizard with a progress bar.
+  // Each step shows ~3 related fields. Saves on every keystroke so a
+  // back-button trip never loses input.
   state.stage3.fields = state.stage3.fields || {};
+  const STEPS = [
+    { title: 'Who you are',  keys: ['location', 'displayName', 'linkedin'] },
+    { title: 'Your work',    keys: ['industry', 'expertise', 'goal'] },
+    { title: 'Buddy fit',    keys: ['learning', 'buddy', 'comms'] },
+  ];
   const form = document.createElement('div');
   form.className = 'madlib';
-  const hint = document.createElement('p');
-  hint.className = 'madlib-hint';
-  hint.innerHTML = '<strong>Type your answer in each box</strong> &middot; or tap a suggestion to fill it.';
-  form.appendChild(hint);
-  for (const f of MADLIB.fields) {
+
+  // Progress header
+  const progress = document.createElement('div');
+  progress.className = 'madlib-progress';
+  progress.innerHTML = `
+    <p class="label"><span class="step-n">1</span> / ${STEPS.length} · <span class="step-title">${STEPS[0].title}</span></p>
+    <div class="bar"><div class="fill" style="width: ${100 / STEPS.length}%"></div></div>
+    <p class="hint">Type your answer in each box · or tap a suggestion to fill it.</p>
+  `;
+  form.appendChild(progress);
+
+  // Build each step container
+  function buildField(f) {
     const row = document.createElement('div');
     row.className = 'madlib-row';
     const init = state.stage3.fields[f.key] || (f.key === 'displayName' ? state.name : '');
@@ -886,7 +950,6 @@ function renderStage3(sheet) {
         ${f.examples.map(ex => `<button type="button" data-ex="${escapeAttr(ex)}">${escapeText(ex)}</button>`).join('')}
       </div>
     `;
-    form.appendChild(row);
     const inp = row.querySelector('input');
     inp.addEventListener('input', () => { state.stage3.fields[f.key] = inp.value; saveState(); });
     row.querySelectorAll('.examples button').forEach(b => {
@@ -894,7 +957,48 @@ function renderStage3(sheet) {
         inp.value = b.dataset.ex; state.stage3.fields[f.key] = inp.value; saveState();
       });
     });
+    return row;
   }
+  const stepEls = STEPS.map((step, idx) => {
+    const el = document.createElement('div');
+    el.className = 'madlib-step';
+    if (idx !== 0) el.hidden = true;
+    for (const key of step.keys) {
+      const f = MADLIB.fields.find(x => x.key === key);
+      if (f) el.appendChild(buildField(f));
+    }
+    return el;
+  });
+  stepEls.forEach(el => form.appendChild(el));
+
+  // Step navigation
+  let curStep = 0;
+  const nav = document.createElement('div');
+  nav.className = 'madlib-nav';
+  nav.innerHTML = `
+    <button type="button" data-act="back">← Back</button>
+    <button type="button" data-act="next" class="primary">Next →</button>
+  `;
+  form.appendChild(nav);
+  const backBtn = nav.querySelector('[data-act="back"]');
+  const nextBtn = nav.querySelector('[data-act="next"]');
+  function renderStep() {
+    stepEls.forEach((el, i) => { el.hidden = i !== curStep; });
+    progress.querySelector('.step-n').textContent = curStep + 1;
+    progress.querySelector('.step-title').textContent = STEPS[curStep].title;
+    progress.querySelector('.fill').style.width = ((curStep + 1) / STEPS.length * 100) + '%';
+    backBtn.disabled = curStep === 0;
+    if (curStep === STEPS.length - 1) {
+      nextBtn.textContent = '✓ Looks good';
+      nextBtn.disabled = true;
+    } else {
+      nextBtn.textContent = 'Next →';
+      nextBtn.disabled = false;
+    }
+  }
+  backBtn.addEventListener('click', () => { curStep = Math.max(0, curStep - 1); renderStep(); });
+  nextBtn.addEventListener('click', () => { curStep = Math.min(STEPS.length - 1, curStep + 1); renderStep(); });
+  renderStep();
   sheet.appendChild(form);
 
   // Outcome (after endless run)
