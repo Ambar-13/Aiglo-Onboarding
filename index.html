@@ -42,12 +42,6 @@
   /* === Tile grid ======================================================== */
   .tiles { display: grid; gap: 14px; grid-template-columns: 1fr; list-style: none; padding: 0; margin: 0; }
   @media (min-width: 720px) { .tiles { grid-template-columns: 1fr 1fr; } }
-  /* With 5 stages in a 2-column grid, the last tile would sit alone.
-     Stretch it across both columns so the bottom row reads as a deliberate
-     full-width "what's next" card instead of an orphan. */
-  @media (min-width: 720px) {
-    .tiles .tile:nth-child(5) { grid-column: 1 / -1; }
-  }
   .tile { background: white; border-radius: 18px; padding: 22px; box-shadow: 0 6px 20px var(--shadow); border: 1px solid var(--lavender-3); position: relative; transition: transform 0.12s ease, box-shadow 0.12s ease; cursor: pointer; }
   .tile:hover { transform: translateY(-2px); box-shadow: 0 10px 28px var(--shadow); }
   .tile .step { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--lavender); font-weight: 800; }
@@ -497,7 +491,7 @@ function renderTiles() {
   const g = document.getElementById('tilesGrid');
   const t = CONTENT;
   // ALL stages open. Done badge if attempted; Next badge on first unattempted.
-  const stages = [1,2,3,4,5].map(id => ({
+  const stages = [1,2,3,4].map(id => ({
     id, title: t['stage'+id].title, sub: t['stage'+id].subtitle
   }));
   const nextIdx = stages.findIndex(s => !state.attempted[s.id]);
