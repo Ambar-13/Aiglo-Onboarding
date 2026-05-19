@@ -157,6 +157,29 @@ canvas { display: block; cursor: pointer; }
   font-size: 15px; color: #ffb0d8; opacity: 0.95;
   letter-spacing: 0.4px;
 }
+.aiglo-card {
+  display: none;
+  max-width: 380px; margin: 0 auto 22px;
+  padding: 14px 18px;
+  background: rgba(245, 237, 255, 0.08);
+  border: 1px solid rgba(212, 186, 255, 0.35);
+  border-left: 3px solid #ff60a0;
+  border-radius: 10px;
+  text-align: left;
+}
+.aiglo-card.show { display: block; }
+.aiglo-card .fact-kicker {
+  font-size: 10px; letter-spacing: 2.5px;
+  font-weight: 800; color: #ffb0d8;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.aiglo-card .fact-body {
+  font-size: 14px; line-height: 1.5;
+  color: #f5edff; opacity: 0.95;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
+}
 .help {
   max-width: 380px; font-size: 14px; line-height: 1.6;
   opacity: 0.92; margin-bottom: 24px;
@@ -208,6 +231,10 @@ canvas { display: block; cursor: pointer; }
   <div class="help" id="help">
     <p><b>HOLD</b> <kbd>A</kbd> / tap <b>LEFT</b> &nbsp;|&nbsp; <b>HOLD</b> <kbd>L</kbd> / tap <b>RIGHT</b></p>
     <p style="margin-top:10px;opacity:.85;">A held hand grips any rock it touches. Release a hand to let it swing free &mdash; that's how you swing. Release the second hand at the top of your swing to fly up and grab the next rock.</p>
+  </div>
+  <div class="aiglo-card" id="aigloCard">
+    <div class="fact-kicker" id="factKicker">Meet AI Global</div>
+    <div class="fact-body" id="factBody">A community of senior people treating AI as a craft, not a horoscope — built with MIT Professional Education.</div>
   </div>
   <button class="go" id="play">Start the climb</button>
   <div class="best" id="best"></div>
@@ -1770,12 +1797,43 @@ function gameOver() {
   setTimeout(showGameOver, 700);
 }
 
+// Warm onboarding facts about Aiglo — shown one at a time on the fall
+// (and win) screen so that "Caught the wall." doubles as a teaching moment:
+// the lesson stays, the player learns something about the community.
+const AIGLO_FACTS = [
+  { k: 'Meet AI Global',     b: 'A community of senior people treating AI as a craft, not a horoscope — built with MIT Professional Education.' },
+  { k: 'GloLabs Vol 1',      b: 'Six peer-reviewed marketing case studies just dropped — real teams shipping real systems.' },
+  { k: 'GloGames',           b: 'The playful side of Aiglo. "Neural Nets" is the first release — six floors of how a network actually learns.' },
+  { k: 'SPC',                b: 'Four hands-on governance courses, taught live. The path from curious to credible.' },
+  { k: 'Projects to join',   b: 'Ambassador, AI.MRKT, AI 2027 — three open volunteer tracks. Pick a lane and ship something.' },
+  { k: 'Our mission',        b: 'Open systems · practical AI · clear stewardship. We move on a quarterly cycle — Q1 2026 is marketing.' },
+  { k: 'By the numbers',     b: '11K+ taught · 200+ upskilled · 1K+ members in 4 weeks · 80%+ weekly active. The energy is real.' },
+  { k: 'How buddies work',  b: 'Drop your lane in #find-a-buddy; the Discord routes you to someone in the same domain by morning.' }
+];
+let __factIdx = Math.floor(Math.random() * AIGLO_FACTS.length);
+
+function showAigloFact() {
+  const card = document.getElementById('aigloCard');
+  if (!card) return;
+  // Step through the deck so the player sees a different fact each fall.
+  const f = AIGLO_FACTS[__factIdx % AIGLO_FACTS.length];
+  __factIdx = (__factIdx + 1) % AIGLO_FACTS.length;
+  document.getElementById('factKicker').textContent = f.k;
+  document.getElementById('factBody').textContent  = f.b;
+  card.classList.add('show');
+}
+function hideAigloFact() {
+  const card = document.getElementById('aigloCard');
+  if (card) card.classList.remove('show');
+}
+
 function showGameOver() {
   const won = ONBOARD_TARGET > 0 && meters >= ONBOARD_TARGET;
   titleEl.innerHTML = won ? 'Summit<span>,</span> reached.' : 'Caught the wall.';
   tagEl.textContent = won ? 'well climbed' : 'pick up · climb again';
   helpEl.innerHTML = '<div class="score-big"><b>' + meters + ' METERS</b></div>'
     + '<p style="opacity:.7;font-size:13px;letter-spacing:2px;">' + (bestMeters > meters ? 'RECORD ' + bestMeters + 'm' : 'NEW RECORD!') + '</p>';
+  showAigloFact();
   // Onboarding mode: replace TRY AGAIN with a "back to onboarding" CTA so
   // the player lands on the menu page (where the poster + intro UI lives).
   if (ONBOARD_RETURN) {
@@ -1981,14 +2039,14 @@ function drawGrassTuft(sx, sy) {
 
 function drawClimbSign(sx, baseY) {
   ctx.save();
-  // Board geometry — bigger than the original 96x44 so the by-the-numbers
-  // stats and the "Hope you have fun." line have room.
-  const W = 132, H = 92;
+  // Board geometry — wider than before so the italic-serif greeting and
+  // four stat tiles read comfortably.
+  const W = 172, H = 96;
   const left = sx - W / 2, top = baseY - 30 - H;
   // Two posts
   ctx.fillStyle = '#6a4ec0';
-  ctx.fillRect(sx - 48, baseY - 30, 4, 30);
-  ctx.fillRect(sx + 44, baseY - 30, 4, 30);
+  ctx.fillRect(sx - 64, baseY - 30, 4, 30);
+  ctx.fillRect(sx + 60, baseY - 30, 4, 30);
   // Main board
   ctx.fillStyle = '#9c7fd4';
   ctx.fillRect(left, top, W, H);
@@ -2006,8 +2064,8 @@ function drawClimbSign(sx, baseY) {
   // Warm hand-painted title — italic serif so the sign reads like a
   // welcome carving, not a label.
   ctx.fillStyle = '#fff5fb';
-  ctx.font = 'italic bold 13px Georgia, "Times New Roman", serif';
-  ctx.fillText('Welcome, Aiglo-ian.', sx, top + 15);
+  ctx.font = 'italic bold 15px Georgia, "Times New Roman", serif';
+  ctx.fillText('Welcome, Aiglo-ian.', sx, top + 16);
 
   // "BY THE NUMBERS" small kicker, friendly sans
   ctx.fillStyle = '#3a1f6a';
@@ -2094,20 +2152,23 @@ function drawRecordSign(sx, baseY, meters) {
   ctx.save();
   // Post
   ctx.fillStyle = '#6a4ec0';
-  ctx.fillRect(sx - 2, baseY - 28, 4, 28);
-  // Light lavender plate (replaces the old yellow record-tag colour)
+  ctx.fillRect(sx - 2, baseY - 30, 4, 30);
+  // Light lavender plate — wider than before so "record" and the meters
+  // number have breathing room and don't stack on top of each other.
+  const PW = 76, PH = 32;
   ctx.fillStyle = '#d4baff';
-  ctx.fillRect(sx - 28, baseY - 52, 56, 24);
+  ctx.fillRect(sx - PW / 2, baseY - 30 - PH, PW, PH);
   ctx.strokeStyle = '#4a2a8a';
   ctx.lineWidth = 1.6;
-  ctx.strokeRect(sx - 28, baseY - 52, 56, 24);
-  // "record:" small + meters big
+  ctx.strokeRect(sx - PW / 2, baseY - 30 - PH, PW, PH);
+  // Both lines in italic Georgia so the sign reads as one hand-painted
+  // unit — the previous mix of Inter + Georgia looked stitched together.
   ctx.fillStyle = '#4a2a8a';
-  ctx.font = 'bold 7px Inter, -apple-system, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('record:', sx, baseY - 41);
-  ctx.font = 'italic bold 14px Georgia, "Times New Roman", serif';
-  ctx.fillText(meters + 'm', sx, baseY - 31);
+  ctx.font = 'italic bold 8px Georgia, "Times New Roman", serif';
+  ctx.fillText('record', sx, baseY - 30 - PH + 12);
+  ctx.font = 'italic bold 16px Georgia, "Times New Roman", serif';
+  ctx.fillText(meters + 'm', sx, baseY - 30 - PH + 27);
   ctx.textAlign = 'start';
   // Small directional arrow on a tag at the post
   ctx.fillStyle = '#6a4ea0';
@@ -2623,6 +2684,7 @@ function startGame() {
   + 'Release the <b>second</b> hand at the top of your swing to fly up and grab the next rock.</p>'
   + '<p style="margin-top:8px;opacity:.65;font-size:13px;">Both hands released at the same time while hanging still &mdash; <b>jump straight up</b>.</p>';
   playBtn.textContent = 'Start the climb';
+  hideAigloFact();
   reset();
   ov.classList.add('hide');
 }
